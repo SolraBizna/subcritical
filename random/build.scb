@@ -1,2 +1,5 @@
+if(config_question("NO_STRICT_ALIASING", "Does your C compiler support -fno-strict-aliasing? (If it does, you MUST\nanswer yes here to avoid an error.", "bool")) then
+   append_cflags "-fno-strict-aliasing"
+end
 targets={random={"random.cc", "sfmt19937.cc"}}
 install={packages={"random"},headers={"random.h"}}
