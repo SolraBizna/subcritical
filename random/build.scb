@@ -1,0 +1,2 @@
+targets={random={"random.cc", "sfmt19937.cc"}}
+install={packages={"random"},headers={"random.h"}}

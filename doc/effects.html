@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>effects</tt> package</h1>
+<p><tt>effects</tt> depends on <a href="graphics.html#Graphic" class="code">Graphic</a></p>
+<p><tt>effects</tt> contains no classes.</p>
+<h2>License</h2>
+<p>The <tt>effects</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Utility functions</h2>
+<dl>
+<dt class="code"><a name="Flip" /><i>new_graphic</i> = SCUtil.Flip(<i>old_graphic</i>)</dt>
+<dd><i class="code">old_graphic</i> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">new_graphic</i> will be a new <a href="graphics.html#Graphic" class="code">Graphic</a> containing the image data from <i class="code">old_graphic</i> rotated 180 degrees.</dd>
+<dt class="code"><a name="MakeFrisketDirectly" /><i>frisket</i> = SCUtil.MakeFrisketDirectly(<i>graphic</i>)</dt>
+<dd><i class="code">graphic</i> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">frisket</i> will be a new <a href="graphics.html#Frisket" class="code">Frisket</a> containing exactly the green channel data from <i class="code">graphic</i>, without any colorspace conversion.</dd>
+<dt class="code"><a name="MakeFrisketFromAlpha" /><i>frisket</i> = SCUtil.MakeFrisketFromAlpha(<i>graphic</i>)</dt>
+<dd><i class="code">graphic</i> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">frisket</i> will be a new <a href="graphics.html#Frisket" class="code">Frisket</a> equivalent to <i class="code">graphic</i> (minus color information).</dd>
+<dt class="code"><a name="MakeFrisketFromGrayscale" /><i>frisket</i> = SCUtil.MakeFrisketFromGrayscale(<i>graphic</i>)</dt>
+<dd><i class="code">graphic</i> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">frisket</i> will be a new <a href="graphics.html#Frisket" class="code">Frisket</a> which is more opaque where <i>graphic</i> is brighter and more transparent where <i>graphic</i> is darker. The red, green, and blue channels are weighted according to their contribution to human perception of brightness. The alpha channel of <i>graphic</i>, if any, is ignored.</dd>
+<dt class="code"><a name="MakeFrisketFromGrayscaleQuickly" /><i>frisket</i> = SCUtil.MakeFrisketFromGrayscaleQuickly(<i>graphic</i>)</dt>
+<dd><i class="code">graphic</i> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">frisket</i> will be a new <a href="graphics.html#Frisket" class="code">Frisket</a> which is more opaque where <i>graphic</i> is brighter and more transparent where <i>graphic</i> is darker. The red, green, and blue channels contribute equally to the final value. The alpha channel of <i>graphic</i>, if any, is ignored.</dd>
+<dt class="code"><a name="MirrorHorizontal" /><i>new_graphic</i> = SCUtil.MirrorHorizontal(<i>old_graphic</i>)</dt>
+<dd><i class="code">old_graphic</i> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">new_graphic</i> will be a new <a href="graphics.html#Graphic" class="code">Graphic</a> containing the image data from <i class="code">old_graphic</i> flipped along the X axis.</dd>
+<dt class="code"><a name="MirrorVertical" /><i>new_graphic</i> = SCUtil.MirrorVertical(<i>old_graphic</i>)</dt>
+<dd><i class="code">old_graphic</i> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">new_graphic</i> will be a new <a href="graphics.html#Graphic" class="code">Graphic</a> containing the image data from <i class="code">old_graphic</i> flipped along the Y axis.</dd>
+<dt class="code"><a name="RenderPreCompressed" />function <i>my_render_function</i>(<i>x</i>, <i>y</i>) ... return <i>r</i>,<i>g</i>,<i>b</i>[,<i>a</i>] end
+<i>graphic</i> = SCUtil.Render(<i>my_render_function</i>, <i>width</i>, <i>height</i>[, <i>alpha</i>])</dt>
+<dd><i class="code">graphic</i> will contain a new <a href="graphics.html#Graphic" class="code">Graphic</a>, <i class="code">width</i> x <i class="code">height</i>, containing image data provided by <i class="code">my_render_function</i>.</dd>
+<dd><i class="code">my_render_function</i> is a <tt>function</tt> you provide. Its parameters, <i class="code">x</i> and <i class="code">y</i>, are integer coordinates such that <tt>0</tt> &lt;= <i class="code">x</i> &lt; <i class="code">width</i> and <tt>0</tt> &lt;= <i class="code">y</i> &lt; <i class="code">height</i>. Its return values (<i class="code">r,g,b</i>), are <tt>number</tt>s between 0 and 1, inclusive. They are interpreted in a linear colorspace (that is, 0.5 is half as bright as 1). If <i class="code">alpha</i> is <tt>true</tt>, your function must return a fourth <tt>number</tt>, <i class="code">a</i>, denoting the degree of opacity between 0 (transparent) and 1 (opaque). If <i class="code">alpha</i> is <tt>false</tt> or not specified, the returned graphic is fully opaque.</dd>
+<dd>It is unwise to cause an error in <i class="code">my_render_function</i> or to return an unexpected number of values.</dd>
+<dt class="code"><a name="RenderPreCompressed" />function <i>my_render_function</i>(<i>x</i>, <i>y</i>) ... return <i>r</i>,<i>g</i>,<i>b</i>[,<i>a</i>] end
+<i>graphic</i> = SCUtil.RenderPreCompressed(<i>my_render_function</i>, <i>width</i>, <i>height</i>[, <i>alpha</i>])</dt>
+<dd>This behaves exactly as <a href="#Render" class="code">Render</a> above, with one exception. The <i class="code">r</i>, <i class="code">g</i>, and <i class="code">b</i> return values of <i class="code">my_render_function</i> are assumed to be in an sRGB colorspace. (One might use this function to implement an image loader in Lua.)</dd>
+<dt class="code"><a name="RotateLeft" /><i>new_graphic</i> = SCUtil.RotateLeft(<i>old_graphic</i>)</dt>
+<dd><i class="code">old_graphic</i></a> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">new_graphic</i> will be a new <a href="graphics.html#Graphic" class="code">Graphic</a> containing the image data from <i class="code">old_graphic</i> rotated 90 degrees counter-clockwise.</dd>
+<dt class="code"><a name="RotateRight" /><i>new_graphic</i> = SCUtil.RotateRight(<i>old_graphic</i>)</dt>
+<dd><i class="code">old_graphic</i></a> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">new_graphic</i> will be a new <a href="graphics.html#Graphic" class="code">Graphic</a> containing the image data from <i class="code">old_graphic</i> rotated 90 degrees clockwise.</dd>
+<dt class="code"><a name="ScaleBest" /><i>new_graphic</i> = SCUtil.ScaleBest(<i>old_graphic</i>, <i>width</i>, <i>height</i>)</dt>
+<dd><i class="code">old_graphic</i></a> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">new_graphic</i> will be a new <a href="graphics.html#Graphic" class="code">Graphic</a> containing the image data from <i class="code">old_graphic</i> scaled to <i class="code">width</i> x <i class="code">height</i> using Lanczos3 windowed sinc filtering. Alpha channels are handled correctly, but might behave contrary to your expectations.</dd>
+<dd>Like many other forms of high-quality resampling, Lancsoz3 filtering will cause some "fringing." This is normal.</dd>
+<dt class="code"><a name="ScaleFast" /><i>new_graphic</i> = SCUtil.ScaleFast(<i>old_graphic</i>, <i>width</i>, <i>height</i>)</dt>
+<dd><i class="code">old_graphic</i></a> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">new_graphic</i> will be a new <a href="graphics.html#Graphic" class="code">Graphic</a> containing the image data from <i class="code">old_graphic</i> scaled to <i class="code">width</i> x <i class="code">height</i> using nearest-neighbor "filtering." Alpha channels are handled.</dd>
+<dd>This is ugly, but fast.</dd>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

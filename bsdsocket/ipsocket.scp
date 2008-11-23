@@ -1,0 +1,8 @@
+license Compatible
+version 0b3
+
+class TCPSocket : SocketStream concrete
+class TCPListenSocket : ListenSocketStream concrete
+
+class UDPSocket : SocketDgram concrete
+class UDPListenSocket : ListenSocketDgram concrete

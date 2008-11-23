@@ -1,0 +1,21 @@
+license Compatible
+version 0b3
+
+depend Graphic
+
+utility MirrorHorizontal
+utility MirrorVertical
+utility Flip
+utility RotateRight
+utility RotateLeft
+
+utility ScaleFast
+utility ScaleBest
+
+utility Render
+utility RenderPreCompressed
+
+utility MakeFrisketFromAlpha
+utility MakeFrisketFromGrayscale
+utility MakeFrisketFromGrayscaleQuickly
+utility MakeFrisketDirectly

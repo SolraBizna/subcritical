@@ -1,0 +1,28 @@
+license Compatible
+
+version 0b3 core
+
+class PackedArray1D     concrete
+class PackedArray1D_B   concrete
+class PackedArray1D_S8  concrete
+class PackedArray1D_U8  concrete
+class PackedArray1D_S16 concrete
+class PackedArray1D_U16 concrete
+class PackedArray1D_S32 concrete
+class PackedArray1D_U32 concrete
+class PackedArray2D     concrete
+class PackedArray2D_B   concrete
+class PackedArray2D_S8  concrete
+class PackedArray2D_U8  concrete
+class PackedArray2D_S16 concrete
+class PackedArray2D_U16 concrete
+class PackedArray2D_S32 concrete
+class PackedArray2D_U32 concrete
+class PackedArray3D     concrete
+class PackedArray3D_B   concrete
+class PackedArray3D_S8  concrete
+class PackedArray3D_U8  concrete
+class PackedArray3D_S16 concrete
+class PackedArray3D_U16 concrete
+class PackedArray3D_S32 concrete
+class PackedArray3D_U32 concrete

@@ -1,0 +1,16 @@
+license Compatible
+version 0b3 core
+
+class Drawable
+class GraphicsDevice : Drawable tangible
+class Graphic : Drawable concrete
+class Frisket
+class GraphicLoader tangible
+class GraphicDumper tangible
+
+utility CompileCoords
+utility CompileIndices
+
+// These are not documented because you want to use PNG (or ANYTHING else) instead.
+class SCILoader : GraphicLoader concrete @ 1000000
+class SCIDumper : GraphicDumper concrete @ 1000000

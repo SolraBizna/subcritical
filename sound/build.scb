@@ -1,0 +1,2 @@
+targets = {sound={"sound.cc", "loader.cc", "wav.cc"}}
+install = {packages={"sound"}, headers={"sound.h"}}

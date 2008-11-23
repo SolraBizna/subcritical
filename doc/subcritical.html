@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>SubCritical</tt> module</h1>
+<p><tt>SubCritical</tt> is a normal Lua module. It can also be addressed by <tt>subcritical</tt>, <tt>SC</tt>, or <tt>sc</tt>.</p>
+<dl>
+<dt class="code"><a name="Choices" /><i>table</i> = SubCritical.Choices(<i>class</i>)</dt>
+<dd>Returns an array containing the names of all available implementors of <i class="code">class</i>, in order from best priority to worst. Normally you do not need this unless you want to offer the user a choice of which implementor to use (see <a href="#ConstructSpecific">ConstructSpecific).</dd>
+<dt class="code"><a name="Construct" /><i>object</i> = SubCritical.Construct(<i>class</i>, ...)
+<i>object</i> = assert(SubCritical.Construct(<i>class</i>, ...))</dt>
+<dd>Returns, if possible, either an instance of <i class="code">class</i> directly or an instance of a class that inherits from it. If you wish an error to be thrown on failure, it is adviseable to <tt>assert</tt> its return value (as shown above).</dd>
+<dt class="code"><a name="ConstructPath" /><i>true_path</i> = SubCritical.ConstructPath(<i>path</i>[, <i>level</i>])
+<i>true_path</i> = SubCritical.Path(<i>path</i>[, <i>level</i>])
+<i>true_path</i> = SCPath(<i>path</i>[, <i>level</i>])
+<i>true_path</i> = scpath(<i>path</i>[, <i>level</i>])
+<i>true_path</i> = P"<i>path</i>"</dt>
+<dd>Returns a platform-specific equivalent to <i class="code">path</i>. <i class="code">path</i> is a UNIX-style path relative to <b>the directory containing the source file containing the calling code</b>. Calling <tt>ConstructPath</tt> from code not loaded directly from a file is unwise, and will have different semantics on different platforms.<dd>
+<dd>If you write code that wishes to wrap <tt>ConstructPath</tt> without itself affecting where the path points to, use the <i class="code">level</i> parameter. A value of <tt>3</tt> denotes the function calling you, <tt>4</tt> denotes the function that called that function, etc.</dd>
+<dt class="code"><a name="ConstructSpecific" /><i>object</i> = SubCritical.ConstructSpecific(<i>class</i>, ...)
+<i>object</i> = assert(SubCritical.ConstructSpecific(<i>class</i>, ...))</dt>
+<dd>Returns, if possible, an instance of <i class="code">class</i> directly, and not a subclass. If you wish an error to be thrown on failure, it is adviseable to <tt>assert</tt> its return value (as shown above). Normally you do not need this unless you want to offer the user a choice of which implementor to use (see <a href="#Choices">Choices).</dd></dd>
+<dt class="code"><a name="Util" />... = SubCritical.Util.<i>name</i>(...)
+... = SubCritical.util.<i>name</i>(...)
+... = SCUtil.<i>name</i>(...)
+... = scutil.<i>name</i>(...)</dt>
+<dd>All of the above are equivalent ways to call a native <tt>utility</tt> functions named <i class="code">name</i>.</dd>
+<dt class="code"><a name="var.Read"><i>file</i> = SubCritical.Var.Read(<i>name</i>)
+<i>file</i> = SubCritical.var.Read(<i>name</i>)
+<i>file</i> = SCVar.Read(<i>name</i>)
+<i>file</i> = scvar.Read(<i>name</i>)</dt>
+<dd>Returns a Lua <tt>file</tt> (actually, a table shadowing one) to read a file by the name of <i class="code">name</i> in the SubCritical configuration directory. The location of this directory varies from platform to platform.</dd>
+<dd><i class="code">name</i> must not begin with a period or end with a tilde (~). In addition, if it contains slashes (/), they are converted to underscores (_). Some platforms may name the file differently than the name you provide; on those platforms, it is guaranteed that there is a one-to-one mapping between <i class="code">name</i> parameters and actual filenames.</dd>
+<dt class="code"><a name="var.Write"><i>file</i> = SubCritical.Var.Write(<i>name</i>)
+<i>file</i> = SubCritical.var.Write(<i>name</i>)
+<i>file</i> = SCVar.Write(<i>name</i>)
+<i>file</i> = scvar.Write(<i>name</i>)</dt>
+<dd>Returns a Lua <tt>file</tt> (actually, a table shadowing one) to create or replace a file by the name of <i class="code">name</i> in the SubCritical configuration directory. The location of this directory varies from platform to platform. The file is not actually created / replaced until it is explicitly closed (with <tt>:close()</tt>). In particular, if the garbage collector gets it, the file is never actually created!</dd>
+<dd>See <a href="var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
+<dt class="code"><a name="var.Update"><i>file</i> = SubCritical.Var.Update(<i>name</i>)
+<i>file</i> = SubCritical.var.Update(<i>name</i>)
+<i>file</i> = SCVar.Update(<i>name</i>)
+<i>file</i> = scvar.Update(<i>name</i>)</dt>
+<dd>Returns a Lua <tt>file</tt> (actually, a table shadowing one) to update a file by the name of <i class="code">name</i> in the SubCritical configuration directory. If the file does not exist, it is created. If it does, the file position starts at the end of the file. In either case, the file handle can be seeked, read from, and written to at will. The file is not actually updated until it is explicitly closed (with <tt>:close()</tt>). In particular, if the garbage collector gets it, the file is never updated!</dd>
+<dd>See <a href="var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

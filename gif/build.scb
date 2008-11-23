@@ -1,0 +1,3 @@
+append_ldflags"-lgif"
+targets = {gif={"gif.cc"}}
+install = {packages={"gif"}}

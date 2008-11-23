@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>array</tt> package</h1>
+<h2>License</h2>
+<p>The <tt>array</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<p>This package contains 24 classes, all of them variations on a theme. You can create a densely packed fixed-size array of either 1, 2, or 3 dimensions, containing Lua numbers, booleans, or signed/unsigned 8-, 16-, or 32-bit integers.</p>
+<table>
+<thead>
+<tr><th>Class</th><th>Dim.</th><th>Range</th></tr>
+</thead>
+<tbody>
+<tr><td>PackedArray1D</td><td>1D</td><td>any <tt>number</tt></td></tr>
+<tr><td>PackedArray1D_B</td><td>1D</td><td><tt>true</tt> or <tt>false</tt></td></tr>
+<tr><td>PackedArray1D_S8</td><td>1D</td><td>-128 <= integer <= 127</td></tr>
+<tr><td>PackedArray1D_U8</td><td>1D</td><td>0 <= integer <= 255</td></tr>
+<tr><td>PackedArray1D_S16</td><td>1D</td><td>-32768 <= integer <= 32767</td></tr>
+<tr><td>PackedArray1D_U16</td><td>1D</td><td>0 <= integer <= 65535</td></tr>
+<tr><td>PackedArray1D_S32</td><td>1D</td><td>-2147483648 <= integer <= 2147483647</td></tr>
+<tr><td>PackedArray1D_U32</td><td>1D</td><td>0 <= integer <= 4294967295</td></tr>
+</tbody>
+<tbody>
+<tr><td>PackedArray2D</td><td>2D</td><td>any <tt>number</tt></td></tr>
+<tr><td>PackedArray2D_B</td><td>2D</td><td><tt>true</tt> or <tt>false</tt></td></tr>
+<tr><td>PackedArray2D_S8</td><td>2D</td><td>-128 <= integer <= 127</td></tr>
+<tr><td>PackedArray2D_U8</td><td>2D</td><td>0 <= integer <= 255</td></tr>
+<tr><td>PackedArray2D_S16</td><td>2D</td><td>-32768 <= integer <= 32767</td></tr>
+<tr><td>PackedArray2D_U16</td><td>2D</td><td>0 <= integer <= 65535</td></tr>
+<tr><td>PackedArray2D_S32</td><td>2D</td><td>-2147483648 <= integer <= 2147483647</td></tr>
+<tr><td>PackedArray2D_U32</td><td>2D</td><td>0 <= integer <= 4294967295</td></tr>
+</tbody>
+<tbody>
+<tr><td>PackedArray3D</td><td>3D</td><td>any <tt>number</tt></td></tr>
+<tr><td>PackedArray3D_B</td><td>3D</td><td><tt>true</tt> or <tt>false</tt></td></tr>
+<tr><td>PackedArray3D_S8</td><td>3D</td><td>-128 <= integer <= 127</td></tr>
+<tr><td>PackedArray3D_U8</td><td>3D</td><td>0 <= integer <= 255</td></tr>
+<tr><td>PackedArray3D_S16</td><td>3D</td><td>-32768 <= integer <= 32767</td></tr>
+<tr><td>PackedArray3D_U16</td><td>3D</td><td>0 <= integer <= 65535</td></tr>
+<tr><td>PackedArray3D_S32</td><td>3D</td><td>-2147483648 <= integer <= 2147483647</td></tr>
+<tr><td>PackedArray3D_U32</td><td>3D</td><td>0 <= integer <= 4294967295</td></tr>
+</tbody>
+</table>
+<p>Each variant takes up the minimum necessary memory to store its contents, and accesses are performed in O(1) time.</p>
+<p>All of the above classes implement the following:</p>
+<dl>
+<dt class="code"><i>array1d</i> = SubCritical.Construct("PackedArray1D", <i>size</i>)
+<i>array2d</i> = SubCritical.Construct("PackedArray2D", <i>width</i>, <i>height</i>)
+<i>array3d</i> = SubCritical.Construct("PackedArray3D", <i>width</i>, <i>height</i>, <i>depth</i>)</dt>
+<dd>Create an array of the given type and dimensions.</dd>
+<dt class="code"><i>value</i> = <i>array1d</i>:Get(<i>x</i>)
+<i>value</i> = <i>array2d</i>:Get(<i>x</i>, <i>y</i>)
+<i>value</i> = <i>array3d</i>:Get(<i>x</i>, <i>y</i>, <i>z</i>)</dt>
+<dd>Get the value currently stored at the given location. Unset values default to false or 0, depending on the array's type.</dd>
+<dd>Coordinates start from 0, not 1.</dd>
+<dt class="code"><i>array1d</i>:Set(<i>value</i>, <i>x</i>)
+<i>array2d</i>:Set(<i>value</i>, <i>x</i>, <i>y</i>)
+<i>array3d</i>:Set(<i>value</i>, <i>x</i>, <i>y</i>, <i>z</i>)</dt>
+<dd>Change the value currently stored at the given location.</dd>
+<dd>Coordinates start from 0, not 1.</dd>
+</dl>
+<p>Here are some examples:</p>
+<pre>-- Create a PackedArray containing a 32x32 quarter-circle.
+array = SubCritical.Construct("PackedArray2D_B", 32, 32)
+for x=0,31 do
+  for y=0,31 do
+    array:Set(math.sqrt(x*x+y*y) <= 31, x, y)
+  end
+end</pre>
+<pre>-- Create a PackedArray containing a multiplication table.
+-- array[x][y] contains (x+1)*(y+1).
+-- 12 * 12 = 144, which is less than 256, so our numbers will fit in a U8.
+array = SubCritical.Construct("PackedArray2D_U8", 12, 12)
+for x=1,12 do
+  for y=1,12 do
+    array:Set(x*y, x-1, y-1)
+  end
+end</pre>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

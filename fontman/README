@@ -1,0 +1,26 @@
+fontman is a very simple package, simplifying FreetypeFont management:
+
+require "fontman"
+myfont = fontman.newfont(P"MyFont.ttf")
+
+Obtain, and automatically cache, different font sizes by indexing myfont. For
+instance:
+
+frisket = myfont[12]:RenderText("This is 12-point text!")
+
+Install by placing fontman.scu somewhere SubCritical can find it:
+
+$ mkdir -p /usr/subcritical/lib/
+$ cp fontman.scu /usr/subcritical/lib/
+
+If you install this, you may also want to install the included Liberation font package:
+
+$ cp -r liberation /usr/subcritical/lib/
+
+Font packages (like the included Liberation fonts) are encouraged to create
+subtables of the provided TTF table (also accessible by ttf):
+
+TTF.MyFamily = fontman.newfont(P"MyFamily-Regular.ttf")
+TTF.MyFamily.Bold = fontman.newfont(P"MyFamily-Bold.ttf")
+
+No particular naming convention is recommended.

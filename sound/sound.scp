@@ -1,0 +1,16 @@
+license Compatible
+version 0b3 core
+
+class SoundBuffer
+class MonoSoundBuffer : SoundBuffer
+class StereoSoundBuffer : SoundBuffer
+class SoundStream
+class SoundMixer : SoundStream concrete
+
+class SoundLoader tangible
+
+class WAVLoader : SoundLoader concrete
+class WAVStream : SoundStream concrete
+
+class SoundMaster
+class SoundDevice : SoundMaster tangible

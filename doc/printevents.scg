@@ -1,0 +1,27 @@
+#!/usr/bin/env lua
+
+require "subcritical"
+
+screen = subcritical.Construct("GraphicsDevice", 256, 192, {windowed=true, title="r toggles relmouse"})
+screen:Update()
+local relmouse
+repeat
+   local evt = screen:GetEvent{wait=true,textok=true,relmouse=relmouse}
+   print("***************")
+   if(evt) then
+      local t = {}
+      for k,v in pairs(evt) do
+	 if(type(v) == "table") then
+	    local u = {k..":"}
+	    for k,v in pairs(v) do
+	       u[#u+1] = k..": "..tostring(v)
+	    end
+	    t[#t+1] = table.concat(u, "\n  ")
+	 else
+	    t[#t+1] = k..": "..tostring(v)
+	 end
+      end
+      if(evt.type == "keydown" and evt.key == "r") then relmouse = not relmouse end
+      print(table.concat(t, "\n"))
+   else print("NIL EVENT") end
+until (evt and evt.type == "quit")

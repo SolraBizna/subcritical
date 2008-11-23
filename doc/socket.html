@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>socket</tt> package</h1>
+<p><tt>socket</tt> contains no utilities.</p>
+<h2>License</h2>
+<p>The <tt>socket</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Classes</h2>
+<h3 class="code"><a name="Socket" />Socket</h3>
+<p>All other classes in the <tt>socket</tt> package are subclasses of <tt>Socket.</tt></p>
+<dl>
+<dt class="code"><a name="Socket:GetAddressParts" /><i>table</i> = <i>socket</i>:GetAddressParts()</dt>
+<dd>Returns a table enumerating all the components this <tt>Socket</tt> needs for an address, along with their values (if they have been set) or false (if they haven't). IP-based sockets would return a table with "Host" and "Port" members, other protocols may return differently.</dd>
+<dd>Using this function and <a href="#Socket:SetAddressPart" class="code">SetAddressPart</a>, you can build a protocol-independent configuration dialog for setting up networked servers or clients. Exactly what address is referred to depends on whether the socket is a <a href="#ListenSocket" class="code">ListenSocket</a> or a <a href="#ConnectedSocket" class="code">ConnectedSocket</a>; a <a href="#ListenSocket" class="code">ListenSocket</a>'s address is the address to listen on, while a <a href="#ConnectedSocket" class="code">ConnectedSocket</a>'s address is the address to connect to.</dd>
+<dd>It is an error to call this function on a <tt>Socket</tt> that already has an address, whether by calling <a href="#Socket:ApplyAddress" class="code">ApplyAddress</a> or by originating from a <a href="#ListenSocket">ListenSocket</a>.</dd>
+<dt class="code"><a name="Socket:SetAddressPart" /><i>socket</i>:SetAddressPart(<i>part</i>, <i>value</i>)</dt>
+<dd>Sets <i class="code">part</i> of the address to <i class="code">value</i>. A <i class="code">value</i> that is a <tt>string</tt> will always be accepted, but other appropriate types may also be accepted, depending on the protocol. A IP-based sockets would expect <i class="code">part</i>s "Host" and "Port", other protocols may expect more, fewer, or different <i class="code">part</i>s.</dd>
+<dd>Using this function and <a href="#Socket:GetAddressParts" class="code">GetAddressParts</a>, you can build a protocol-independent configuration dialog for setting up networked servers or clients. Exactly what address is referred to depends on whether the socket is a <a href="#ListenSocket" class="code">ListenSocket</a> or a <a href="#ConnectedSocket" class="code">ConnectedSocket</a>; a <a href="#ListenSocket" class="code">ListenSocket</a>'s address is the address to listen on, while a <a href="#ConnectedSocket" class="code">ConnectedSocket</a>'s address is the address to connect to.</dd>
+<dd>It is an error to call this function on a <tt>Socket</tt> that already has an address, whether by calling <a href="#Socket:ApplyAddress" class="code">ApplyAddress</a> or by originating from a <a href="#ListenSocket">ListenSocket</a>.</dd>
+<dt class="code"><a name="Socket:ApplyAddress" /><i>success</i>,<i>error</i> = <i>socket</i>:ApplyAddress()</dt>
+<dd>Fails with an error if not enough address parts were <a href="#Socket:SetAddressPart">set</a>. A game that sets every address part mentioned by <a href="#Socket:GetAddressParts" class="code">GetAddressParts</a> will not trigger this error.</dd>
+<dd>Returns <tt>false</tt> followed by an error string if the address was complete but invalid. (Unknown Host errors, etc.)</dd>
+<dd>Returns <tt>false</tt> followed by an error string if the connection failed (ConnectedSocket) or if setting up to listen failed (ListenSocket), but only if the socket is still valid.</dd>
+<dd>Fails with an error if the socket was invalidated by a failure. ("half-open" socket, for instance.)</dd>
+<dd>Returns <tt>true</tt> if all went well.</dd>
+<dd>It is an error to call this function on a <tt>Socket</tt> that already has an address, whether by calling <a href="#Socket:ApplyAddress" class="code">ApplyAddress</a> or by originating from a <a href="#ListenSocket">ListenSocket</a>.</dd>
+<dt class="code"><a name="Socket:SetBlocking" /><i>socket</i>:SetBlocking(<i>whether</i>)</dt>
+<dd>Informs the socket of <i class="code">whether</i> or not it should block on requests such as <a href="#SocketStream:Receive">Receive</a> or <a href="#ListenSocket:Accept">Accept</a>.</dd>
+<dd><tt>Socket</tt>s default to <b>not blocking</b>.</dd>
+<dd>This function always succeeds, unless it throws an error.</dd>
+<dd>It <b>may</b> be an error to call <tt>SetBlocking</tt> on a socket you received from a <a href="#ListenSocket:Accept" class="code">ListenSocket:Accept()</a>, depending on the protocol.</dd>
+<dt class="code"><a name="Socket:GetPrintableAddress" /><i>address</i> = <i>socket</i>:GetPrintableAddress()</dt>
+<dd>Returns a string containing a human-readable network address in whatever format is standard for the protocol in question. For a <a href="#Socket:ListenSocket" class="code">ListenSocket</a>
+<dd>It is an error to call this function on a <tt>Socket</tt> that does not have an address. A <tt>Socket</tt> upon which <a href="#Socket:ApplyAddress" class="code">ApplyAddress</a> has succeeded is okay, as is a <tt>Socket</tt> that was returned by <a href="#ListenSocket:Accept" class="code">ListenSocket:Accept()</a>.</dd>
+</dl>
+<h3 class="code"><a name="ListenSocket" />ListenSocket : <a href="#Socket">Socket</a></h3>
+<p>A <tt>ListenSocket</tt> is a "server" <tt>Socket</tt>. It listens for incoming connections, creates <a href="#ConnectedSocket" class="code">ConnectedSocket</a>s of the appropriate type, and passes them to your code.</p>
+<dl>
+<dt class="code"><a name="ListenSocket:Accept" /><i>client</i> = <i>listen</i>:Accept()</a></dt>
+<dd>If a client is waiting (or, if blocking, a client eventually shows up), return that client as a <a href="#ConnectedSocket">ConnectedSocket</a> of the appropriate type. Otherwise, return <tt>nil</tt>.</dd>
+<dd>Even a blocking socket can return <tt>nil</tt>, in which case the <tt>Accept</tt> call should just be repeated.</dd>
+<dd>Don't call this on a <tt>ListenSocket</tt> which does not have an <a href="#Socket:ApplyAddress">address</a> applied, unless you like errors.</dd>
+</dl>
+<h3 class="code"><a name="ListenSocketStream" />ListenSocketStream : <a href="#ListenSocket">ListenSocket</a></h3>
+<p>A <a href="#ListenSocket">ListenSocket</a> that returns <a href="#SocketStream">SocketStream</a>s. Don't forget to <a href="#Socket:ApplyAddress">set up an address</a>.</p>
+<p><tt>ListenSocketStream</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>listen</i> = SubCritical.Construct("ListenSocketStream")</dt>
+</dl>
+<h3 class="code"><a name="ListenSocketDgram" />ListenSocketDgram : <a href="#ListenSocket">ListenSocket</a></h3>
+<p>A <a href="#ListenSocket">ListenSocket</a> that returns <a href="#SocketDgram">SocketDgram</a>s. Don't forget to <a href="#Socket:ApplyAddress">set up an address</a>.</p>
+<p><tt>ListenSocketDgram</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>listen</i> = SubCritical.Construct("ListenSocketDgram")</dt>
+</dl>
+<h3 class="code"><a name="ConnectedSocket" />ConnectedSocket : <a href="#Socket">Socket</a></h3>
+<p>A <tt>ConnectedSocket</tt> is a "client" or "peer" socket.</p>
+<dl>
+<dt class="code"><i>input</i>,<i>error</i> = <i>socket</i>:Receive(<i>amount</i>)</dt>
+<dd>Returns up to <i>amount</i> bytes read from <i>socket</i>. If <a href="#Socket:SetBlocking">blocking</a>, wait if necessary.</dd>
+<dd>A <a href="#SocketDgram">SocketDgram</a> will return only single packets.</dd>
+<dd>If no bytes were read from <i>socket</i>, return false followed by an error message. If that error message is "not ready", then you should simply wait and try again later. If we are a <a href="#SocketDgram">SocketDgram</a> and the error is "packet too big", you did not provide a large enough <i>amount</i>. (The maximum possible size of a UDP packet is 65507, but a more common non-fragmented maximum is 1484.) Any other error message indicates that further <tt>Receive</tt>s on this socket are futile.</dd>
+<dt class="code"><i>sent</i>,<i>error</i> = <i>socket</i>:Send(<i>output</i>)</dt>
+<dd>Tries to send <i class="code">output</i> (a <tt>string</tt>) over <i class="code">socket</i>. A <a href="#SocketDgram">SocketDgram</a> will return true on success (since partial datagrams cannot be sent), while a <a href="#SocketStream">SocketStream</a> will return the number of bytes sent, if any. In either case, if nothing was sent, return <tt>nil</tt> followed by an error message. If this error message is "not ready", you should simply wait and try again later. If we are a <a href="#SocketDgram">SocketDgram</a> and the error is "packet too big", you should try sending a smaller packet if possible. (The maximum possible size of a UDP packet is 65507, above which an error will occur, but remember to take into account the <a href="#ConnectedSocket:Receive">Receive</a> size at the other end.) Any other error message indicates that further <tt>Send</tt>s on this socket are futile.</dd>
+</dl>
+<h3 class="code"><a name="SocketStream" />SocketStream : <a href="#ConnectedSocket">ConnectedSocket</a></h3>
+<p>A socket representing a reliable, in-order, continuous bytestream (like TCP). Don't forget to <a href="#Socket:ApplyAddress">set up an address</a>.</p>
+<p><tt>SocketStream</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>socket</i> = SubCritical.Construct("SocketStream")</dl>
+</dl>
+<h3 class="code"><a name="SocketDgram" />SocketDgram : <a href="#ConnectedSocket">ConnectedSocket</a></h3>
+<p>A socket representing a series of unreliable, possibly out-of-order, possibly duplicated, discrete packets (like UDP). Don't forget to <a href="#Socket:ApplyAddress">set up an address</a>.</p>
+<p><tt>SocketDgram</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>socket</i> = SubCritical.Construct("SocketDgram")</dl>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

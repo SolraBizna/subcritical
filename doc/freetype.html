@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>freetype</tt> package</h1>
+<p><tt>freetype</tt> depends on <a href="graphics.html#Frisket" class="code">Frisket</a></p>
+<p><tt>freetype</tt> contains no utilities.</p>
+<h2>License</h2>
+<p>The <tt>freetype</tt> package is marked as <tt>Compatible</tt>, which means any game can use it. However, if your game is not GPL and uses <tt>FreetypeFont</tt>, you must add the following notice somewhere in the game (such as the title screen) in order to comply with the FreeType license:</p>
+<blockquote>Portions of this software are copyright (C) 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 The FreeType Project (www.freetype.org). All rights reserved.</blockquote>
+<h2>Classes</h2>
+<h3 class="code"><a name="FreetypeFont" />FreetypeFont</h3>
+<p><tt>FreetypeFont</tt> encapsulates an instance of a Font in the FreeType library. It can be used to render TrueType (<tt>TTF</tt>) and other fonts for display.</p>
+<p><tt>FreetypeFont</tt> performs subpixel pen positioning and kerning, but does not hint.</p>
+<p>Because of the high quality of <tt>FreetypeFont</tt>'s output, very little caching can be done. As such, rendering text is <b>expensive</b>. Try to cache rendered text if possible, and try to render as little text as possible.</p>
+<dl>
+<dt class="code"><i>font</i> = SubCritical.Construct("FreeType", <i>path</i>)
+<i>font</i> = assert(SubCritical.Construct("FreeType", <i>path</i>))</dt>
+<dd>Tries to load the font located at <i>path</i> (see <a href="subcritical.html#ConstructPath">SCPath</a>) in a format FreeType knows. If this font is important, you may want to assert it (as above).</dd>
+<dt class="code"><a name="FreetypeFont:GetNextChar" /><i>offset</i> = <i>font</i>:GetNextChar([<i>start</i>[, <i>stop</i>]])</dt>
+<dd>Returns the byte offset to add to <i class="code">start</i> to skip one UTF-8 character. This can be used in a text editing situation to construct a table of character boundaries with which to move the insertion point back and forth. <i class="code">start</i> and <i class="code">stop</i> behave like the parameters of <tt>string.sub</tt>.</dd>
+<dt class="code"><a name="FreetypeFont:SetSize" /><i>font</i>:SetSize(<i>size</i>)
+<i>font</i>:SetSize(<i>xsize</i>, <i>ysize</i>)</dt>
+<dd>Prepares <i class="code">font</i> to be rendered at <i class="code">size</i> (possibly non-integer) points. By providing two sizes, you can achieve different aspect ratios.</dd>
+<dd>All of the below functions are affected by this size.</dd>
+<dt class="code"><a name="FreetypeFont:BreakLine" /><i>stop</i>,<i>next_start</i> = <i>font</i>:BreakLine(<i>text</i>[, <i>width</i>[, <i>start</i>]])</dt>
+<dd>Returns a suitable <i class="code">stop</i> value to pass to <a href="#GetTextWidth" class="code">GetTextWidth</a> or <a href="#RenderText" class="code">RenderText</a> to render the largest single-line span of <i class="code">text</i> that is less than <i class="code">width</i> wide, and a suitable <i class="code">start</i> value to pass to the next BreakLine. If <i class="code">next_start</i> is nil, this is the last line. If <i class="code">stop</i> is nil, there was no printable text left.</dd>
+<dt class="code"><a name="FreetypeFont:GetTextWidth" /><i>width</i> = <i>font</i>:GetTextWidth(<i>text</i>[, <i>start</i>[, <i>stop</i>]])</dt>
+<dd>Returns the approximate width, in pixels, of <i class="code">text</i> as rendered by <i class="code">font</i>. <i class="code">start</i> and <i class="code">stop</i> behave like the parameters of <tt>string.sub</tt>.</dd>
+<dt class="code"><a name="FreetypeFont:RenderText" /><i>frisket</i>[,<i>outpen</i>] = <i>font</i>:RenderText(<i>text</i>[, <i>start</i>[, <i>stop</i>[, <i>width</i>[, <i>x</i>[, <i>y</i>]]]]])</dt>
+<dd>Returns a <a href="graphics.html#Frisket">Frisket</a> containing <i class="code">text</i> as rendered by <i class="code">font</i>. <i class="code">start</i> and <i class="code">stop</i> behave like the parameters of <tt>string.sub</tt>. If <i class="code">width</i> is not provided, an appropriate value is calculated.</dd>
+<dd>If <i class="code">x</i> and/or <i class="code">y</i> are provided, their fractional portion is interpreted as a subpixel offset for the rendered text in the positive X and Y direction, respectively. In combination with <i class="code">outpen</i>, which is the amount that the pen advanced (including the fractional portion of <i class="code">x</i> if provided) from the origin, this can be used to render multi-style text with subpixel precision.</dd>
+<dt class="code"><a name="FreetypeFont:GetLineHeight" /><i>height</i> = <i>font</i>:GetLineHeight()</dt>
+<dd>Returns the (possibly non-integer) offset between lines of text in <i class="code">font</i>.</dd>
+<dt class="code"><a name="FreetypeFont:GetAscender" /><i>height</i> = <i>font</i>:GetAscender()</dt>
+<dd>Returns the (possibly non-integer) offset between the top of a rendered <a href="graphics.html#Frisket">Frisket</a> and the baseline of text in <i class="code">font</i>.</dd>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

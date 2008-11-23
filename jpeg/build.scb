@@ -1,0 +1,3 @@
+append_ldflags"-ljpeg"
+targets = {jpeg={"jpeg.cc"}}
+install = {packages={"jpeg"}}
