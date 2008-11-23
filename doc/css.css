@@ -1,0 +1,16 @@
+body {
+color: #000;
+background-color: #fff;
+}
+pre {
+border-left: 0.5ex solid #eee;
+padding-left: 1ex;
+padding-top: 0.5ex;
+padding-bottom: 0.5ex;
+}
+dt { font-weight: bold; }
+dd { margin-left: 1em; }
+pre,tt,.code { font-family: monospace; }
+pre,dt.code,h3.code { white-space: pre; }
+table { border: 2px solid black; border-collapse: collapse; }
+td,th { border: 1px solid black; padding: 0.5ex; }

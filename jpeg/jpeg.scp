@@ -1,0 +1,5 @@
+license Compatible
+version 0b3
+
+class JPEGLoader : GraphicLoader concrete
+class JPEGDumper : GraphicDumper concrete

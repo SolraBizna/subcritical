@@ -1,0 +1,46 @@
+--[[
+  This source file is part of the SubCritical distribution.
+  Copyright (C) 2008 Solra Bizna.
+
+  SubCritical is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Lesser General Public License as
+  published by the Free Software Foundation, either version 2 of the
+  License, or (at your option) any later version.
+
+  SubCritical is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Lesser General Public License for more details.
+
+  You should have received a copy of both the GNU General Public
+  License and the GNU Lesser General Public License along with
+  SubCritical.  If not, see <http://www.gnu.org/licenses/>.
+
+  This source file is designed to be accompanied by the GPLed Red Hat
+  LIBERATION fonts. These are covered by their own license and
+  copyright. Solra Bizna claims no ownership of the LIBERATION fonts.
+
+  See AUTHORS, COPYING, and license.txt in this directory for more
+  information.
+]]
+
+require "fontman"
+
+if(not SC.GameIsCompatible("GPL")) then
+   print("WARNING: Your non-GPL-compatible game is trying to load the Liberation fonts.\nIt is unclear whether this is a violation of the Liberation fonts' license.\nYou are advised to relicense your game or use a different set of fonts.")
+end
+
+TTF.Liberation = {}
+
+local styles = {"Bold", "Italic", "BoldItalic"}
+local function MakeFamily(family)
+   local ret = fontman.newfont(SCPath(family:format "Regular"))
+   for i,v in ipairs(styles) do
+      ret[v] = fontman.newfont(SCPath(family:format(v)))
+   end
+   return ret
+end
+
+TTF.Liberation.Sans = MakeFamily("LiberationSans-%s.ttf")
+TTF.Liberation.Serif = MakeFamily("LiberationSerif-%s.ttf")
+TTF.Liberation.Mono = MakeFamily("LiberationMono-%s.ttf")

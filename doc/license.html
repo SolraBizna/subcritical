@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1>Licensing</h1>
+<p>A healthy SubCritical runtime environment potentially has diverse code loaded and inter-linked. This makes licensing complicated.</p>
+<p>Provisions are in place for a SubCritical game or package to specify, along a single axis, the "compatibility" level of its license. The points on this axis are as follows:</p>
+<dl>
+<dt class="code">GPL</dt>
+<dd>Must not be linked with "Incompatible" code.</dd>
+<dt class="code">Compatible</dt>
+<dd>No restrictions.</dd>
+<dt class="code">Incompatible</dt>
+<dd>Must not be linked with "GPL" code.</dd>
+</dl>
+<p>When writing packages, you are strongly encouraged to ensure that you make use of these provisions, so that a GPL'd game does not "taint" itself with proprietary packages, or a proprietary game is deprived of your GPL'd packages.</p>
+<p>SubCritical will happily load a <tt>GPL</tt> package <i>at the same time as</i> an <tt>Incompatible</tt> package if the game's license is <tt>Compatible</tt>. This is by design. Package writers with non-<tt>Compatible</tt> licenses should ensure that they do not depend on cross-licensed code. It is my intention that this avoids any legal problems, but to be honest, I'm very annoyed that I have to deal with this in the first place.</p>
+<p>Writers of new packages and games are <em>strongly</em> encouraged to use <tt>Compatible</tt> licenses such as the GNU LGPL, and avoid all this nonsense entirely.</p>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

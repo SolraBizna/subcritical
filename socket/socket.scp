@@ -1,0 +1,11 @@
+license Compatible
+version 0b3 core
+
+class Socket
+class ListenSocket : Socket
+class ListenSocketDgram : ListenSocket tangible
+class ListenSocketStream : ListenSocket tangible
+class ConnectedSocket : Socket
+class SocketDgram : ConnectedSocket tangible
+class SocketStream : ConnectedSocket tangible
+

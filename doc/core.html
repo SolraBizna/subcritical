@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>core</tt> package</h1>
+<p><tt>core</tt> contains no utilities.</p>
+<h2>License</h2>
+<p>The <tt>core</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Classes</h2>
+<h3 class="code"><a name="Object" />Object</h3>
+<p><tt>Object</tt> is the class that all other classes implicitly inherit from. This means that the below functions can be relied upon to exist for any object.</p>
+<dl>
+<dt class="code"><a name="Object:IsA" /><i>answer</i> = <i>object</i>:IsA(<i>name</i>)</dt>
+<dd>Returns <tt>true</tt> if <i class="code">object</i> either inherits from or is an instance of class <i>name</i>. In particular, all objects will return <tt>true</tt> for <tt>IsA("Object")</tt>.</dd>
+<dt class="code"><a name="Object:Identity" /><i>class</i>[, <i>superclass</i> [, ...]] = <i>object</i>:Identity()</dt>
+<dd>Returns the class name of <i class="code">object</i>, followed by its superclass, and its superclass's superclass, etc. until it reaches <tt>Object</tt>. This is suitable for passing directly to <tt>print</tt> for debugging purposes.</dd>
+</dl>
+<h3 class="code"><a name="Path" />Path</h3>
+<p><tt>Path</tt> contains a platform-specific path. It powers <tt><a href="subcritical.html">SubCritical</a>.<a href="subcritical.html#ConstructPath">ConstructPath</a></tt>, and should not be constructed directly. (It might be useful to directly construct a path for debugging purposes to access a file whose absolute location on your system is known, such as a system font.)</p>
+<dl>
+<dt class="code"><i>path</i> = SubCritical.Construct("Path", <i>raw_path</i>)</dt>
+<dd>Please use <tt><a href="subcritical.html">SubCritical</a>.<a href="subcritical.html#ConstructPath">ConstructPath</a></tt> instead.</dd>
+<dt class="code"><a name="Path:GetPath" /><i>raw_path</i> = <i>path</i>:GetPath()</dt>
+<dd>Returns the "raw" platform-specific path. You normally do not need this function, since io.open is encapsulated by SubCritical.</dd>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

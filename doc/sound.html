@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>sound</tt> package</h1>
+<h2>License</h2>
+<p>The <tt>sound</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<p>A word on garbage collection: SubCritical sound devices are expected to do audio processing in a separate thread from the main thread. However, SubCritical (by design) does not provide thread synchronization primitives. Among other things, that means that the audio processing thread can not communicate with the Lua script or manipulate Lua objects. That includes keeping around references for sound buffers and the like. <b>You are responsible for not allowing sound effects, sound streams, etc. that are "in use" to be garbage collected.</b> This is as simple as keeping references around.</p>
+<h2>Classes</h2>
+<h3 class="code"><a name="SoundBuffer" />SoundBuffer</h3>
+<p>An instance of <tt>SoundBuffer</tt> contains a snippet of audio data&mdash;usually a single sound effect.</p>
+<dl>
+<dt class="code"><a name="SoundBuffer:GetLength" /><i>length</i> = <i>buffer</i>:GetLength()</dt>
+<dd>Returns the length of the sound data in <tt>buffer</tt>, in (real) seconds.</dd>
+</dl>
+<h3 class="code"><a name="MonoSoundBuffer" />MonoSoundBuffer : <a href="#SoundBuffer">SoundBuffer</a>
+<a name="StereoSoundBuffer" />StereoSoundBuffer : <a href="#SoundBuffer">SoundBuffer</a></h3>
+<p><tt>MonoSoundBuffer</tt> and <tt>StereoSoundBuffer</tt> are <tt>SoundBuffer</tt>s containing single-channel and dual-channel audio data, respectively. (The distinction only exists to simplify some sound handling code. Lua code should never need to distinguish between them&mdash;they are interchangeable.)</p>
+<h3 class="code"><a name="SoundLoader" />SoundLoader</h3>
+<p><tt>SoundLoader</tt> is the audio analog of <a href="graphics.html#GraphicLoader" class="code">GraphicLoader</a>&mdash;it reads from audio files of various formats and transforms them into <a href="#SoundBuffer" class="code">SoundBuffer</a>s for your game's consumption.</p>
+<p>You cannot instantiate a <tt>SoundLoader</tt> directly, and should not try to <a href="subcritical.html#Construct">Construct</a> one, since you won't know what formats the returned SoundLoader can load. Instead, you should <a href="subcritical.html#Construct">Construct</a> a specific loader (such as <a href="vorbis.html#VorbisLoader">VorbisLoader</a>) and use that.</p>
+<dl>
+<dt class="code"><a name="SoundLoader:Load" /><i>sound</i> = <i>loader</i>:Load(<i>path</i>)
+<i>sound</i>,<i>othersound</i>,... = <i>loader</i>:Load(<i>path</i>, <i>otherpath</i>, ...)
+<i>sound</i> = assert(<i>loader</i>:Load(<i>path</i>))</dt>
+<dd>Tries to load the sound located at <i>path</i> (see <a href="subcritical.html#ConstructPath">SCPath</a>) in a format this <tt>SoundLoader</tt> understands. If this sound is important, you may want to assert it as shown above, but a little fault tolerance here is probably in order. (Sound can add to a game's atmosphere greatly, but should lack thereof break the game?)</dd>
+</dl>
+<h3 class="code"><a name="SoundMaster" />SoundMaster</h3>
+<p>A <tt>SoundMaster</tt> is a category of object that attaches to a slave <a href="#SoundStream" class="code">SoundStream</a> at construction time and... does something with it. What it does is specific to the implementing object.</p>
+<p><tt>SoundMaster</tt> has no methods or other useful attributes for Lua code, and is of no use to anyone except someone implementing something that fits its paradigm.</p>
+<h3 class="code"><a name="SoundDevice" />SoundDevice : <a href="#SoundMaster" class="code">SoundMaster</a></h3>
+<p><tt>SoundDevice</tt> is the obvious application of <tt>SoundMaster</tt>. It plays the attached <a href="#SoundStream" class="code">SoundStream</a> through some kind of sound hardware.</p>
+<p><tt>SoundDevice</tt> has no methods or other useful attributes for Lua code. Once it is constructed, it must merely be kept around. If you want easily-controlled "sound effects" like you've probably been expecting for the last several classes, attach a <tt>SoundDevice</tt> to a <a href="#SoundMixer" class="code">SoundMixer</a>.</p>
+<dl>
+<dt class="code"><i>device</i> = SubCritical.Construct("SoundDevice", <i>some_stream</i>)</dt>
+</dl>
+<h3 class="code"><a name="SoundStream" />SoundStream</h3>
+<p>A <tt>SoundStream</tt> is a stream of sound. (With me so far?) It produces audio continuously, as long as something is drawing audio out of it (a <tt>SoundMaster</tt>, probably).</p>
+<p>It can represent, for example, a stream of audio (this is how music is intended to be implemented), or even something relatively complicated like a <a href="#SoundMixer">mixer</a>.</p>
+<dl>
+<dt class="code"><i>samplerate</i> = <i>stream</i>:GetFramerate()</dt>
+<dd>Returns the frames-per-second of this <i class="code">stream</i>. (Common values are 32000, 44100, and 48000.)</dd>
+</dl>
+<h3 class="code"><a name="SoundMixer" />SoundMixer : <a href="#SoundStream" class="code">SoundStream</a></h3>
+<p><tt>SoundMixer</tt> is where the action is. It's very powerful. It has a fixed number of sound channels, each with a fixed-size command queue. At a given moment, a channel can be playing a <a href="#SoundBuffer" class="code">SoundBuffer</a>, a <a href="#SoundStream" class="code">SoundStream</a>, or silence. It can play buffers/streams at different rates (which can be changed after the play command is issued), and provides full control over both volume and stereo panning with pan matrices.</p>
+<dl>
+<dt class="code"><i>mixer</i> = SubCritical.Construct("SoundMixer", <i>channels</i>, <i>qlen</i>, <i>samplerate</i>)</dt>
+<dd>Creates a <tt>SoundMixer</tt> with the given number of channels, channel command queue depth, and sample rate. At a given time, only <i class="code">qlen</i>-1 unexecuted commands can be in a channel's command queue.</dd>
+<dd><i class="code">channels</i> and <i class="code">qlen</i> must both be powers of 2. <i class="code">channels</i> must be >= 1, and <i class="code">qlen</i> must be >= 2. (Future revisions to SoundMixer may round up to the nearest valid value.)</dd>
+<dd>Making <i class="code">samplerate</i> a user-controllable option is a good idea. Different sound cards may output at 22050Hz, 32000Hz, 44100Hz, 48000Hz, or even higher (or lower) samplerates, and maximum quality can be attained by outputting at the same samplerate as the sound card.</dd>
+<dt class="code"><i>numchannels</i> = <i>mixer</i>:GetNumChannels()</dt>
+<dd>Return the number of channels this mixer has. This is always >= the number you asked for at construction time.</dd>
+<dt class="code"><i>success</i> = <i>mixer</i>:Play(<i>channel</i>, <i>command</i>)
+<i>success</i> = <i>mixer</i>:Stop(<i>channel</i>, <i>command</i>)</dt>
+<dd>Both of these functions add a <i class="code">command</i> to <i class="code">channel</i>'s command queue. (<i class="code">channel</i> is numbered starting from 1, Lua-style.)</dd>
+<dd>Both of these functions return true on success, false on queueing error (always a full queue), and throw an error on a malformed <i class="code">command</i> or an invalid <i class="code">channel</i>.</dd>
+<dd>Command is a table, containing the following fields:<dl>
+<dt class="code">sound</dt>
+<dd>Optional. Ignored by <tt>Stop</tt>. If present, should be a <tt>SoundBuffer</tt> or <tt>SoundStream</tt>, which will replace the currently playing source (if any) when this command is executed. (resetting the pan matrix, playback rate, etc. to defaults unless new ones are specified in the same table.)</dd>
+<dd><b>DO NOT</b> allow the object in question to be garbage collected while it could still be in use! (This is as simple as keeping a reference around somewhere, such as in a variable.)</dd>
+<dt class="code">repeats</dt>
+<dd>Optional. Ignored unless accompanied by <tt>sound</tt>. If present, and <tt>sound</tt> is a <tt>SoundBuffer</tt>, the number of times to repeat playback of <tt>sound</tt>.</dd>
+<dt class="code">pan</dt>
+<dd>Optional. Not ignored by <tt>Stop</tt> but it's silly to put it in. Changes the pan matrix in use by the channel. (If <tt>sound</tt> is provided, this will play <tt>sound</tt> with the provided pan matrix, otherwise it will change the pan matrix of the currently playing sound.)</dd>
+<dd><tt>pan</tt> should be a table with 1, 2, or 4 elements, all numbers >= -4 or so and <= 4 or so. If it contains 1 element, both channels of the source will be amplified by that factor. If it contains 2 elements, the left channel will be amplified by the first factor and the right channel by the second. If it contains 4 elements, the sound output is determined by the following pseudocode:</dd>
+<dd><pre>left_output = left_source * pan[1] + right_source * pan[2]
+right_output = left_source * pan[3] + right_source * pan[4]</pre></dd>
+<dt class="code">rate</dt>
+<dd>The playback rate of the source. (If <tt>sound</tt> is provided, this will play <tt>sound</tt> at the given rate, otherwise it will change the rate of the currently playing sound.)</dd>
+<dd>Should be > 0 and <= 256. 1 = normal speed, < 1 = slower, > 1 = faster.</dd>
+<dt class="code">delay</dt>
+<dd>The delay, in seconds, between reaching this part of the command queue and actually executing its command. This has precision down to individual samples.</dd>
+<dt class="code">flag1
+flag2
+flag3
+flag4</dt>
+<dd>If set to a non-false value, set the corresponding flag to <tt>true</tt> upon <i>executing</i> (not reaching) this command. (See <a href="#SoundMixer:TestFlag" class="code">TestFlag</a>.)</dd>
+</dl></dd>
+<dt class="code"><i>success</i> = <i>mixer</i>:ClearQueue(<i>channel</i>)</dt>
+<dd>Inserts a <tt>ClearQueue</tt> command into <i class="code">channel</i>'s command queue. <i class="code">channel</i> is constantly searching its entire queue for a <tt>ClearQueue</tt> command and if it sees one it deletes all commands up to and including that command from its queue. (You can call <tt>Play</tt>, etc. immediately after the <tt>ClearQueue</tt> and it will be as if <tt>ClearQueue</tt> was instantaneous. It is this complicated due to the lockless implementation of threading SubCritical employs.)</dd>
+<dd>Note that this command can actually fail due to an overfull queue!</dd>
+<dt class="code"><i>flag</i> = <i>mixer</i>:TestFlag(<i>channel</i>, <i>flag</i>)</dt>
+<dd>Returns true if <i class="code">flag</i> is set in <i class="code">channel</i>, clearing it in the process.</dd>
+</dl>
+<h3 class="code"><a name="WAVLoader" />WAVLoader : <a href="#SoundLoader">SoundLoader</a></h3>
+<p><tt>WAVLoader</tt> reads Windows WAVE files. Only 1- and 2-channel 8- or 16-bit WAVEs are supported.</p>
+<p><tt>WAVLoader</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>flac_loader</i> = SubCritical.Construct("WAVLoader")</dt>
+</dl>
+<h3 class="code"><a name="WAVStream">WAVStream : <a href="#SoundStream">SoundStream</a></h3>
+<p>A stream of audio data from a Windows WAVE file. Only uncompressed 1- and 2-channel 8- or 16-bit PCM WAVEs are supported. The stream loops back to the beginning of the WAVE file upon reaching the end.</p>
+<p><tt>WAVStream</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>stream</i> = SubCritical.Construct("WAVStream", <i>path</i>)</dt>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

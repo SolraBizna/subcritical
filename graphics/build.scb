@@ -1,0 +1,10 @@
+-- -*- lua -*-
+
+targets = {
+   ["graphics"]={"graphics.cc","tables.cc","sci.cc","loader.cc","dumper.cc","primitives.cc"},
+}
+
+install = {
+   headers={"graphics.h"},
+   packages={"graphics"},
+}

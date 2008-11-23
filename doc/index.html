@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1>Setup</h1>
+<p>To create a SubCritical game, create a file with a <tt>scg</tt> extension. This file will be the "main" chunk of your game. At the top of the file, put:</p>
+<pre>gamelicense = "<i>license</i>"
+require "subcritical"</pre>
+<p>It is vital that these lines be before any other code. Doing this ensures that your game has a fair chance of running the same from platform to platform.</p>
+<p>Replace <i class="code">license</i> with one of:</p>
+<dl>
+<dt><tt>GPL</tt></dt>
+<dd>Your game's license permits linking with the GPL, and does not allow linking with "proprietary" licenses. (Example: GPL)</dd>
+<dt><tt>Compatible</tt></dt>
+<dd>Your game's license does not have any linking restrictions, and is otherwise compatible with the GPL. (Example: LGPL, BSD license, public domain)</dd>
+<dt><tt>Incompatible</tt></dt>
+<dd>Your game conflicts with the GNU GPL, or is restricted from dynamically linking with GPL code. (Example: All non-Open licenses)</dd>
+</dl>
+<p>It is recommended that games be released under the LGPL (which qualifies as <tt>Compatible</tt> above) in order to be as flexible as possible. Some packages or libraries may become unavailable depending on which license you've chosen.</p>
+<p>NOTE: Specifying a license in this way is NOT legally binding. You must also separately indicate, in a human-readable fashion (such as a <tt>COPYING</tt> or <tt>LICENCE</tt> file and/or boilerplate), the exact terms of the license of your game. Additionally, a Compatible game can and will cause GPL and Incompatible packages to be loaded at the same time. It is assumed that, since GPL and Incompatible code is not "touching," this is permitted. See <a href="license.html">license.html</a>.</p>
+<p>You can omit the <i class="code">license</i> line above, but SubCritical will persistently warn you that your game is not licensed. If it is omitted, SubCritical will assume a <tt>Compatible</tt> license.</p>
+<p>If you change <tt>gamelicense</tt> later, SubCritical will IGNORE the change.</p>
+<h1>Contents</h1>
+<ul>
+<li><a href="subcritical.html"><tt>SubCritical</tt> Lua module</a> (how to get the below objects in the first place)</li>
+<li>Objects (<tt><a href="subcritical.html">SubCritical</a>.<a href="subcritical.html#Construct">Construct</a>()</tt>)<ul>
+<li><a href="core.html#Object" class="code">Object</a><ul>
+<li><a href="graphics.html#Drawable" class="code">Drawable</a><ul>
+<li><a href="graphics.html#Graphic" class="code">Graphic</a></li>
+<li><a href="graphics.html#GraphicsDevice" class="code">GraphicsDevice</a><ul>
+<li><a href="sdl.html#SDLGraphics" class="code">SDLGraphics</a></li>
+</ul></li>
+</ul></li>
+<li><a href="freetype.html#FreetypeFont" class="code">FreetypeFont</a></li>
+<li><a href="graphics.html#Frisket" class="code">Frisket</a></li>
+<li><a href="graphics.html#GraphicDumper" class="code">GraphicDumper</a><ul>
+<li><a href="jpeg.html#JPEGDumper" class="code">JPEGDumper</a></li>
+<li><a href="png.html#PNGDumper" class="code">PNGDumper</a></li>
+</ul></li>
+<li><a href="graphics.html#GraphicLoader" class="code">GraphicLoader</a><ul>
+<li><a href="gif.html#GIFLoader" class="code">GIFLoader</a></li>
+<li><a href="jpeg.html#JPEGLoader" class="code">JPEGLoader</a></li>
+<li><a href="png.html#PNGLoader" class="code">PNGLoader</a></li>
+</ul></li>
+<li><a href="socket.html#ListenSocket" class="code">ListenSocket</a><ul>
+<li><a href="socket.html#ListenSocketDgram" class="code">ListenSocketDgram</a><ul>
+<li><a href="ipsocket.html#UDPListenSocket" class="code">UDPListenSocket</a></li>
+</ul></li>
+<li><a href="socket.html#ListenSocketStream" class="code">ListenSocketStream</a><ul>
+<li><a href="ipsocket.html#TCPListenSocket" class="code">TCPListenSocket</a></li>
+</ul></li>
+</ul></li>
+<li><a href="array.html" class="code">PackedArray*</a></li>
+<li><a href="core.html#Path" class="code">Path</a></li>
+<li><a href="random.html#RNG" class="code">RNG</a><ul>
+<li><a href="random.html#SFMT19937" class="code">SFMT19937</a></li>
+</ul></li>
+<li><a href="socket.html#Socket" class="code">Socket</a><ul>
+<li><a href="socket.html#ConnectedSocket" class="code">ConnectedSocket</a><ul>
+<li><a href="socket.html#SocketDgram" class="code">SocketDgram</a><ul>
+<li><a href="ipsocket.html#UDPSocket" class="code">UDPSocket</a></li>
+</ul></li>
+<li><a href="socket.html#SocketStream" class="code">SocketStream</a><ul>
+<li><a href="ipsocket.html#TCPSocket" class="code">TCPSocket</a></li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li><a href="sound.html#SoundBuffer" class="code">SoundBuffer</a><ul>
+<li><a href="sound.html#MonoSoundBuffer" class="code">MonoSoundBuffer</a></li>
+<li><a href="sound.html#StereoSoundBuffer" class="code">StereoSoundBuffer</a></li>
+</ul></li>
+<li><a href="sound.html#SoundLoader" class="code">SoundLoader</a><ul>
+<li><a href="flac.html#FLACLoader" class="code">FLACLoader</a></li>
+<li><a href="vorbis.html#VorbisLoader" class="code">VorbisLoader</a></li>
+<li><a href="sound.html#WAVLoader" class="code">WAVLoader</a></li>
+</ul></li>
+<li><a href="sound.html#SoundMaster" class="code">SoundMaster</a><ul>
+<li><a href="sound.html#SoundDevice" class="code">SoundDevice</a><ul>
+<li><a href="sdl.html#SDLSound" class="code">SDLSound</a></li>
+</ul></li>
+</ul></li>
+<li><a href="sound.html#SoundStream" class="code">SoundStream</a><ul>
+<li><a href="flac.html#FLACStream" class="code">FLACStream</a></li>
+<li><a href="sound.html#SoundMixer" class="code">SoundMixer</a></li>
+<li><a href="vorbis.html#VorbisStream" class="code">VorbisStream</a></li>
+<li><a href="sound.html#WAVStream" class="code">WAVStream</a></li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>Utilities (<tt><a href="subcritical.html#util">SCUtil</a>.*</tt>)<ul>
+<li><a href="graphics.html#CompileCoords" class="code">CompileCoords</a></li>
+<li><a href="graphics.html#CompileIndices" class="code">CompileIndices</a></li>
+<li><a href="serialize.html#Dehydrate" class="code">Dehydrate</a></li>
+<li><a href="effects.html#Flip" class="code">Flip</a></li>
+<li><a href="timing.html#GetTime" class="code">GetTime</a></li>
+<li><a href="timing.html#GetWallTime" class="code">GetWallTime</a></li>
+<li><a href="serialize.html#GoodChecksum" class="code">GoodChecksum</a></li>
+<li><a href="serialize.html#GoodChecksumHex" class="code">GoodChecksumHex</a></li>
+<li><a href="effects.html#MakeFrisketDirectly" class="code">MakeFrisketDirectly</a></li>
+<li><a href="effects.html#MakeFrisketFromAlpha" class="code">MakeFrisketFromAlpha</a></li>
+<li><a href="effects.html#MakeFrisketFromGrayscale" class="code">MakeFrisketFromGrayscale</a></li>
+<li><a href="effects.html#MakeFrisketFromGrayscaleQuickly" class="code">MakeFrisketFromGrayscaleQuickly</a></li>
+<li><a href="effects.html#MirrorHorizontal" class="code">MirrorHorizontal</a></li>
+<li><a href="effects.html#MirrorVertical" class="code">MirrorVertical</a></li>
+<li><a href="serialize.html#QuickChecksum" class="code">QuickChecksum</a></li>
+<li><a href="serialize.html#QuickChecksumHex" class="code">QuickChecksumHex</a></li>
+<li><a href="serialize.html#Rehydrate" class="code">Rehydrate</a></li>
+<li><a href="effects.html#Render" class="code">Render</a></li>
+<li><a href="effects.html#RenderPreCompressed" class="code">RenderPreCompressed</a></li>
+<li><a href="effects.html#RotateLeft" class="code">RotateLeft</a></li>
+<li><a href="effects.html#RotateRight" class="code">RotateRight</a></li>
+<li><a href="effects.html#ScaleBest" class="code">ScaleBest</a></li>
+<li><a href="effects.html#ScaleFast" class="code">ScaleFast</a></li>
+<li><a href="timing.html#Sleep" class="code">Sleep</a></li>
+</ul></li>
+</ul>
+</body>
+</html>

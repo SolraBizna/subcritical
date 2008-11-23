@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>random</tt> package</h1>
+<p><tt>random</tt> contains no utilities.</p>
+<h2>License</h2>
+<p>The <tt>random</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Classes</h2>
+<h3 class="code"><a name="RNG" />RNG</h3>
+<p>An instance of <tt>RNG</tt> encapsulates a stream of random numbers. Any two <tt>RNG</tt>s of the same type initialized with the same seed(s) will give the same sequence of random numbers on all platforms.</p>
+<p>If this package is installed, SubCritical replaces Lua's <tt>math.random</tt> and <tt>math.randomseed</tt> functions with equivalent versions that use the "best" available RNG instead. (The starting random seed is a single 1.)</p>
+<dl>
+<dt class="code"><i>rng</i> = SubCritical.Construct("RNG", <i>seeds...</i>)</dt>
+<dd><i class="code">seeds</i> is a sequence of one or more integers. Each will be both clamped to the range [0,4294967295] and rounded to a nearby integer in an undefined way. (For maximum compatibility, provide only numbers that will not be changed by either operation.)</dd>
+<dd>One could use a text string as a random seed like so:</dd>
+<dd><pre class="code">function bytes(str)
+  local ret = {}
+  for char in str:gmatch(".") do
+    ret[#ret+1] = char:byte()
+  end
+  return unpack(ret)
+end
+-- ...
+rng = SC.Construct("RNG", bytes(my_string))</pre></dd>
+<dd>Note that if you are hoping to get the same sequence of random numbers at both ends of a network socket (even if both ends are the same platform), you should Construct a <i>specific type</i> of RNG. For example, construct a generic RNG at the server end and use <i class="code">rng</i><tt>:</tt><a href="core.html#Object:Identity">Identity</a><tt>()</tt> to transmit its class for specific instantiation at the client end. (Or just construct <a href="#SFMT19937" class="code">SFMT19937</a> directly instead.)</dd>
+<dt class="code"><i>number</i> = <i>rng</i>:Random()</dt>
+<dd>Returns a random number such that 0 <= <i class="code">number</i> < 1.</dd>
+<dt class="code"><i>number</i> = <i>rng</i>:Random(<i>max</i>)</dt>
+<dd>Returns a random integer such that 1 <= <i class="code">number</i> <= <i class="code">max</i>.</dd>
+<dt class="code"><i>number</i> = <i>rng</i>:Random(<i>min</i>, <i>max</i>)</dt>
+<dd>Returns a random integer such that <i class="code">min</i> <= <i class="code">number</i> <= <i class="code">max</i>.</dd>
+</dl>
+<h3 class="code"><a name="SFMT19937">SFMT19937</a> : <a href="#RNG">RNG</a></h3>
+<p><tt>SFMT19937</tt> is a interface to the reference implementation of Mutsuo Saito's and Makoto Matsumoto's <a href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/index.html">SIMD-oriented Fast Mersenne Prime Twister</a> with a period of 2<sup>19937</sup>-1. (This is a VERY big number, so this is likely to be sufficient for any SubCritical games.) It has good statistical properties, and good performance. The adventurous may try their hand at compiling the included AltiVec- or SSE2-enabled codepaths. (The machine this package was developed on is capable of neither.)</p>
+<dl>
+<dt class="code"><i>rng</i> = SubCritical.Construct("SFMT19937", <i>seeds...</i>)</dt>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

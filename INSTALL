@@ -1,0 +1,30 @@
+SubCritical's build system is functional, but incomplete. To build and install
+SubCritical, first, install Lua 5.1 or later. (see: http://www.lua.org/)
+
+From inside the top-level SubCritical source directory:
+
+$ ./build_all.sh
+
+You will be prompted with questions about your build environment; answer the
+prompts. If you make a mistake, you can delete the .scbuild file from your
+HOME directory to reconfigure the build. (Be sure to run clean_all.sh
+afterward.)
+
+You can build individual packages, including packages not included in the
+SubCritical tree, by running scbuild.lua manually:
+
+$ cd funky-subcritical-package/
+$ lua ../subcritical-0b3/scbuild.lua all install
+
+The following packages have external dependencies:
+
+  flac (requires a libFLAC 1.2.1)
+  freetype (requires a fairly recent FreeType 2)
+  gif (requires a fairly recent giflib, or a compatible replacement)
+  jpeg (requires a fairly recent IJG jpeglib)
+  png (requires a fairly recent libpng 1.2 and zlib)
+  sdl (requires a fairly recent SDL 1.2)
+  vorbis (requires fairly recent libogg and libvorbis)
+
+You may also want to install the fontman package and the Liberation fonts, see
+fontman/README for instructions on how to do that.

@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>flac</tt> package</h1>
+<h2>License</h2>
+<p>The <tt>flac</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Classes</h2>
+<h3 class="code"><a name="FLACLoader" />FLACLoader : <a href="sound.html#SoundLoader">SoundLoader</a></h3>
+<p><tt>FLACLoader</tt> reads FLAC files. Only 1- and 2-channel 8- or 16-bit FLACs are supported.</p>
+<p><tt>FLACLoader</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>flac_loader</i> = SubCritical.Construct("FLACLoader")</dt>
+</dl>
+<h3 class="code"><a name="FLACStream">FLACStream : <a href="sound.html#SoundStream">SoundStream</a></h3>
+<p>A stream of audio data from a FLAC file. Only 1- and 2-channel 8- or 16-bit FLACs are supported. The stream loops back to the position denoted by the LOOP_START tag (if present; the beginning if absent) upon reaching the position denoted by the LOOP_END tag (if present; the end if absent).</p>
+<dl>
+<dt class="code"><i>stream</i> = SubCritical.Construct("FLACStream", <i>path</i>)</dt>
+<dd>Create a <tt>FLACStream</tt> from the file at <i>path</i>.</dd>
+<dt class="code"><i>tags</i> = <i>stream</i>:GetTags()</dt>
+<dd><i class="code">tags</i> is an array of strings of the form "key=value" containing all the "Vorbis comment" / "FLAC tag" information in the source file.</dd>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

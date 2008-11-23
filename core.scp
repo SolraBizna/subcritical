@@ -1,0 +1,7 @@
+license Compatible
+version 0b3 core
+
+// This definition is required, and is treated specially.
+class Object
+
+class Path concrete

@@ -1,0 +1,5 @@
+license Compatible
+version 0b3 core
+
+class RNG tangible
+class SFMT19937 : RNG concrete

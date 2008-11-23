@@ -1,0 +1,13 @@
+license Compatible
+version 0b3
+
+// If your game is not GPL'd, please add the following notice somewhere in the
+// game (such as the title screen) in order to comply with the FreeType
+// license:
+
+// Portions of this software are copyright (C) 1996-2001, 2002, 2003, 2004,
+// 2005, 2006, 2007 The FreeType Project (www.freetype.org). All rights
+// reserved.
+
+depend Frisket
+class FreetypeFont concrete

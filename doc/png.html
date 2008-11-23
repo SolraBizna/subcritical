@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>png</tt> package</h1>
+<p><tt>png</tt> contains no utilities.</p>
+<h2>License</h2>
+<p>The <tt>png</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Classes</h2>
+<h3 class="code"><a name="PNGLoader" />PNGLoader : <a href="graphics.html#GraphicLoader">GraphicLoader</a></h3>
+<p><tt>PNGLoader</tt> loads all known forms of PNG file.</p>
+<p><tt>PNGLoader</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>png_loader</i> = SubCritical.Construct("PNGLoader")</dt>
+</dl>
+<h3 class="code"><a name="PNGDumper" />PNGDumper : <a href="graphics.html#GraphicDumper">GraphicDumper</a></h3>
+<p><tt>PNGLoader</tt> writes PNG files.</p>
+<dl>
+<dt class="code"><i>png_dumper</i> = SubCritical.Construct("PNGDumper")</dt>
+<dd>Prepares a <tt>PNGDumper</tt>.</dd>
+<dt class="code"><i>table</i> = <i>dumper</i>:ListFilters()</dt>
+<dd>Returns a table showing (both as an array and as a map) all possible filters that can be passed to SetFilters.</dd>
+<dt class="code"><i>dumper</i>:SetFilters(<i>filter</i>[, <i>otherfilter</i>[, ...]])</dt>
+<dd>Set the filters to try while compressing the image. You can save compression time by trying fewer filters in exchange for larger file size.</dd>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

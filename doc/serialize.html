@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>serialize</tt> package</h1>
+<p><tt>serialize</tt> depends on <a href="graphics.html#Graphic" class="code">Graphic</a></p>
+<p><tt>serialize</tt> contains no classes.</p>
+<h2>License</h2>
+<p>The <tt>serialize</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Utility functions</h2>
+<dl>
+<dt class="code"><a name="Dehydrate" /><i>celduin</i> = SCUtil.Dehydrate(<i>value</i>)</dt>
+<dd><i class="code">value</i> is nil, a boolean, a number, a string, or a table. If it is a table, it can only contain booleans, numbers, strings, and other tables as keys. Duplicate references and circular references are handled correctly &mdash; you will get a semantically identical table from a later <a href="#Rehydrate" class="code">Rehydrate</a> on the same <i class="code">celduin</i>. <i class="code">celduin</i> will be a string, and will almost certainly contain NULs.</dd>
+<dt class="code"><a name="Rehydrate" /><i>value</i> = SCUtil.Rehydrate(<i>celduin</i>)</dt>
+<dd>The inverse of <a href="#Dehydrate" class="code">Dehydrate</a>. It's recommended that you use one of the checksumming functions in this package to verify the integrity of a <i class="code">celduin</i> before rehydration, since the encoding contains no redundancy and <tt>Rehydrate</tt> will raise an error on a malformed <i class="code">celduin</i>.</dd>
+<dt class="code"><a name="QuickChecksum" /><i>sum</i> = SCUtil.QuickChecksum(<i>message</i>)
+<a name="QuickChecksumHex" /><i>printable_sum</i> = SCUtil.QuickChecksumHex(<i>message</i>)</dt>
+<dd>Calculates the checksum of <i class="code">message</i> in accordance with the same CRC32 function as is used by <a href="http://tools.ietf.org/html/rfc1952">gzip</a>.</dd>
+<dd><tt>QuickChecksum</tt> will return a 4-byte compact binary encoding while <tt>QuickChecksumHex</tt> will return 8 (capitalized) hexadecimal digits.</dd>
+<dt class="code"><a name="GoodChecksum" /><i>sum</i> = SCUtil.GoodChecksum(<i>message</i>)
+<a name="GoodChecksumHex" /><i>printable_sum</i> = SCUtil.GoodChecksumHex(<i>message</i>)</dt>
+<dd>Calculates the SHA-256 digest of <i class="code">message</i>.</dd>
+<dd><tt>GoodChecksum</tt> will return a 32-byte compact binary encoding while <tt>GoodChecksumHex</tt> will return 64 (capitalized) hexadecimal digits.</dd>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

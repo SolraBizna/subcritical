@@ -1,0 +1,9 @@
+license Compatible
+version 0b3 core
+
+utility Dehydrate
+utility Rehydrate
+utility QuickChecksum
+utility QuickChecksumHex
+utility GoodChecksum
+utility GoodChecksumHex

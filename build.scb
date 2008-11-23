@@ -1,0 +1,28 @@
+-- -*- lua -*-
+
+-- This is a SubCritical build script. It describes the package(s) here to
+-- scbuild. It is a Lua script, so you can use fancy platform-specific logic
+-- to determine what gets build. (See config_question)
+
+-- *** BUILD TARGETS ***
+-- Most build scripts will only have one entry here (that of the package being
+-- compiled)
+targets = {
+   ["subcritical_helper"]={"helper.cc"},
+   ["core"]={"core.cc"},
+}
+
+-- *** INSTALLATION FILES ***
+install = {
+   -- Header files to install. These will be installed to the location scbuild
+   -- expects to find them (with some twiddling, to support Windows).
+   headers={"core.h"},
+   -- Packages to install. Normally, there will only be one entry here (same as
+   -- the one build target above). To support Windows, you should only have one
+   -- package built here.
+   packages={"core"},
+   -- Lua packages to install. Normally, you won't put these in! (Unless you're
+   -- abusing scbuild as a generic Lua package build system...)
+   lcpackages={"subcritical_helper"},
+   lpackages={"subcritical.lua"},
+}

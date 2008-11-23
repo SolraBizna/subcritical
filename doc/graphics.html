@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>graphics</tt> package</h1>
+<h2>License</h2>
+<p>The <tt>graphics</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Classes</h2>
+<h3 class="code"><a name="Frisket" />Frisket</h3>
+<p>A <tt>Frisket</tt> is a pure alpha channel with no color information of its own. It is usually used for text. See <a href="#Drawable:BlitFrisket" class="code">Drawable:BlitFrisket</a>.</p>
+<dl>
+<dt class="code"><a name="Frisket:GetSize" /><i>width</i>,<i>height</i> = <i>frisket</i>:GetSize()</dt>
+<dd>Returns the pixel dimensions of this <tt>Frisket</tt></dd>
+</dl>
+<h3 class="code"><a name="Drawable" />Drawable</h3>
+<p>A <tt>Drawable</tt> is, basically, an image. It normally comes in two flavors, <a href="#Graphic" class="code">Graphic</a> and <a href="#GraphicsDevice" class="code">GraphicsDevice</a>. Both flavors support all of the below code.</p>
+<dl>
+<dt class="code"><a name="Drawable:GetSize" /><i>width</i>,<i>height</i> = <i>drawable</i>:GetSize()</dt>
+<dd>Returns the pixel dimensions of this <tt>Drawable</tt></dd>
+<dt class="code"><a name="Drawable:Blit" /><i>destination</i>:Blit(<i>source</i>, [<i>source_x</i>, <i>source_y</i>, <i>source_w</i>, <i>source_h</i>,] <i>x</i>, <i>y</i>[, <i>alpha</i>])</dt>
+<dd>Draws <i class="code">source</i> (a <a href="#Drawable" class="code">Drawable</a>) on <i class="code">destination</i>, with the top-left corner at <i class="code">x,y</i>. If <i class="code">source_*</i> are provided, deal with that subset of <i class="code">source</i>. If <i class="code">alpha</i> is specified, draw it with the given level of opacity. (1 is opaque, 0 is fully transparent.)</dd>
+<dd>Note: Unlike the corresponding function in SDL, this function handles partially-transparent blitting of an image with an alpha channel.</dd>
+<dd>Note 2: It is perfectly reasonable for <i class="code">source</i> to be a <a href="#GraphicsDevice" class="code">GraphicsDevice</a>.</dd>
+<dt class="code"><a name="Drawable:BlitFrisket" /><i>destination</i>:BlitFrisket(<i>source</i>, [<i>source_x</i>, <i>source_y</i>, <i>source_w</i>, <i>source_h</i>,] <i>x</i>, <i>y</i>)</dt>
+<dd>Draws <i class="code">source</i> (a <a href="#Frisket" class="code">Frisket</a>) on <i class="code">destination</i>, with the top-left corner at <i class="code">x,y</i>. If <i class="code">source_*</i> are provided, deal with that subset of <i class="code">source</i>.</dd>
+<dd>This function uses the selected primitive color (see <a href="#Drawable:SetPrimitiveColor" class="code">SetPrimitiveColor</a>). If the primitive color is transparent, <i class="code">source</i>'s data is modulated appropriately.</dd>
+<dt class="code"><a name="Drawable:SetPrimitiveColor" /><i>drawable</i>:SetPrimitiveColor(<i>r</i>, <i>g</i>, <i>b</i>[, <i>a</i>])</dt>
+<dd>Sets the current "primitive color," which is used by <a href="#Drawable:DrawPoints" class="code">DrawPoints</a>, <a href="#Drawable:DrawLines" class="code">DrawLines</a>, <a href="#Drawable:DrawLineLoop" class="code">DrawLineLoop</a>, <a href="#Drawable:DrawLineStrip" class="code">DrawLineStrip</a>, <a href="#Drawable:DrawTriangles" class="code">DrawTriangles</a>, <a href="#Drawable:DrawTriangleStrip" class="code">DrawTriangleStrip</a>, <a href="#Drawable:DrawTriangleFan" class="code">DrawTriangleFan</a>, <a href="#Drawable:DrawRect" class="code">DrawRect</a>, and <a href="#Drawable:BlitFrisket" class="code">BlitFrisket</a>. If <i class="code">a</i> is not provided, full opacity (<tt>1</tt>) is assumed.</dd>
+<dt class="code"><a name="Drawable:DrawPoints" /><i>destination</i>:DrawPoints(<i>coords</i>, <i>diameter</i>)</dt>
+<dd>Draw points <i class="code">diameter</i> in diameter at every coordinate in <i class="code">coords</i> (a CoordArray, see <a href="#CompileCoords" class="code">CompileCoords</a>) using the current primitive color.</dd>
+<dd>Note: Points, and all other primitives, fully support alpha in the primitive color.</dd>
+<dd>Note 2: Currently, points are rendered as rectangles and lack subpixel precision. In the future, they may be rendered as circles and gain subpixel precision.</dd>
+<dt class="code"><a name="Drawable:DrawLines" /><i>destination</i>:DrawLines(<i>width</i>, <i>coords</i>, <i>indices</i>)</dt>
+<dd>Each pair of indices in <i class="code">indices</i> (an IndexArray, see <a href="#CompileIndices" class="code">CompileIndices</a>) designates two coordinate pairs in <i class="code">coords</i> (a CoordArray, see <a href="#CompileCoords" class="code">CompileCoords</a>) between which a <i class="code">width</i> (possibly non-integer) pixel wide line should be drawn using the current primitive color.</dd>
+<dd>Lines in SubCritical are drawn with subpixel precision, but not antialiased.</dd>
+<dd>If you wish to draw only a single line, the following code is more convenient:</dd>
+<dd><pre>local _i = SCUtil.CompileIndices{0,1}
+function draw_line(destination, width, x1, y1, x2, y2)
+  local c = SCUtil.CompileCoords{x1,y1,x2,y2}
+  return destination:DrawLines(width, c, _i)
+end</pre></dd>
+<dd>If you want to draw only straight horizontal or vertical lines, you should use <a href="#Drawable:DrawRect">DrawRect</a> instead, since its results are easier to control. (DrawLine might disagree with your expectations on exactly what pixels get filled.)</dd>
+<dd>Note: Lines, and all other primitives, fully support alpha in the primitive color.</dd>
+<dt class="code"><a name="Drawable:DrawLineStrip" /><i>destination</i>:DrawLineStrip(<i>width</i>, <i>coords</i>, <i>indices</i>)</dt>
+<dd>As with DrawLines, but <i class="code">indices</i> are handled differently. The first index does nothing on its own. All indices after it designate a line between themselves and the index before them. (Essentially, <i>indices</i> designates a continuous strip of lines, hence the name.)</dd>
+<dt class="code"><a name="Drawable:DrawLineLoop" /><i>destination</i>:DrawLineLoop(<i>width</i>, <i>coords</i>, <i>indices</i>)</dt>
+<dd>As with DrawLineStrip, with an additional line between the last and first indices.</dd>
+<dt class="code"><a name="Drawable:DrawTriangles" /><i>destination</i>:DrawTriangles(<i>coords</i>, <i>indices</i>)</dt>
+<dd>Each triple of indices in <i class="code">indices</i> (an IndexArray, see <a href="#CompileIndices" class="code">CompileIndices</a>) designates three coordinate pairs in <i class="code">coords</i> (a CoordArray, see <a href="#CompileCoords" class="code">CompileCoords</a>) which form a triangle that should be drawn with the current primitive color.</dd>
+<dd>Triangles in SubCritical are drawn with subpixel precision, but not antialiased. SubCritical uses a top-left fill convention, so abutting triangles will not have holes or overdraw.</dd>
+<dd>Note: Triangles, and all other primitives, fully support alpha in the primitive color.</dd>
+<dt class="code"><a name="Drawable:DrawTriangleStrip" /><i>destination</i>:DrawTriangleStrip(<i>coords</i>, <i>indices</i>)</dt>
+<dd>As with DrawTriangles, but <i class="code">indices</i> are handled differently. The first triple designates a triangle, then each index after that designates a new triangle between it and the two indices before it.</dd>
+<dt class="code"><a name="Drawable:DrawTriangleFan" /><i>destination</i>:DrawTriangleFan(<i>coords</i>, <i>indices</i>)</dt>
+<dd>As with DrawTriangles, but <i class="code">indices</i> are handled differently. The first triple designates a triangle, then each index after that designates a new triangle between it, the index before it, and the first index.</dd>
+<dt class="code"><a name="Drawable:DrawRect" /><i>destination</i>:DrawRect(<i>left</i>, <i>top</i>, <i>width</i>, <i>height</i>)</dt>
+<dd>Designates a rectangle to be drawn in the primitive color. (This function's interface was changed as of 0b1.)</dd>
+<dt class="code"><a name="Drawable:SetClipRect" /><i>drawable</i>:SetClipRect(<i>x</i>, <i>y</i>, <i>width</i>, <i>height</i>)</dt>
+<dd>Sets the clip rectangle of <i class="code">drawable</i>. No pixels outside the clip rectangle will change.</dd>
+<dt class="code"><a name="Drawable:TakeSnapshot" /><i>graphic</i> = <i>drawable</i>:TakeSnapshot()</dt>
+<dd>A convenience function that returns a <a href="#Graphic" class="code">Graphic</a> containing a copy of the current image data in <i class="code">drawable</i>. No drawing state is copied, only image data.</dd>
+</dl>
+<h3 class="code"><a name="Graphic" />Graphic : <a href="#Drawable">Drawable</a></h3>
+<p>A <tt>Graphic</tt> is a <a href="#Drawable" class="code">Drawable</a> whose lot in life is to eventually be blitted to other <a href="#Drawable" class="code">Drawable</a>s. See <a href="#Drawable:Blit" class="code">Drawable:Blit</a>.</p>
+<dl>
+<dt class="code"><a name="Graphic:OptimizeFor" /><i>graphic</i>:OptimizeFor(<i>drawable</i>)</dt>
+<dd>If necessary, converts <i class="code">graphic</i>'s internal pixel format for fast blitting to <i class="code">drawable</i>. This is normally done automatically, but you can do the work ahead of time with this function if you so choose. (It's not worth it.)</dd>
+</dl>
+<h3 class="code"><a name="GraphicsDevice" />GraphicsDevice : <a href="#Drawable">Drawable</a></h3>
+<p>A <tt>GraphicsDevice</tt> is a mild-mannered <a href="#Drawable" class="code">Drawable</a> by day and what the user actually sees by night.</p>
+<dl>
+<dt class="code"><i>device</i> = SubCritical.Construct("GraphicsDevice", <i>width</i>, <i>height</i>)
+<i>device</i> = SubCritical.Construct("GraphicsDevice", <i>width</i>, <i>height</i>, {[windowed=<i>is_windowed</i>,] [title=<i>window_title</i>]})</dt>
+<dd>Tries to construct and initialize a new <tt>GraphicsDevice</tt> of the given <i class="code">width</i> and <i class="code">height</i>. If <tt>windowed</tt>, try to create a windowed context instead of a fullscreen one. If <tt>title</tt> is specified, use <i class="code">window_title</i> instead of the device-specific default title.</dd>
+<dt class="code"><a name="GraphicsDevice:Update" /><i>device</i>:Update()
+<i>device</i>:Update(<i>x</i>, <i>y</i>, <i>width</i>, <i>height</i>)</dt>
+<dd>Copies the pixels inside the given rectangle (or, if none is specified, all pixels) to the screen, where the user can get at them. A common mistake is to forget to call this after you're finished blitting.</dd>
+<dt class="code"><a name="GraphicsDevice:GetEvent" /><i>event</i> = <i>device</i>:GetEvent{[wait=<i>should_wait</i>,] [relmouse=<i>should_relmouse</i>,] [textok=<i>is_textok</i>,]}</dt>
+<dd>If any events are available, return the next one as a table. If <tt>wait</tt> is true, don't return until an event becomes available. If <tt>relmouse</tt> is true, return relative mouse motion directly instead of keeping track of an absolute mouse position. If <tt>textok</tt> is true, process the user's keystrokes and give us every character they type.</dd>
+<dd>The returned table contains a "type" member denoting its type. Its structure is complicated. An example game included in this directory (<tt>printevents.scg</tt>) will print all received events, you can use it to determine the form of the specific events you're looking for.</dd>
+</dl>
+<h3 class="code"><a name="GraphicLoader" />GraphicLoader</h3>
+<p>An instance of <tt>GraphicLoader</tt> is poised to read from image files and give you nice, juicy <a href="#Graphic">Graphic</a>s to use in your game.</p>
+<p>You cannot instantiate a <tt>GraphicLoader</tt> directly, and should not try to <a href="subcritical.html#Construct">Construct</a> one, since you won't know what formats the returned GraphicLoader can load. Instead, you should <a href="subcritical.html#Construct">Construct</a> a specific loader (such as <a href="png.html#PNGLoader">PNGLoader</a>) and use that.</p>
+<dl>
+<dt class="code"><a name="GraphicLoader:Load" /><i>graphic</i> = <i>loader</i>:Load(<i>path</i>)
+<i>graphic</i>,<i>othergraphic</i>,... = <i>loader</i>:Load(<i>path</i>, <i>otherpath</i>, ...)
+<i>graphic</i> = assert(<i>loader</i>:Load(<i>path</i>))</dt>
+<dd>Tries to load the graphic located at <i>path</i> (see <a href="subcritical.html#ConstructPath">SCPath</a>) in a format this GraphicLoader understands. If this graphic is important, you may want to assert it (as shown above).</dd>
+</dl>
+<h3 class="code"><a name="GraphicDumper" />GraphicDumper</h3>
+<p>An instance of <tt>GraphicDumper</tt> is poised to save the contents of your <a href="#Drawable">Drawable</a>s in some wild new image format.</p>
+<p>You cannot instantiate a <tt>GraphicDumper</tt> directly, and should not try to <a href="subcritical.html#Construct">Construct</a> one, since you won't know what format the returned GraphicDumper will save in. Instead, you should <a href="subcritical.html#Construct">Construct</a> a specific dumper (such as <a href="png.html#PNGDumper">PNGDumper</a>) and use that.</p>
+<dl>
+<dt class="code">function <i>func</i>(<i>value</i>, data) ... end
+<a name="GraphicDumper:Dump" /><i>dumper</i>:Dump(<i>image</i>, <i>value</i>, <i>func</i>)</dt>
+<dd><i class="code">image</i> is any <a href="#Drawable" class="code">Drawable</a>, <i class="code">value</i> is anything at all, and <i class="code">func</i> is a function that will be called like <tt>func(value, <i>data</i>)</tt> where <i>data</i> is data to be written to the file. <i class="code">func</i> must return <tt>true</tt> (or some other true value) if the write succeeded.</dd>
+<dd>It is an amazing coincidence that it just so happens that this is how <tt>file:write</tt> behaves. For some Lua file, then, one could <tt><i>dumper</i>:Dump(<i>image</i>, <i>file</i>, <i>file</i>.write)</tt>. Total coincidence, of course.</dd>
+</dl>
+<h2>Utility functions</h2>
+<dl>
+<dt class="code"><a name="CompileCoords" /><i>coords</i> = SCUtil.CompileCoords(<i>table</i>)</dt>
+<dd>Returns a <tt>CoordArray</tt> suitable for passing to many of <a href="#Drawable" class="code">Drawable</a>'s drawing functions. <i class="code">table</i> should be an array directly containing coordinate pairs in the form of <tt>number</tt>s, and in particular must <b>not</b> be an array of <tt>table</tt>s.</dd>
+<dt class="code"><a name="CompileIndices" /><i>indices</i> = SCUtil.CompileIndices(<i>table</i>)</dt>
+<dd>Returns an <tt>IndexArray</tt> suitable for passing to many of <a href="#Drawable" class="code">Drawable</a>'s drawing functions. <i class="code">table</i> should be an array directly containing 0-based indices in the form of <tt>number</tt>s.</dd>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

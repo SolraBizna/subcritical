@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>ipsocket</tt> package</h1>
+<p><tt>ipsocket</tt> contains no utilities.</p>
+<h2>License</h2>
+<p>The <tt>ipsocket</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Classes</h2>
+<h3 class="code"><a name="TCPSocket" />TCPSocket : <a href="socket.html#SocketStream">SocketStream</a></h3>
+<p>A <a href="socket.html#SocketStream">SocketStream</a> based on TCP/IPv4.</p>
+<p><tt>TCPSocket</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>socket</i> = SubCritical.Construct("TCPSocket")
+<i>socket</i>:SetAddressPart("Host", <i>host</i>)
+<i>socket</i>:SetAddressPart("Port", <i>port</i>)
+<i>-- normally, you want to handle an error here more gracefully</i>
+assert(<i>socket</i>:ApplyAddress())</dt>
+</dl>
+<h3 class="code"><a name="TCPListenSocket" />TCPListenSocket : <a href="socket.html#ListenSocketStream">ListenSocketStream</a></h3>
+<p>A <a href="socket.html#ListenSocketStream">ListenSocketStream</a> based on TCP/IPv4.</p>
+<p><tt>TCPListenSocket</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>listen</i> = SubCritical.Construct("TCPListenSocket")
+<i>listen</i>:SetAddressPart("Host", "*") <i>-- * -> INADDR_ANY</i>
+<i>listen</i>:SetAddressPart("Port", <i>port</i>)
+<i>-- normally, you want to handle an error here more gracefully</i>
+assert(<i>listen</i>:ApplyAddress())</dt>
+</dl>
+<h3 class="code"><a name="UDPSocket" />UDPSocket : <a href="socket.html#SocketDgram">SocketDgram</a></h3>
+<p>A <a href="socket.html#SocketDgram">SocketDgram</a> based on UDP/IPv4.</p>
+<p><tt>UDPSocket</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>socket</i> = SubCritical.Construct("UDPSocket")
+<i>socket</i>:SetAddressPart("Host", <i>host</i>)
+<i>socket</i>:SetAddressPart("Port", <i>port</i>)
+<i>-- normally, you want to handle an error here more gracefully</i>
+assert(<i>socket</i>:ApplyAddress())</dt>
+</dl>
+<h3 class="code"><a name="UDPListenSocket" />UDPListenSocket : <a href="socket.html#ListenSocketDgram">ListenSocketDgram</a></h3>
+<p>A <a href="socket.html#ListenSocketDgram">ListenSocketDgram</a> based on UDP/IPv4.</p>
+<p><tt>UDPListenSocket</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>listen</i> = SubCritical.Construct("UDPListenSocket")
+<i>listen</i>:SetAddressPart("Host", "*") <i>-- * -> INADDR_ANY</i>
+<i>listen</i>:SetAddressPart("Port", <i>port</i>)
+<i>-- normally, you want to handle an error here more gracefully</i>
+assert(<i>listen</i>:ApplyAddress())</dt>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

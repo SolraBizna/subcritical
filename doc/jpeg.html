@@ -1,0 +1,30 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>jpeg</tt> package</h1>
+<p><tt>jpeg</tt> contains no utilities.</p>
+<h2>License</h2>
+<p>The <tt>jpeg</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Classes</h2>
+<h3 class="code"><a name="JPEGLoader" />JPEGLoader : <a href="graphics.html#GraphicLoader">GraphicLoader</a></h3>
+<p><tt>JPEGLoader</tt> loads color or grayscale JIF (<tt>*.jpg</tt> and <tt>*.jpeg</tt>) files.</p>
+<p><tt>JPEGLoader</tt> has no methods it didn't inherit.</p>
+<dl>
+<dt class="code"><i>jpeg_loader</i> = SubCritical.Construct("JPEGLoader")</dt>
+</dl>
+<h3 class="code"><a name="JPEGDumper" />JPEGDumper : <a href="graphics.html#GraphicDumper">GraphicDumper</a></h3>
+<p><tt>JPEGLoader</tt> writes progressive JIF files. The recommended extension for new JIF files is <tt>*.jpeg</tt>.</p>
+<dl>
+<dt class="code"><i>jpeg_dumper</i> = SubCritical.Construct("JPEGDumper")</dt>
+<dd>Prepares a <tt>JPEGDumper</tt>.</dd>
+<dt class="code"><i>dumper</i>:SetQuality(<i>quality</i>)</dt>
+<dd>Sets the quality of produced JPEG data on the standard 0-100 scale.</dd>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>
