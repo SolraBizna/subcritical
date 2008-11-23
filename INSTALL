@@ -18,7 +18,7 @@ $ lua ../subcritical-0b3/scbuild.lua all install
 
 The following packages have external dependencies:
 
-  flac (requires a libFLAC 1.2.1)
+  flac (requires libFLAC 1.2.1)
   freetype (requires a fairly recent FreeType 2)
   gif (requires a fairly recent giflib, or a compatible replacement)
   jpeg (requires a fairly recent IJG jpeglib)
