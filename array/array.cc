@@ -80,7 +80,7 @@ public:
     if(x < 0 || x >= width) return luaL_error(L, "array index 1 out of bounds");
     long y = (long)luaL_checknumber(L, 2);
     if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
-    lua_pushnumber(L, (lua_Number)array[x*width+y]);
+    lua_pushnumber(L, (lua_Number)array[x*height+y]);
     return 1;
   }
   virtual int Lua_Set(lua_State* L) throw() {
@@ -89,7 +89,7 @@ public:
     if(x < 0 || x >= width) return luaL_error(L, "array index 1 out of bounds");
     long y = (long)luaL_checknumber(L, 3);
     if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
-    array[x*width+y] = val;
+    array[x*height+y] = val;
     return 0;
   }
 private:
@@ -109,7 +109,7 @@ public:
     if(x < 0 || x >= width) return luaL_error(L, "array index 1 out of bounds");
     long y = (long)luaL_checknumber(L, 2);
     if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
-    long coord = x*width+y;
+    long coord = x*height+y;
     lua_pushboolean(L, array[coord/32] & (1<<(coord%32)));
     return 1;
   }
@@ -119,7 +119,7 @@ public:
     if(x < 0 || x >= width) return luaL_error(L, "array index 1 out of bounds");
     long y = (long)luaL_checknumber(L, 3);
     if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
-    long coord = x*width+y;
+    long coord = x*height+y;
     if(val)
       array[coord/32] |= 1<<(coord%32);
     else
@@ -134,7 +134,7 @@ private:
 template <class T> class PackedArray<T, 3> : public ProtoPackedArray {
 public:
   PackedArray(long dims[3])
-  : array((T*)calloc(dims[0]*dims[1]*dims[2],sizeof(T))), width(dims[0]), height(dims[1]), depth(dims[2]), widthheight(dims[0]*dims[1]) {
+    : array((T*)calloc(dims[0]*dims[1]*dims[2],sizeof(T))), width(dims[0]), height(dims[1]), depth(dims[2]), heightdepth(dims[1]*dims[2]) {
     if(!array) throw 0;
   }
   virtual ~PackedArray() { free(array); }
@@ -145,7 +145,7 @@ public:
     if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
     long z = (long)luaL_checknumber(L, 3);
     if(z < 0 || z >= depth) return luaL_error(L, "array index 3 out of bounds");
-    lua_pushnumber(L, (lua_Number)array[x*widthheight+y*height+z]);
+    lua_pushnumber(L, (lua_Number)array[x*heightdepth+y*height+z]);
     return 1;
   }
   virtual int Lua_Set(lua_State* L) throw() {
@@ -156,18 +156,18 @@ public:
     if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
     long z = (long)luaL_checknumber(L, 4);
     if(z < 0 || z >= depth) return luaL_error(L, "array index 3 out of bounds");
-    array[x*widthheight+y*height+z] = val;
+    array[x*heightdepth+y*depth+z] = val;
     return 0;
   }
 private:
   T* array;
-  long width, height, depth, widthheight;
+  long width, height, depth, heightdepth;
 };
 
 template <> class PackedArray<bool, 3> : public ProtoPackedArray {
 public:
   PackedArray(long dims[3])
-  : array((uint32_t*)calloc((dims[0]*dims[1]*dims[2]+31)/32,sizeof(uint32_t))), width(dims[0]), height(dims[1]), depth(dims[2]), widthheight(dims[0]*dims[1]) {
+    : array((uint32_t*)calloc((dims[0]*dims[1]*dims[2]+31)/32,sizeof(uint32_t))), width(dims[0]), height(dims[1]), depth(dims[2]), heightdepth(dims[0]*dims[1]) {
     if(!array) throw 0;
   }
   virtual ~PackedArray() { free(array); }
@@ -178,7 +178,7 @@ public:
     if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
     long z = (long)luaL_checknumber(L, 3);
     if(z < 0 || z >= depth) return luaL_error(L, "array index 3 out of bounds");
-    long coord = x*widthheight+y*height+z;
+    long coord = x*heightdepth+y*height+z;
     lua_pushboolean(L, array[coord/32] & (1<<(coord%32)));
     return 1;
   }
@@ -190,7 +190,7 @@ public:
     if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
     long z = (long)luaL_checknumber(L, 4);
     if(z < 0 || z >= depth) return luaL_error(L, "array index 3 out of bounds");
-    long coord = x*widthheight+y*height+z;
+    long coord = x*heightdepth+y*height+z;
     if(val)
       array[coord/32] |= 1<<(coord%32);
     else
@@ -199,7 +199,7 @@ public:
   }
 private:
   uint32_t* array;
-  long width, height, depth, widthheight;
+  long width, height, depth, heightdepth;
 };
 
 #define sa(name, type, order, sizeop) \
