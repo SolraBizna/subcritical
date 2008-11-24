@@ -453,8 +453,8 @@ local function construct(class, ...)
    return class.constructor(...)
 end
 
-local function ck_construct(class, ...)
-   if(class.constructor) then return class.constructor(...) end
+local function ck_construct(class)
+   if(class.constructor) then return true end
    ensure_loaded(class)
    return readso(class.file, "Construct_"..class.name)
 end
