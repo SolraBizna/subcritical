@@ -26,10 +26,6 @@
 
 require "fontman"
 
-if(not SC.GameIsCompatible("GPL")) then
-   print("WARNING: Your non-GPL-compatible game is trying to load the Liberation fonts.\nIt is unclear whether this is a violation of the Liberation fonts' license.\nYou are advised to relicense your game or use a different set of fonts.")
-end
-
 TTF.Liberation = {}
 
 local styles = {"Bold", "Italic", "BoldItalic"}
