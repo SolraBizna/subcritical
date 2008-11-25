@@ -120,7 +120,7 @@ public:
       else if(delay <= 0) {
 	delay = -1;
 	bool have_rate = false;
-	uint16_t target_rate;
+	uint16_t target_rate = 256;
 	switch(Q.op) {
 	default:
 	  break;
@@ -132,7 +132,6 @@ public:
 	case SoundOpcode::PlayStream:
 	  irp = 32768; // 100% new sample
 	  have_rate = true;
-	  target_rate = 256;
 	  target_type = Q.op;
 	  target = Q.target;
 	  break;
