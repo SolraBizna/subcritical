@@ -24,7 +24,15 @@ The following packages have external dependencies:
   jpeg (requires a fairly recent IJG jpeglib)
   png (requires a fairly recent libpng 1.2 and zlib)
   sdl (requires a fairly recent SDL 1.2)
-  vorbis (requires fairly recent libogg and libvorbis)
+  vorbis (requires libogg 1.1.3ish and libvorbis 1.2.0 or later)
+
+If you are building on Darwin (Mac OS X) and installed the above dependencies
+via DarwinPorts, you may need to set some environment variables like:
+
+  LDFLAGS=-L/opt/lib
+  CFLAGS="-isystem /opt/include"
+
+Substitute /opt/local for /opt if necessary.
 
 You may also want to install the fontman package and the Liberation fonts, see
 fontman/README for instructions on how to do that.
