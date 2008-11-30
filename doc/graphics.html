@@ -98,7 +98,7 @@ end</pre></dd>
 <dl>
 <dt class="code">function <i>func</i>(<i>value</i>, data) ... end
 <a name="GraphicDumper:Dump" /><i>dumper</i>:Dump(<i>image</i>, <i>value</i>, <i>func</i>)</dt>
-<dd><i class="code">image</i> is any <a href="#Drawable" class="code">Drawable</a>, <i class="code">value</i> is anything at all, and <i class="code">func</i> is a function that will be called like <tt>func(value, <i>data</i>)</tt> where <i>data</i> is data to be written to the file. <i class="code">func</i> must return <tt>true</tt> (or some other true value) if the write succeeded.</dd>
+<dd><i class="code">image</i> is any <a href="#Drawable" class="code">Drawable</a>, <i class="code">value</i> is anything at all, and <i class="code">func</i> is a function that will be called like <tt><i>func</i>(<i>value</i>, <i>data</i>)</tt> where <i>data</i> is data to be written to the file. <i class="code">func</i> must return <tt>true</tt> (or some other true value) if the write succeeded.</dd>
 <dd>It is an amazing coincidence that it just so happens that this is how <tt>file:write</tt> behaves. For some Lua file, then, one could <tt><i>dumper</i>:Dump(<i>image</i>, <i>file</i>, <i>file</i>.write)</tt>. Total coincidence, of course.</dd>
 </dl>
 <h2>Utility functions</h2>
