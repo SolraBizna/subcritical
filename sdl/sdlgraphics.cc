@@ -128,6 +128,7 @@ doing_relmouse(false), doing_textok(false) {
     QuitSubsystem(SDL_INIT_VIDEO);
     throw (const char*)SDL_GetError();
   }
+  SDL_WM_SetCaption(title, title);
   // Determine the best layout to use.
   if(screen->format->BytesPerPixel != 4) throw (const char*)"Non-32-bit mode given";
   else switch(screen->format->Rmask) {
