@@ -14,6 +14,10 @@
 <dt class="code"><a name="Construct" /><i>object</i> = SubCritical.Construct(<i>class</i>, ...)
 <i>object</i> = assert(SubCritical.Construct(<i>class</i>, ...))</dt>
 <dd>Returns, if possible, either an instance of <i class="code">class</i> directly or an instance of a class that inherits from it. If you wish an error to be thrown on failure, it is adviseable to <tt>assert</tt> its return value (as shown above).</dd>
+<dd>Constructors may both return nil or throw an error on failure, depending on the failure. If the failure was caused by malformed constructor parameters, it should throw an error.</dd>
+<dt class="code"><a name="ConstructSpecific" /><i>object</i> = SubCritical.ConstructSpecific(<i>class</i>, ...)
+<i>object</i> = assert(SubCritical.ConstructSpecific(<i>class</i>, ...))</dt>
+<dd>Returns, if possible, an instance of <i class="code">class</i> directly, and not a subclass. If you wish an error to be thrown on failure, it is adviseable to <tt>assert</tt> its return value (as shown above). Normally you do not need this unless you want to offer the user a choice of which implementor to use (see <a href="#Choices">Choices).</dd></dd>
 <dt class="code"><a name="ConstructPath" /><i>true_path</i> = SubCritical.ConstructPath(<i>path</i>[, <i>level</i>])
 <i>true_path</i> = SubCritical.Path(<i>path</i>[, <i>level</i>])
 <i>true_path</i> = SCPath(<i>path</i>[, <i>level</i>])
@@ -21,14 +25,11 @@
 <i>true_path</i> = P"<i>path</i>"</dt>
 <dd>Returns a platform-specific equivalent to <i class="code">path</i>. <i class="code">path</i> is a UNIX-style path relative to <b>the directory containing the source file containing the calling code</b>. Calling <tt>ConstructPath</tt> from code not loaded directly from a file is unwise, and will have different semantics on different platforms.<dd>
 <dd>If you write code that wishes to wrap <tt>ConstructPath</tt> without itself affecting where the path points to, use the <i class="code">level</i> parameter. A value of <tt>3</tt> denotes the function calling you, <tt>4</tt> denotes the function that called that function, etc.</dd>
-<dt class="code"><a name="ConstructSpecific" /><i>object</i> = SubCritical.ConstructSpecific(<i>class</i>, ...)
-<i>object</i> = assert(SubCritical.ConstructSpecific(<i>class</i>, ...))</dt>
-<dd>Returns, if possible, an instance of <i class="code">class</i> directly, and not a subclass. If you wish an error to be thrown on failure, it is adviseable to <tt>assert</tt> its return value (as shown above). Normally you do not need this unless you want to offer the user a choice of which implementor to use (see <a href="#Choices">Choices).</dd></dd>
 <dt class="code"><a name="Util" />... = SubCritical.Util.<i>name</i>(...)
 ... = SubCritical.util.<i>name</i>(...)
 ... = SCUtil.<i>name</i>(...)
 ... = scutil.<i>name</i>(...)</dt>
-<dd>All of the above are equivalent ways to call a native <tt>utility</tt> functions named <i class="code">name</i>.</dd>
+<dd>All of the above are equivalent ways to call a native <tt>utility</tt> function named <i class="code">name</i>.</dd>
 <dt class="code"><a name="var.Read"><i>file</i> = SubCritical.Var.Read(<i>name</i>)
 <i>file</i> = SubCritical.var.Read(<i>name</i>)
 <i>file</i> = SCVar.Read(<i>name</i>)
