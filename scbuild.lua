@@ -188,7 +188,6 @@ package.cpath = "./?"..soext..";../?"..soext
 if(install_lua) then
    package.cpath = package.cpath..";"..install_lua.."/?"..soext
 end
-print(package.cpath)
 
 if(os.getenv("CXXFLAGS") or os.getenv("CFLAGS")) then
    cxx = cxx .. " " .. (os.getenv("CXXFLAGS") or os.getenv("CFLAGS"))
