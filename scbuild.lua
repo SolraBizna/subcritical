@@ -145,7 +145,7 @@ local include_path = config_question("INCLUDE_PATH",
 include_path = include_path:gsub("/+$","").."/"
 
 local full_install = config_question("FULL_INSTALL",
-				     "Will you be installing packages UNIX-style? (If you are building for native\n(NOT Cygwin) Windows or for an OSX .app (NOT command-line) then you should\nanswer no here and install manually.)",
+				     "Will you be installing packages UNIX-style? (If you are building for native\n(NOT Cygwin) Windows or for an OSX .app (NOT command-line) then you can\nanswer no here and install manually.)",
 				     "bool")
 local install_lib,install_c,install_lua
 if(full_install) then
@@ -182,6 +182,13 @@ end
 
 cxx = cxx .. " -I"..include_path
 cxx = cxx .. " -DSO_EXTENSION=\"\\\""..soext.."\\\"\""
+
+-- Try our best to find subcritical_helper
+package.cpath = "./?"..soext..";../?"..soext
+if(install_lua) then
+   package.cpath = package.cpath..";"..install_lua.."/?"..soext
+end
+print(package.cpath)
 
 if(os.getenv("CXXFLAGS") or os.getenv("CFLAGS")) then
    cxx = cxx .. " " .. (os.getenv("CXXFLAGS") or os.getenv("CFLAGS"))
@@ -301,9 +308,12 @@ function fake_targets.install()
 	    -- this message is redundant in the avoided case
 	    print("Full install disabled, not installing Lua C packages.")
 	 end
-	 for i,package in pairs(install.lcpackages) do
-	    if(package == "subcritical_helper") then
-	       print("Note: You will probably have to manually install subcritical_helper before\nproceeding, as it is required by scbuild.")
+	 if(false) then
+	    -- no longer needed
+	    for i,package in pairs(install.lcpackages) do
+	       if(package == "subcritical_helper") then
+		  print("Note: You will probably have to manually install subcritical_helper before\nproceeding, as it is required by scbuild.")
+	       end
 	    end
 	 end
       end
