@@ -189,6 +189,10 @@ void Drawable::BlitFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int s
   if(dy < clip_top) { st += clip_top - dy; dy = clip_top; }
   if(dx + (sr - sl) > clip_right) { sr += clip_right - (dx + (sr - sl)); }
   if(dy + (sb - st) > clip_bottom) { sb += clip_bottom - (dy + (sb - st)); }
+  if(sl < 0) { dx -= sl; sl = 0; }
+  if(sr >= gfk->width) sr = gfk->width - 1;
+  if(st < 0) { dy -= st; st = 0; }
+  if(sb >= gfk->height) sb = gfk->height - 1;
   if(sr < sl || sb < st) return;
   if(primitive_alpha) {
     if(tr_a == 0) return;
