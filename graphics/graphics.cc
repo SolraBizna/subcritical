@@ -278,8 +278,19 @@ Drawable::~Drawable() {
 
 int GraphicsDevice::Lua_Update(lua_State* L) throw() {
   if(lua_gettop(L) == 0) UpdateAll();
-  else Update((int)luaL_checknumber(L,1),(int)luaL_checknumber(L,2),
-	      (int)luaL_checknumber(L,3),(int)luaL_checknumber(L,4));
+  else {
+    int x, y, w, h;
+    x = (int)luaL_checkinteger(L, 1);
+    y = (int)luaL_checkinteger(L, 2);
+    w = (int)luaL_checkinteger(L, 3);
+    h = (int)luaL_checkinteger(L, 4);
+    if(x < 0) { w += x; x = 0; }
+    if(x + w > width) w = width - x;
+    if(y < 0) { h += y; y = 0; }
+    if(y + h > height) h = height - y;
+    if(w <= 0 || h <= 0) return 0;
+    Update(x, y, w, h);
+  }
   return 0;
 }
 
