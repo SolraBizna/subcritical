@@ -23,8 +23,10 @@
 #ifndef _SUBCRITICAL_BSD_IPSOCKET_H
 #define _SUBCRITICAL_BSD_IPSOCKET_H
 
+#ifndef IPSOCKET_IS_BSD
 #define IPSOCKET_IS_BSD 1
 #define IPSOCKET_IS_WINSOCK 0
+#endif
 
 #include "subcritical/socket.h"
 #include <netinet/in.h>
