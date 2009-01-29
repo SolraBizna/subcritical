@@ -1,4 +1,4 @@
 license Compatible
-version 0b3
+version 0b4
 
 class GIFLoader : GraphicLoader concrete

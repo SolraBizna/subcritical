@@ -48,7 +48,7 @@ function errorf(err, ...)
 end
 
 subcritical = {}
-subcritical.version = 0x0b3
+subcritical.version = 0x0b4
 -- aliases
 SubCritical,SC,sc = subcritical,subcritical,subcritical
 
