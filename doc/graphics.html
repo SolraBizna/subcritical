@@ -29,7 +29,7 @@
 <dd>Draws <i class="code">source</i> (a <a href="#Frisket" class="code">Frisket</a>) on <i class="code">destination</i>, with the top-left corner at <i class="code">x,y</i>. If <i class="code">source_*</i> are provided, deal with that subset of <i class="code">source</i>.</dd>
 <dd>This function uses the selected primitive color (see <a href="#Drawable:SetPrimitiveColor" class="code">SetPrimitiveColor</a>). If the primitive color is transparent, <i class="code">source</i>'s data is modulated appropriately.</dd>
 <dt class="code"><a name="Drawable:SetPrimitiveColor" /><i>drawable</i>:SetPrimitiveColor(<i>r</i>, <i>g</i>, <i>b</i>[, <i>a</i>])</dt>
-<dd>Sets the current "primitive color," which is used by <a href="#Drawable:DrawPoints" class="code">DrawPoints</a>, <a href="#Drawable:DrawLines" class="code">DrawLines</a>, <a href="#Drawable:DrawLineLoop" class="code">DrawLineLoop</a>, <a href="#Drawable:DrawLineStrip" class="code">DrawLineStrip</a>, <a href="#Drawable:DrawTriangles" class="code">DrawTriangles</a>, <a href="#Drawable:DrawTriangleStrip" class="code">DrawTriangleStrip</a>, <a href="#Drawable:DrawTriangleFan" class="code">DrawTriangleFan</a>, <a href="#Drawable:DrawRect" class="code">DrawRect</a>, and <a href="#Drawable:BlitFrisket" class="code">BlitFrisket</a>. If <i class="code">a</i> is not provided, full opacity (<tt>1</tt>) is assumed.</dd>
+<dd>Sets the current "primitive color," which is used by <a href="#Drawable:DrawPoints" class="code">DrawPoints</a>, <a href="#Drawable:DrawLines" class="code">DrawLines</a>, <a href="#Drawable:DrawLineLoop" class="code">DrawLineLoop</a>, <a href="#Drawable:DrawLineStrip" class="code">DrawLineStrip</a>, <a href="#Drawable:DrawTriangles" class="code">DrawTriangles</a>, <a href="#Drawable:DrawTriangleStrip" class="code">DrawTriangleStrip</a>, <a href="#Drawable:DrawTriangleFan" class="code">DrawTriangleFan</a>, <a href="#Drawable:DrawRect" class="code">DrawRect</a>, <a href="#Drawable:DrawBox" class="code">DrawBox</a>, and <a href="#Drawable:BlitFrisket" class="code">BlitFrisket</a>. If <i class="code">a</i> is not provided, full opacity (<tt>1</tt>) is assumed.</dd>
 <dt class="code"><a name="Drawable:DrawPoints" /><i>destination</i>:DrawPoints(<i>coords</i>, <i>diameter</i>)</dt>
 <dd>Draw points <i class="code">diameter</i> in diameter at every coordinate in <i class="code">coords</i> (a CoordArray, see <a href="#CompileCoords" class="code">CompileCoords</a>) using the current primitive color.</dd>
 <dd>Note: Points, and all other primitives, fully support alpha in the primitive color.</dd>
@@ -43,7 +43,7 @@ function draw_line(destination, width, x1, y1, x2, y2)
   local c = SCUtil.CompileCoords{x1,y1,x2,y2}
   return destination:DrawLines(width, c, _i)
 end</pre></dd>
-<dd>If you want to draw only straight horizontal or vertical lines, you should use <a href="#Drawable:DrawRect">DrawRect</a> instead, since its results are easier to control. (DrawLine might disagree with your expectations on exactly what pixels get filled.)</dd>
+<dd>If you want to draw only straight horizontal or vertical lines, you should use <a href="#Drawable:DrawRect" class="code">DrawRect</a> (or <a href="#Drawable:DrawBox" class="code">DrawBox</a>) instead, since its results are easier to control. (DrawLine might disagree with your expectations on exactly what pixels get filled.)</dd>
 <dd>Note: Lines, and all other primitives, fully support alpha in the primitive color.</dd>
 <dt class="code"><a name="Drawable:DrawLineStrip" /><i>destination</i>:DrawLineStrip(<i>coords</i>, <i>indices</i>, <i>width</i>)</dt>
 <dd>As with DrawLines, but <i class="code">indices</i> are handled differently. The first index does nothing on its own. All indices after it designate a line between themselves and the index before them. (Essentially, <i>indices</i> designates a continuous strip of lines, hence the name.)</dd>
@@ -59,8 +59,13 @@ end</pre></dd>
 <dd>As with DrawTriangles, but <i class="code">indices</i> are handled differently. The first triple designates a triangle, then each index after that designates a new triangle between it, the index before it, and the first index.</dd>
 <dt class="code"><a name="Drawable:DrawRect" /><i>destination</i>:DrawRect(<i>left</i>, <i>top</i>, <i>width</i>, <i>height</i>)</dt>
 <dd>Designates a rectangle to be drawn in the primitive color. (This function's interface was changed as of 0b1.)</dd>
+<dt class="code"><a name="Drawable:DrawBox" /><i>destination</i>:DrawBox(<i>left</i>, <i>top</i>, <i>width</i>, <i>height</i>) -- thickness of 1
+<i>destination</i>:DrawBox(<i>left</i>, <i>top</i>, <i>width</i>, <i>height</i>, <i>thickness</i>)</dt>
+<dd>Designates a rectangle to be outlined in the primitive color at the given thickness. The lines will fall entirely <b>inside</b> the given rectangle.</dd>
 <dt class="code"><a name="Drawable:SetClipRect" /><i>drawable</i>:SetClipRect(<i>x</i>, <i>y</i>, <i>width</i>, <i>height</i>)</dt>
-<dd>Sets the clip rectangle of <i class="code">drawable</i>. No pixels outside the clip rectangle will change.</dd>
+<dd>Sets the clip rectangle of <i class="code">drawable</i>. No pixels outside the clip rectangle will ever change.</dd>
+<dt class="code"><a name="Drawable:GetClipRect" /><i>x</i>, <i>y</i>, <i>width</i>, <i>height</i> = <i>drawable</i>:GetClipRect()</dt>
+<dd>Returns the clip rectangle of <i class="code">drawable</i>.</dd>
 <dt class="code"><a name="Drawable:TakeSnapshot" /><i>graphic</i> = <i>drawable</i>:TakeSnapshot()</dt>
 <dd>A convenience function that returns a <a href="#Graphic" class="code">Graphic</a> containing a copy of the current image data in <i class="code">drawable</i>. No drawing state is copied, only image data.</dd>
 </dl>

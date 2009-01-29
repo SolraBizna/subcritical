@@ -82,6 +82,24 @@ int Drawable::Lua_DrawRect(lua_State* L) throw() {
   return 0;
 }
 
+void Drawable::DrawBox(int l, int t, int r, int b, int sz) throw() {
+  DrawRect(l, t, r, t+sz-1);
+  DrawRect(l, b-sz+1, r, b);
+  DrawRect(l, t+sz, l+sz-1, b-sz);
+  DrawRect(r-sz+1, t+sz, r, b-sz);
+}
+
+int Drawable::Lua_DrawBox(lua_State* L) throw() {
+  if(has_alpha) return luaL_error(L, "Graphics with alpha channels cannot be modified with this function.");
+  int l, t, r, b;
+  l = (int)nearbyint(luaL_checknumber(L, 1));
+  t = (int)nearbyint(luaL_checknumber(L, 2));
+  r = l + (int)nearbyint(luaL_checknumber(L, 3)) - 1;
+  b = t + (int)nearbyint(luaL_checknumber(L, 4)) - 1;
+  DrawBox(l, t, r, b, luaL_optinteger(L, 5, 1));
+  return 0;
+}
+
 void Drawable::DrawPoints(int size, const Fixed* coords, size_t pointcount) throw() {
   const Fixed* fp = coords;
   if(primitive_alpha && tr_a == 0) return;

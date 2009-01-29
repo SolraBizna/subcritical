@@ -99,10 +99,14 @@ namespace SubCritical {
     int Lua_DrawTriangles(lua_State* L) throw();
     int Lua_DrawTriangleStrip(lua_State* L) throw();
     int Lua_DrawTriangleFan(lua_State* L) throw();
-    void DrawRect(int x, int y, int w, int h) throw();
+    void DrawBox(int l, int t, int r, int b, int sz) throw();
+    int Lua_DrawBox(lua_State* L) throw();
+    void DrawRect(int l, int t, int r, int b) throw();
     int Lua_DrawRect(lua_State* L) throw();
     void SetClipRect(int l, int t, int r, int b) throw();
     int Lua_SetClipRect(lua_State* L) throw();
+    void GetClipRect(int& l, int& t, int& r, int& b) throw();
+    int Lua_GetClipRect(lua_State* L) throw();
     int width, height;
     bool has_alpha, simple_alpha, fake_alpha;
     enum FBLayout layout;

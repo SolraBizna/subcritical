@@ -321,6 +321,29 @@ int Drawable::Lua_SetClipRect(lua_State* L) throw() {
   return 0;
 }
 
+void Drawable::GetClipRect(int& l, int& t, int& r, int& b) throw() {
+  l = clip_left;
+  t = clip_top;
+  r = clip_right;
+  b = clip_bottom;
+}
+
+int Drawable::Lua_GetClipRect(lua_State* L) throw() {
+  int l, t, r, b;
+  GetClipRect(l, t, r, b);
+  int x, y, w, h;
+  x = l;
+  y = t;
+  w = r - l + 1;
+  h = b - t + 1;
+  SetClipRect(l, t, r, b);
+  lua_pushinteger(L, x);
+  lua_pushinteger(L, y);
+  lua_pushinteger(L, w);
+  lua_pushinteger(L, h);
+  return 4;
+}
+
 CoordArray::CoordArray(size_t count) : count(count) {
   coords = (Fixed*)calloc(sizeof(Fixed), count*2);
 }
@@ -574,8 +597,10 @@ int Drawable::Lua_Blit(lua_State* L) throw() {
 
 static const struct ObjectMethod DMethods[] = {
   METHOD("GetSize", &Drawable::Lua_GetSize),
+  METHOD("GetClipRect", &Drawable::Lua_GetClipRect),
   METHOD("SetClipRect", &Drawable::Lua_SetClipRect),
   METHOD("SetPrimitiveColor", &Drawable::Lua_SetPrimitiveColor),
+  METHOD("DrawBox", &Drawable::Lua_DrawBox),
   METHOD("DrawRect", &Drawable::Lua_DrawRect),
   METHOD("DrawPoints", &Drawable::Lua_DrawPoints),
   METHOD("DrawLines", &Drawable::Lua_DrawLines),
