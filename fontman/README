@@ -8,6 +8,14 @@ instance:
 
 frisket = myfont[12]:RenderText("This is 12-point text!")
 
+Or:
+
+frisket = myfont(12):RenderText("This is more 12-point text!")
+
+Or:
+
+frisket = myfont(12, 18):RenderText("This is vertically stretched 12-point text!")
+
 Install by placing fontman.scu somewhere SubCritical can find it:
 
 $ mkdir -p /usr/subcritical/lib/

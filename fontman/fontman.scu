@@ -28,6 +28,7 @@ TTF = ttf
 
 function fontman.newfont(path)
    local numt = {}
+   local weird = {}
    function numt.__index(t, k)
       assert(not rawget(t, k), "Lua metatables are melting!")
       if(type(k) ~= "number" or k < 1/64) then return nil end
@@ -35,6 +36,22 @@ function fontman.newfont(path)
       nufont:SetSize(k)
       rawset(t, k, nufont)
       return nufont
+   end
+   function numt.__call(t, x, y)
+      if(not y) then
+	 return t[x]
+      else
+	 if(not weird[x]) then
+	    weird[x] = {}
+	 end
+	 if(not weird[x][y]) then
+	    local nufont = assert(SC.Construct("FreetypeFont", path))
+	    nufont:SetSize(x, y)
+	    weird[x][y] = nufont
+	    return nufont
+	 end
+	 return weird[x][y]
+      end
    end
    local ret = {_isfont_=true}
    setmetatable(ret, numt)
