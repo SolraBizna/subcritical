@@ -63,6 +63,24 @@ namespace SubCritical {
   public:
     Frisket(int width, int height);
     virtual ~Frisket();
+    void CopyFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
+    void CopyFrisket(const Frisket*, int dx, int dy) throw();
+    int Lua_CopyFrisket(lua_State* L) throw();
+    void ModulateFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
+    void ModulateFrisket(const Frisket*, int dx, int dy) throw();
+    int Lua_ModulateFrisket(lua_State* L) throw();
+    void AddFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
+    void AddFrisket(const Frisket*, int dx, int dy) throw();
+    int Lua_AddFrisket(lua_State* L) throw();
+    void SubtractFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
+    void SubtractFrisket(const Frisket*, int dx, int dy) throw();
+    int Lua_SubtractFrisket(lua_State* L) throw();
+    void MinFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
+    void MinFrisket(const Frisket*, int dx, int dy) throw();
+    int Lua_MinFrisket(lua_State* L) throw();
+    void MaxFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
+    void MaxFrisket(const Frisket*, int dx, int dy) throw();
+    int Lua_MaxFrisket(lua_State* L) throw();
     int Lua_GetSize(lua_State* L) const throw();
     PROTOCOL_PROTOTYPE();
     int width, height;

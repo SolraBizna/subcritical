@@ -13,6 +13,20 @@
 <h3 class="code"><a name="Frisket" />Frisket</h3>
 <p>A <tt>Frisket</tt> is a pure alpha channel with no color information of its own. It is usually used for text. See <a href="#Drawable:BlitFrisket" class="code">Drawable:BlitFrisket</a>.</p>
 <dl>
+<dt class="code"><i>frisket</i> = SubCritical.Construct("Frisket", <i>width</i>, <i>height</i>)</dt>
+<dd>Creates a new, completely transparent frisket.</dd>
+<dt class="code"><a name="Frisket:CopyFrisket" /><i>destination</i>:CopyFrisket(<i>source</i>, [<i>source_x</i>, <i>source_y</i>, <i>source_w</i>, <i>source_h</i>,] <i>x</i>, <i>y</i>)</dt>
+<dd>Copies data from <i class="code">source</i> (a <a href="#Frisket" class="code">Frisket</a>) to <i class="code">destination</i>, with the top-left corner at <i class="code">x,y</i>. If <i class="code">source_*</i> are provided, deal with that subset of <i class="code">source</i>.</dd>
+<dt class="code"><a name="Frisket:ModulateFrisket" /><i>destination</i>:ModulateFrisket(<i>source</i>, [<i>source_x</i>, <i>source_y</i>, <i>source_w</i>, <i>source_h</i>,] <i>x</i>, <i>y</i>)</dt>
+<dd>Multiplies the data from <i class="code">source</i> (a <a href="#Frisket" class="code">Frisket</a>) with the data already in <i class="code">destination</i>, with the top-left corner at <i class="code">x,y</i>. If <i class="code">source_*</i> are provided, deal with that subset of <i class="code">source</i>.</dd>
+<dt class="code"><a name="Frisket:AddFrisket" /><i>destination</i>:AddFrisket(<i>source</i>, [<i>source_x</i>, <i>source_y</i>, <i>source_w</i>, <i>source_h</i>,] <i>x</i>, <i>y</i>)</dt>
+<dd>Adds the data from <i class="code">source</i> (a <a href="#Frisket" class="code">Frisket</a>) to the data already in <i class="code">destination</i>, with the top-left corner at <i class="code">x,y</i>. If <i class="code">source_*</i> are provided, deal with that subset of <i class="code">source</i>.</dd>
+<dt class="code"><a name="Frisket:SubtractFrisket" /><i>destination</i>:SubtractFrisket(<i>source</i>, [<i>source_x</i>, <i>source_y</i>, <i>source_w</i>, <i>source_h</i>,] <i>x</i>, <i>y</i>)</dt>
+<dd>Subtracts the data in <i class="code">source</i> (a <a href="#Frisket" class="code">Frisket</a>) from the data already in <i class="code">destination</i>, with the top-left corner at <i class="code">x,y</i>. If <i class="code">source_*</i> are provided, deal with that subset of <i class="code">source</i>.</dd>
+<dt class="code"><a name="Frisket:MinFrisket" /><i>destination</i>:MinFrisket(<i>source</i>, [<i>source_x</i>, <i>source_y</i>, <i>source_w</i>, <i>source_h</i>,] <i>x</i>, <i>y</i>)</dt>
+<dd>Replace each frixel of <i class="code">destination</i> with the frixels from <i class="code">source</i> (a <a href="#Frisket" class="code">Frisket</a>), but only if the new frixel is more <b>transparent</b> than the old one; with the top-left corner at <i class="code">x,y</i>. If <i class="code">source_*</i> are provided, deal with that subset of <i class="code">source</i>.</dd>
+<dt class="code"><a name="Frisket:MaxFrisket" /><i>destination</i>:MaxFrisket(<i>source</i>, [<i>source_x</i>, <i>source_y</i>, <i>source_w</i>, <i>source_h</i>,] <i>x</i>, <i>y</i>)</dt>
+<dd>Replace each frixel of <i class="code">destination</i> with the frixels from <i class="code">source</i> (a <a href="#Frisket" class="code">Frisket</a>), but only if the new frixel is more <b>opaque</b> than the old one; with the top-left corner at <i class="code">x,y</i>. If <i class="code">source_*</i> are provided, deal with that subset of <i class="code">source</i>.</dd>
 <dt class="code"><a name="Frisket:GetSize" /><i>width</i>,<i>height</i> = <i>frisket</i>:GetSize()</dt>
 <dd>Returns the pixel dimensions of this <tt>Frisket</tt></dd>
 </dl>
@@ -72,6 +86,8 @@ end</pre></dd>
 <h3 class="code"><a name="Graphic" />Graphic : <a href="#Drawable">Drawable</a></h3>
 <p>A <tt>Graphic</tt> is a <a href="#Drawable" class="code">Drawable</a> whose lot in life is to eventually be blitted to other <a href="#Drawable" class="code">Drawable</a>s. See <a href="#Drawable:Blit" class="code">Drawable:Blit</a>.</p>
 <dl>
+<dt class="code"><i>graphic</i> = SubCritical.Construct("Graphic", <i>width</i>, <i>height</i>)</dt>
+<dd>Creates a new graphic with no alpha channel (but undefined data).</dd>
 <dt class="code"><a name="Graphic:OptimizeFor" /><i>graphic</i>:OptimizeFor(<i>drawable</i>)</dt>
 <dd>If necessary, converts <i class="code">graphic</i>'s internal pixel format for fast blitting to <i class="code">drawable</i>. This is normally done automatically, but you can do the work ahead of time with this function if you so choose. (It's not worth it.)</dd>
 </dl>

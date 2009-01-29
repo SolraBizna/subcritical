@@ -212,6 +212,12 @@ PROTOCOL_IMP(Graphic, Drawable, GMethods);
 
 static const struct ObjectMethod FMethods[] = {
   METHOD("GetSize", &Frisket::Lua_GetSize),
+  METHOD("CopyFrisket", &Frisket::Lua_CopyFrisket),
+  METHOD("ModulateFrisket", &Frisket::Lua_ModulateFrisket),
+  METHOD("AddFrisket", &Frisket::Lua_AddFrisket),
+  METHOD("SubtractFrisket", &Frisket::Lua_SubtractFrisket),
+  METHOD("MinFrisket", &Frisket::Lua_MinFrisket),
+  METHOD("MaxFrisket", &Frisket::Lua_MaxFrisket),
   NOMOREMETHODS(),
 };
 PROTOCOL_IMP(Frisket, Object, FMethods);
@@ -408,6 +414,166 @@ SUBCRITICAL_UTILITY(CompileIndices)(lua_State* L) {
   return 1;
 }
 
+void Frisket::CopyFrisket(const Frisket* gfk, int dx, int dy) throw() {
+  CopyFrisketRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
+}
+
+void Frisket::CopyFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+  int sl, st, sr, sb;
+  sl = sx;
+  st = sy;
+  sr = sx + sw - 1;
+  sb = sy + sh - 1;
+  if(sl < 0) { dx -= sl; sl = 0; }
+  if(sr >= gfk->width) sr = gfk->width - 1;
+  if(st < 0) { dy -= st; st = 0; }
+  if(sb >= gfk->height) sb = gfk->height - 1;
+  if(sr < sl || sb < st) return;
+  for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
+    Frixel* src, *dst;
+    src = gfk->rows[sY] + sl;
+    dst = rows[dY] + dx;
+    memcpy(dst, src, (sr - sl + 1) * sizeof(Frixel));
+    //size_t rem = sr - sl + 1;
+    //UNROLL_MORE(rem,
+    //	*dst++ = *src++);
+  }
+}
+
+void Frisket::ModulateFrisket(const Frisket* gfk, int dx, int dy) throw() {
+  ModulateFrisketRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
+}
+
+void Frisket::ModulateFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+  int sl, st, sr, sb;
+  sl = sx;
+  st = sy;
+  sr = sx + sw - 1;
+  sb = sy + sh - 1;
+  if(sl < 0) { dx -= sl; sl = 0; }
+  if(sr >= gfk->width) sr = gfk->width - 1;
+  if(st < 0) { dy -= st; st = 0; }
+  if(sb >= gfk->height) sb = gfk->height - 1;
+  if(sr < sl || sb < st) return;
+  for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
+    Frixel* src, *dst;
+    src = gfk->rows[sY] + sl;
+    dst = rows[dY] + dx;
+    size_t rem = sr - sl + 1;
+    UNROLL_MORE(rem,
+		*dst = (*src++ * *dst) / 255;
+		++dst;);
+  }
+}
+
+void Frisket::AddFrisket(const Frisket* gfk, int dx, int dy) throw() {
+  AddFrisketRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
+}
+
+void Frisket::AddFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+  int sl, st, sr, sb;
+  sl = sx;
+  st = sy;
+  sr = sx + sw - 1;
+  sb = sy + sh - 1;
+  if(sl < 0) { dx -= sl; sl = 0; }
+  if(sr >= gfk->width) sr = gfk->width - 1;
+  if(st < 0) { dy -= st; st = 0; }
+  if(sb >= gfk->height) sb = gfk->height - 1;
+  if(sr < sl || sb < st) return;
+  for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
+    Frixel* src, *dst;
+    int res;
+    src = gfk->rows[sY] + sl;
+    dst = rows[dY] + dx;
+    size_t rem = sr - sl + 1;
+    UNROLL_MORE(rem,
+		res = *src++ + *dst;
+		if(res > 255) *dst++ = 255;
+		else *dst++ = res;);
+  }
+}
+
+void Frisket::SubtractFrisket(const Frisket* gfk, int dx, int dy) throw() {
+  SubtractFrisketRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
+}
+
+void Frisket::SubtractFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+  int sl, st, sr, sb;
+  sl = sx;
+  st = sy;
+  sr = sx + sw - 1;
+  sb = sy + sh - 1;
+  if(sl < 0) { dx -= sl; sl = 0; }
+  if(sr >= gfk->width) sr = gfk->width - 1;
+  if(st < 0) { dy -= st; st = 0; }
+  if(sb >= gfk->height) sb = gfk->height - 1;
+  if(sr < sl || sb < st) return;
+  for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
+    Frixel* src, *dst;
+    int res;
+    src = gfk->rows[sY] + sl;
+    dst = rows[dY] + dx;
+    size_t rem = sr - sl + 1;
+    UNROLL_MORE(rem,
+		res = *dst - *src++;
+		if(res < 0) *dst++ = 0;
+		else *dst++ = res;);
+  }
+}
+
+void Frisket::MinFrisket(const Frisket* gfk, int dx, int dy) throw() {
+  MinFrisketRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
+}
+
+void Frisket::MinFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+  int sl, st, sr, sb;
+  sl = sx;
+  st = sy;
+  sr = sx + sw - 1;
+  sb = sy + sh - 1;
+  if(sl < 0) { dx -= sl; sl = 0; }
+  if(sr >= gfk->width) sr = gfk->width - 1;
+  if(st < 0) { dy -= st; st = 0; }
+  if(sb >= gfk->height) sb = gfk->height - 1;
+  if(sr < sl || sb < st) return;
+  for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
+    Frixel* src, *dst;
+    src = gfk->rows[sY] + sl;
+    dst = rows[dY] + dx;
+    size_t rem = sr - sl + 1;
+    UNROLL_MORE(rem,
+		*dst = *src > *dst ? *dst : *src;
+		++src; ++dst;);
+  }
+}
+
+void Frisket::MaxFrisket(const Frisket* gfk, int dx, int dy) throw() {
+  MaxFrisketRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
+}
+
+void Frisket::MaxFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+  int sl, st, sr, sb;
+  sl = sx;
+  st = sy;
+  sr = sx + sw - 1;
+  sb = sy + sh - 1;
+  if(sl < 0) { dx -= sl; sl = 0; }
+  if(sr >= gfk->width) sr = gfk->width - 1;
+  if(st < 0) { dy -= st; st = 0; }
+  if(sb >= gfk->height) sb = gfk->height - 1;
+  if(sr < sl || sb < st) return;
+  for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
+    Frixel* src, *dst;
+    src = gfk->rows[sY] + sl;
+    dst = rows[dY] + dx;
+    size_t rem = sr - sl + 1;
+    UNROLL_MORE(rem,
+		*dst = *src < *dst ? *dst : *src;
+		++src; ++dst;);
+  }
+}
+
 void Drawable::Blit(const Drawable* gfk, int dx, int dy) throw() {
   BlitRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
 }
@@ -591,7 +757,67 @@ int Drawable::Lua_Blit(lua_State* L) throw() {
   case 7: BlitRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
   case 8: BlitRectT(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7), luaL_checknumber(L,8)); return 0;
   default:
-    return luaL_error(L, "Blit takes 3, 4, 7, or 8 parameters\n");
+    return luaL_error(L, "Blit takes 3, 4, 7, or 8 parameters");
+  }
+}
+
+int Frisket::Lua_CopyFrisket(lua_State* L) throw() {
+  Frisket* gfk = lua_toobject(L,1,Frisket);
+  switch(lua_gettop(L)) {
+  case 3: CopyFrisket(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
+  case 7: CopyFrisketRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
+  default:
+    return luaL_error(L, "CopyFrisket takes 3 or 7 parameters");
+  }
+}
+
+int Frisket::Lua_ModulateFrisket(lua_State* L) throw() {
+  Frisket* gfk = lua_toobject(L,1,Frisket);
+  switch(lua_gettop(L)) {
+  case 3: ModulateFrisket(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
+  case 7: ModulateFrisketRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
+  default:
+    return luaL_error(L, "ModulateFrisket takes 3 or 7 parameters");
+  }
+}
+
+int Frisket::Lua_AddFrisket(lua_State* L) throw() {
+  Frisket* gfk = lua_toobject(L,1,Frisket);
+  switch(lua_gettop(L)) {
+  case 3: AddFrisket(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
+  case 7: AddFrisketRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
+  default:
+    return luaL_error(L, "AddFrisket takes 3 or 7 parameters");
+  }
+}
+
+int Frisket::Lua_SubtractFrisket(lua_State* L) throw() {
+  Frisket* gfk = lua_toobject(L,1,Frisket);
+  switch(lua_gettop(L)) {
+  case 3: SubtractFrisket(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
+  case 7: SubtractFrisketRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
+  default:
+    return luaL_error(L, "SubtractFrisket takes 3 or 7 parameters");
+  }
+}
+
+int Frisket::Lua_MinFrisket(lua_State* L) throw() {
+  Frisket* gfk = lua_toobject(L,1,Frisket);
+  switch(lua_gettop(L)) {
+  case 3: MinFrisket(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
+  case 7: MinFrisketRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
+  default:
+    return luaL_error(L, "MinFrisket takes 3 or 7 parameters");
+  }
+}
+
+int Frisket::Lua_MaxFrisket(lua_State* L) throw() {
+  Frisket* gfk = lua_toobject(L,1,Frisket);
+  switch(lua_gettop(L)) {
+  case 3: MaxFrisket(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
+  case 7: MaxFrisketRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
+  default:
+    return luaL_error(L, "MaxFrisket takes 3 or 7 parameters");
   }
 }
 
@@ -627,6 +853,12 @@ SUBCRITICAL_CONSTRUCTOR(Graphic)(lua_State* L) {
   Graphic* p = new Graphic(luaL_checkinteger(L,1), luaL_checkinteger(L, 2), FB_RGBx);
   p->has_alpha = false;
   p->simple_alpha = true;
+  p->Push(L);
+  return 1;
+}
+
+SUBCRITICAL_CONSTRUCTOR(Frisket)(lua_State* L) {
+  Frisket* p = new Frisket(luaL_checkinteger(L,1), luaL_checkinteger(L, 2));
   p->Push(L);
   return 1;
 }
