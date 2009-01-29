@@ -253,6 +253,46 @@ static int f_copy(lua_State* L) {
   return 0;
 }
 
+static int f_parsecmdline(lua_State* L) {
+  const char* cmdline = luaL_checkstring(L, 2);
+  char* buf = (char*)malloc(strlen(cmdline));
+  int argn = 1;
+  const char* p;
+  char* q = buf;
+  for(p = cmdline; *p; ++p) {
+    if(*p == '"') {
+      for(++p; *p && *p != '"'; ++p) {
+	if(*p == '\\')
+	  ++p;
+	if(*p)
+	  *q++ = *p;
+      }
+    }
+    else if(*p == '\'') {
+      for(++p; *p && *p != '\''; ++p) {
+	if(*p == '\\')
+	  ++p;
+	if(*p)
+	  *q++ = *p;
+      }
+    }
+    else if(*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') {
+      if(q != buf) {
+	lua_pushlstring(L, buf, q - buf);
+	lua_rawseti(L, 1, argn++);
+	q = buf;
+      }
+    }
+    else *q++ = *p;
+  }
+  if(q != buf) {
+    lua_pushlstring(L, buf, q - buf);
+    lua_rawseti(L, 1, argn++);    
+  }
+  free(buf);
+  return 0;
+}
+
 static const luaL_Reg regs[] = {
   {"listfiles", f_listfiles},
   {"dlopen", f_dlopen},
@@ -262,6 +302,7 @@ static const luaL_Reg regs[] = {
   {"ckdir", f_ckdir},
   {"replace", f_replace},
   {"copy", f_copy},
+  {"parse_command_line", f_parsecmdline},
   {NULL, NULL}, 
 };
 

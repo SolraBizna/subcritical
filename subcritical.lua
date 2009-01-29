@@ -78,6 +78,14 @@ end
 dprintf("Load subcritical_helper...")
 local helper = require "subcritical_helper"
 
+if(not arg or not arg[1]) then
+   arg = arg or {}
+   if(os.getenv("SUBCRITICAL_COMMAND_LINE")) then
+      dprintf("Parse SUBCRITICAL_COMMAND_LINE...")
+      helper.parse_command_line(arg, os.getenv("SUBCRITICAL_COMMAND_LINE"))
+   end
+end
+
 local dirsep,baseexp,dirfrob
 if(helper.os == "windows") then
    dirsep = "\\","\\[^\\]+$"
