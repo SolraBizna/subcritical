@@ -270,6 +270,7 @@ inline void Drawable::DrawSpan(int y, Fixed l, Fixed r) {
   if(r >= fx_w) r = fx_w - 1;
   l = Q_TO_I(l);
   r = Q_TO_I(r);
+  if(r <= l) return;
   int rem = r - l;
   Pixel* p = rows[y] + l;
   STD_PRIM_UNROLL;
@@ -294,7 +295,7 @@ inline void Drawable::DrawSpanA(int y, Fixed l, Fixed r) {
 #define Tri_DDA_Init(side, top, bot, dir)		\
 side = top[!dir]; \
 side##bign = bot[!dir] - top[!dir]; \
-side##f = ((top[dir] + 32) & 63); \
+side##f = ((top[dir] + 32) & 63);	\
 side##d = bot[dir] - top[dir]; \
 if(!side##d) side##d = 0x7FFFFFFF; \
 side##n = side##bign << 6; \
@@ -312,34 +313,7 @@ else { \
 } \
 if(side##f == 0) side##e = 0; \
 else { \
-  side##e = side##bign * (63 - side##f);	\
-  while(side##e >= side##d) {			\
-    side##e -= side##d; \
-    side += side##i; \
-  } \
-}
-#define Tri_DDA_InitFloored(side, top, bot, dir)		\
-side = top[!dir]; \
-side##bign = bot[!dir] - top[!dir]; \
-side##f = ((top[dir] + 1) & 63);   \
-side##d = bot[dir] - top[dir]; \
-if(!side##d) side##d = 0x7FFFFFFF; \
-side##n = side##bign << 6; \
-if(side##n < 0) { \
-  side##n = -side##n; \
-  side##i = -1; \
-  side##s = -(side##n / side##d); \
-  side##n = side##n % side##d; \
-  side##bign = -side##bign; \
-} \
-else { \
-  side##i = 1; \
-  side##s = side##n / side##d; \
-  side##n = side##n % side##d; \
-} \
-if(side##f == 0) side##e = 0; \
-else { \
-  side##e = side##bign * (63 - side##f);	\
+  side##e = side##bign * (64 - side##f);	\
   while(side##e >= side##d) {			\
     side##e -= side##d; \
     side += side##i; \
