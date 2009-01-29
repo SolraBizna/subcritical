@@ -234,7 +234,7 @@ int FreetypeFont::Lua_SetSize(lua_State* L) throw() {
     if(ysize == 0.0) return luaL_error(L, "At least one point size must be specified");
     else xsize = ysize;
   }
-  else ysize = xsize;
+  else if(ysize == 0.0) ysize = xsize;
   SetSize(xsize, ysize);
   return 0;
 }
