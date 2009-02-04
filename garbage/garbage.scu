@@ -1,0 +1,50 @@
+garbage = {}
+local manage_count = 0
+
+local debugging = not not os.getenv("GARBAGE_DEBUG")
+local dprintf
+if(debugging) then
+   function dprintf(format, ...)
+      print("GARBG:"..format:format(...))
+   end
+else
+   function dprintf() end
+end
+
+function garbage.Manage()
+   if(manage_count == 0) then
+      dprintf("Release(): Automatic garbage collection paused")
+      collectgarbage("stop")
+   end
+   manage_count = manage_count + 1
+   dprintf("Manage(): New manage count is %i", manage_count)
+end
+
+function garbage.Release()
+   manage_count = manage_count - 1
+   dprintf("Release(): New manage count is %i", manage_count)
+   if(manage_count == 0) then
+      dprintf("Release(): Automatic garbage collection resumed")
+      collectgarbage("restart")
+   end
+end
+
+if(debugging) then
+   function garbage.Collect()
+      if(manage_count == 0) then
+	 dprintf("Collect(): Not managing garbage, but asked to collect anyway")
+      end
+      local old = collectgarbage("count")
+      collectgarbage("collect")
+      local new = collectgarbage("count")
+      if(old > new) then
+	 dprintf("Collect(): Collected %i bytes of (Lua-visible) garbage", (old - new) * 1024)
+      else
+	 dprintf("Collect(): CREATED %i bytes of garbage?!", (new - old) * 1024)
+      end
+   end
+else
+   function garbage.Collect()
+      collectgarbage("collect")
+   end
+end

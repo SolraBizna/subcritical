@@ -1,0 +1,24 @@
+garbage is a simple utility package centralizing and standardizing garbage collection.
+
+require "garbage"
+...
+function GameLoop()
+  garbage.Manage() -- Suspend Lua's built-in automatic garbage collection
+  repeat
+    ProcessFrame()
+    RenderFrame()
+    garbage.Collect() -- Clean up after every frame
+  until ShouldQuit()
+  garbage.Release() -- Restore automatic garbage collection
+end
+
+By setting the environment variable "GARBAGE_DEBUG" you can get some interesting garbage collection statistics.
+
+Why would you want to use this package, you ask? You don't have to. Lua provides a pretty good automatic garbage collector that does a little bit of work at a time, and steps up the pace when too much garbage accumulates. The problem is that it relies on Lua's memory allocations to know when there's "too much" garbage, while SubCritical classes often actually take up far more than the ~20 bytes Lua counts for them. Also, some time can be saved overall by doing all this work at once, at pre-prescribed moments.
+
+SCUI, at least, uses this package. If you want to install SCUI, you'll need to install this too.
+
+Install by placing garbage.scu somewhere SubCritical can find it:
+
+$ mkdir -p /usr/subcritical/lib/
+$ cp garbage.scu /usr/subcritical/lib/
