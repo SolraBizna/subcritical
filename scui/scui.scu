@@ -1,0 +1,274 @@
+if(not pcall(require,"garbage")) then
+   print("WARNING: garbage is not installed! We like garbage!")
+end
+local garbage = garbage
+
+local dirty_debug = not not os.getenv("DEBUG_SCUI_UPDATES")
+
+scui = {}
+
+local protots = {}
+function scui.Inherit(sub, super) 
+   if(sub._super or not super) then return end
+   sub._super = super
+   if(protots[super]) then
+      setmetatable(sub, protots[super])
+   else
+      local mt = {__index=super}
+      protots[super] = mt
+      setmetatable(sub, mt)
+   end
+   return sub
+end
+
+function scui.CompileWidget(widget)
+   if(widget.parent) then
+      widget._x,widget._y = widget.parent._x+widget.x,widget.parent._y+widget.y
+   else
+      widget._x,widget._y = widget.x,widget.y
+   end
+   if(widget.hotkeys) then
+      for k,v in pairs(widget.hotkeys) do
+	 if(v ~= true) then widget.hotkeys[k] = nil end
+      end
+   else
+      widget.hotkeys = {}
+   end
+   scui.Inherit(widget, widget.type)
+   scui.MarkDirty(widget)
+   for i,v in ipairs(widget) do
+      if(not v.parent) then v.parent = widget end
+      scui.CompileWidget(v)
+      for key,target in pairs(v.hotkeys) do
+	 if(target == true) then widget.hotkeys[key] = v
+	 else widget.hotkeys[key] = target end
+      end
+   end
+end
+
+function scui.RenderWidget(widget, dirty_rect)
+   widget.dirty,widget.messy = false,false
+   local rs = widget.RenderSelf
+   if(rs) then
+      rs(widget)
+      if(dirty_rect) then dirty_rect(widget._x, widget._y, widget.w, widget.h) end
+   end
+   for i,v in ipairs(widget) do
+      scui.RenderWidget(v, dirty_rect)
+   end
+end
+
+function scui.RefreshWidget(widget, dirty_rect)
+   if(not widget.messy) then return end
+   if(widget.dirty) then
+      scui.RenderWidget(widget, dirty_rect)
+   else
+      widget.dirty,widget.messy = false,false
+      for i,v in ipairs(widget) do
+         if(v.dirty) then
+            scui.RenderWidget(v, dirty_rect)
+         elseif (v.messy) then
+            scui.RefreshWidget(v, dirty_rect)
+         end
+      end
+   end
+end
+
+function scui.FindSubWidget(widget, x, y)
+   -- virtual widget?
+   if(not (widget.w and widget.h)) then return end
+   -- given position is outside this widget?
+   if(widget.IsInside) then
+      if(not widget:IsInside(x - widget._x, y - widget._y)) then return end
+   elseif (x < widget._x or y < widget._y or x >= widget._x + widget.w or y >= widget._y + widget.h) then return end
+   -- given position is claimed by a subwidget?
+   for n=#widget,1,-1 do
+      local ret = scui.FindSubWidget(widget[n], x, y)
+      if(ret) then return ret end
+   end
+   -- the given pixel is ours!
+   return widget
+end
+
+function scui.MarkDirty(widget)
+   widget.dirty = true
+   repeat
+      widget.messy = true
+      widget = widget.parent
+   until widget == nil or widget.messy
+end
+
+-- Backup the pixels behind a widget, used by RunModal among other places
+-- Can also be used to backup the pixels comprising a widget
+function scui.BackupWidget(widget)
+   assert(widget.w and widget.h, "scui.BackupWidget called for a virtual widget?!")
+   widget.backup = SC.Construct("Graphic", widget.w, widget.h)
+   widget.backup:OptimizeFor(screen) -- a comforting but unnecessary idiom
+   widget.backup:Blit(screen, widget._x, widget._y, widget.w, widget.h, 0, 0)
+end
+
+-- the inverse of the above
+function scui.RestoreWidget(widget)
+   assert(widget.w and widget.h, "scui.RestoreWidget called for a virtual widget?!")
+   assert(widget.backup, "scui.RestoreWidget called for a widget that has not been backed up (or that has already been restored since then)")
+   screen:Blit(widget.backup, widget._x, widget._y)
+   widget.backup = nil
+end
+
+local function intersect_rect(x1, y1, w1, h1, x2, y2, w2, h2)
+   if(x1 < x2) then
+      w1 = w1 - (x2 - x1)
+      x1 = x2
+   end
+   if(y1 < y2) then
+      h1 = h1 - (y2 - y1)
+      y1 = y2
+   end
+   if(w1 > w2) then w1 = w2 end
+   if(h1 > h2) then h1 = h2 end
+   if(w1 <= 0 or h1 <= 0) then return nil
+   else return x1,y1,w1,h1 end
+end
+
+local cursor_x,cursor_y
+
+function scui.EventLoop(widget, params, cursor, hotx, hoty)
+   local ret = nil
+   params = params or {}
+   local idle = params.idle
+   local hotkeys = widget.hotkeys
+   local fake_cursor_widget = {}
+   fake_cursor_widget.w,fake_cursor_widget.h = cursor:GetSize()
+   local focus_widget,clicked_widgets = nil,{}
+   local lbcx,lbcy
+   local dirty_l,dirty_t,dirty_r,dirty_b
+   local function clean()
+      if(dirty_l > dirty_r or dirty_t > dirty_b) then return end
+      if(dirty_debug) then
+	 local fake={_x=dirty_l, _y=dirty_t, w=dirty_r-dirty_l+1, h=dirty_b-dirty_t+1}
+	 scui.BackupWidget(fake)
+	 screen:SetPrimitiveColor(1,0,0)
+	 screen:DrawRect(dirty_l, dirty_t, dirty_r-dirty_l+1, dirty_b-dirty_t+1)
+	 screen:Update(dirty_l, dirty_t, dirty_r-dirty_l+1, dirty_b-dirty_t+1)
+	 SCUtil.Sleep(0.1)
+	 scui.RestoreWidget(fake)
+      end
+      screen:Update(dirty_l, dirty_t, dirty_r-dirty_l+1, dirty_b-dirty_t+1)
+      dirty_l,dirty_t = screen:GetSize()
+      dirty_r,dirty_b = -1,-1
+   end
+   dirty_l,dirty_t = screen:GetSize()
+   dirty_r,dirty_b = -1,-1
+   local function dirty_point(x,y)
+      if(dirty_l > x) then dirty_l = x end
+      if(dirty_t > y) then dirty_t = y end
+      if(dirty_r < x) then dirty_r = x end
+      if(dirty_b < y) then dirty_b = y end
+   end
+   local function dirty_rect(x,y,w,h)
+      dirty_point(x,y)
+      dirty_point(x+w-1,y+h-1)
+   end
+   local function mouseat(x, y)
+      cursor_x,cursor_y = x,y
+      local new_widget = scui.FindSubWidget(widget, x, y)
+      if(new_widget ~= focus_widget) then
+	 if(focus_widget and focus_widget.OnMouseLeave) then
+	    ret = focus_widget:OnMouseLeave()
+	 end
+	 focus_widget = new_widget
+	 if(ret) then return end
+	 if(new_widget and new_widget.OnMouseEnter) then
+	    ret = new_widget:OnMouseEnter()
+	 end
+      end
+      if(focus_widget and not ret) then
+	 if(focus_widget.OnMouseMove) then
+	    ret = focus_widget:OnMouseMove(x,y)
+	 end
+      end
+   end
+   if(garbage) then garbage.Manage() end
+   repeat
+      local evt
+      if(idle or widget.messy or lbcx ~= cursor_x or lbcy ~= cursor_y) then
+	 evt = screen:GetEvent{textok=true}
+      else
+	 evt = screen:GetEvent{textok=true,wait=true}
+      end
+      if(not evt) then
+	 if(idle) then idle() end
+	 if(widget.messy) then
+	    scui.RefreshWidget(widget, dirty_rect)
+	 end
+	 if(cursor_x) then
+	    lbcx,lbcy = cursor_x,cursor_y
+	    fake_cursor_widget._x = cursor_x - hotx
+	    fake_cursor_widget._y = cursor_y - hoty
+	    scui.BackupWidget(fake_cursor_widget)
+	    screen:Blit(cursor, cursor_x - hotx, cursor_y - hoty)
+	    dirty_rect(cursor_x - hotx, cursor_y - hoty, fake_cursor_widget.w, fake_cursor_widget.h)
+	    clean()
+	    scui.RestoreWidget(fake_cursor_widget)
+	    dirty_rect(cursor_x - hotx, cursor_y - hoty, fake_cursor_widget.w, fake_cursor_widget.h)
+	 else
+	    clean()
+	 end
+      elseif (evt.type == "mousemove") then
+	 mouseat(evt.x, evt.y)
+      elseif (evt.type == "mousedown") then
+	 mouseat(evt.x, evt.y)
+	 if(ret ~= nil) then break end
+	 if(focus_widget) then
+	    clicked_widgets[evt.button] = focus_widget
+	    if(focus_widget.OnMouseDown) then
+	       ret = focus_widget:OnMouseDown(evt.button)
+	    end
+	 end
+      elseif (evt.type == "mouseup") then
+	 mouseat(evt.x, evt.y)
+	 if(ret ~= nil) then break end
+	 if(clicked_widgets[evt.button]) then
+	    local clicked_widget = clicked_widgets[evt.button]
+	    clicked_widgets[evt.button] = nil
+	    if(clicked_widget.OnMouseUp) then
+	       ret = clicked_widget:OnMouseUp(evt.button)
+	    end
+	 end
+      elseif (evt.type == "text") then
+	 if(focus_widget and focus_widget.OnText) then
+	    ret = focus_widget:OnText(evt.text)
+	 end
+      elseif (evt.type == "keydown") then
+	 if(hotkeys[evt.key]) then
+	    local key_widget = hotkeys[evt.key]
+	    if(key_widget == true) then key_widget = widget end
+	    assert(hotkeys[evt.key].OnHotKey)
+	    ret = hotkeys[evt.key]:OnHotKey(evt.key, evt.mod)
+	 end
+	 if(ret) then break end
+	 if(focus_widget and focus_widget.OnKeyDown) then
+	    ret = focus_widget:OnKeyDown(evt.key, evt.mod)
+	 end
+      elseif (evt.type == "keyup") then
+	 if(focus_widget and focus_widget.OnKeyUp) then
+	    ret = focus_widget:OnKeyUp(evt.key, evt.mod)
+	 end
+      elseif (evt.type == "quit") then
+	 break
+      end
+      if(garbage) then garbage.Collect() end
+   until ret ~= nil
+   clean()
+   if(garbage) then garbage.Release() end
+   return ret
+end
+
+function scui.RunModal(widget, params, cursor, hotx, hoty)
+   assert(widget._x and widget._y and widget.w and widget.h, "this needs to be a compiled widget")
+   scui.BackupWidget(widget)
+   local ret = scui.EventLoop(widget, params, cursor, hotx, hoty)
+   scui.RestoreWidget(widget)
+   screen:Update(widget._x, widget._y, widget.w, widget.h)
+   return ret
+end

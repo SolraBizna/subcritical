@@ -1,0 +1,12 @@
+scui is a simple (complicated) UI toolkit. It's next to useless without a widget toolkit. You can write your own or use the provided Uranium widget set (or both!).
+
+Widget toolkits are complicated, and documenting this one properly would take me a while. Try reading the examples. (in the examples/ directory)
+
+Install by placing scui.scu (and preferably also the uranium directory) where SubCritical can find it:
+
+$ mkdir -p /usr/subcritical/lib/
+$ cp -r scui.scu uranium /usr/subcritical/lib/
+
+scui uses (does not require) garbage, and uranium requires fontman and liberation.
+
+Currently, substantial portions of uranium (including aesthetic enhancements and text input) are missing. This is beta software, whaddaya expect?
