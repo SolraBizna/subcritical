@@ -13,7 +13,7 @@ end
 
 function garbage.Manage()
    if(manage_count == 0) then
-      dprintf("Release(): Automatic garbage collection paused")
+      dprintf("Manage(): Automatic garbage collection paused")
       collectgarbage("stop")
    end
    manage_count = manage_count + 1
@@ -21,6 +21,7 @@ function garbage.Manage()
 end
 
 function garbage.Release()
+   assert(manage_count > 0, "garbage.Release() called without a matching garbage.Manage()!")
    manage_count = manage_count - 1
    dprintf("Release(): New manage count is %i", manage_count)
    if(manage_count == 0) then
