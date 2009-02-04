@@ -1,0 +1,75 @@
+gamelicense = "Compatible"
+
+require "subcritical"
+require "scui"
+require "uranium"
+
+screen = assert(SC.Construct("GraphicsDevice", 512, 384, {windowed=true,title="Simple Uranium Example"}))
+
+-- this widget acts as our our top-level "window"
+widget = {
+   -- these are its coordinates and dimensions... since we have no parent
+   -- widget, these are absolute coordinates; if we were contained in another
+   -- widget, they would be relative to its top-left corner
+   x=32,y=32,w=290,h=210,
+   -- uranium.box is a widget that appears as a box. (shocking!) It's most
+   -- useful to contain other widgets. It handles no events on its own.
+   type=uranium.box,
+   -- an optional attribute of a uranium.box; if true, the box will be filled
+   -- in with black. (great for the top-level window)
+   filled=true,
+   -- uranium.text is a widget that draws text. (shocking!) We need not provide
+   -- w or h members; if we don't, it will grow as needed on the missing
+   -- dimensions. (uranium.Alert uses this to dynamically grow the dialog
+   -- based on the text)
+   {x=4, y=4, w=248, h=35, type=uranium.text, text="Text test\ntext test\nhi"},
+   -- uranium.button is a clickable button. (shock---hrrk!) If provided, action
+   -- is a function that will be called when the button is clicked. If it
+   -- returns any value but nil, the event loop and/or modal session will end
+   -- and the function in question (EventLoop or RunModal) will return that
+   -- value.
+   {x=20, y=140, w=120, h=20, type=uranium.button, text="No clicking me!", action=
+      function(me)
+	 -- uranium.Alert returns which button was pressed. Up to three buttons
+	 -- can be requested. The first one, requested or not, will always be
+	 -- there. If you want to use the default names for these buttons,
+	 -- specify them as true.
+	 local result = uranium.Alert("I told you not to click me!", true, true, true)
+	 if(result == 1) then
+	    -- The default button was pressed.
+	    uranium.Alert("Okay, as long as you don't do it again.")
+	 elseif (result == 2) then
+	    -- The cancel button (second button, hotkey escape) was pressed.
+	    result = uranium.Alert("Are you saying you want me to help you never, ever, ever, ever, ever do it again?", "Yes", "No")
+	    if(result == 1) then
+	       uranium.Alert("Okay, I'll disable that button for good.", "Thanks")
+	       -- If you want a button to start life disabled, set
+	       -- disabled=true when declaring it.
+	       me:Disable()
+	    else
+	       uranium.Alert("Okay. You're silly. I think I'll just walk away now.")
+	    end
+	 else
+	    -- If we return a value, we'll end our session and RunModal will
+	    -- pass it back to us. (see above)
+	    return "If you insist. (You clicked on Abort, so I'm aborting!)"
+	 end
+      end},
+   -- If you don't provide an action, the default action returns the tag. If
+   -- you also don't provide a tag, you have a button that does nothing. That
+   -- would be silly, so we provide a tag.
+   -- hotkeys is an optional table of hotkeys that trigger that widget.
+   {x=150, y=140, w=120, h=20, type=uranium.button, text="Click me!", tag="You clicked the right button!", hotkeys={["return"]=true}},
+}
+
+-- Render a nice, pretty, blue background.
+screen:SetPrimitiveColor(0,0,1/2)
+screen:DrawRect(0,0,512,384)
+screen:Update()
+
+-- Call this on a widget before the first time you try to use it, and after you
+-- modify it or any of its children.
+scui.CompileWidget(widget)
+-- Print the value returned by RunModal. This will return nil if the user
+-- requests (via the OS) that we quit.
+print(scui.RunModal(widget, nil, uranium.cursor()))

@@ -1,0 +1,52 @@
+require "scui"
+require "liberation"
+
+uranium = {}
+uranium.font = TTF.Liberation.Sans[12]
+uranium.bfont = TTF.Liberation.Sans.Bold[12]
+
+function uranium.DrawBox(x, y, w, h)
+   if(screen.DrawBox) then return screen:DrawBox(x, y, w, h)
+   else
+      screen:DrawRect(x, y, w, 1)
+      screen:DrawRect(x, y+h-1, w, 1)
+      screen:DrawRect(x, y+1, 1, h-2)
+      screen:DrawRect(x+w-1, y+1, 1, h-2)
+   end
+end
+
+dofile(P"box.lua")
+dofile(P"text.lua")
+dofile(P"button.lua")
+dofile(P"cursor.lua")
+
+function uranium.Alert(text, default_button, cancel_button, other_button)
+   if(default_button == true) then default_button = "OK" end
+   if(cancel_button == true) then cancel_button = "Cancel" end
+   if(other_button == true) then other_button = "Abort" end
+   local alert = {
+      w=315,
+      type=uranium.box, filled=true,
+      {x=20,y=15,w=260,type=uranium.text,text=text},
+   }
+   uranium.text.SetupText(alert[1])
+   local buttony = alert[1].h + alert[1].y + 10
+   alert.h = buttony + 35
+   alert[#alert+1] = {x=210,y=buttony,w=85,h=20,type=uranium.button,hotkeys={["return"]=true},text=default_button or "OK",tag=1}
+   if(cancel_button) then
+      alert[#alert+1] = {x=115,y=buttony,w=85,h=20,type=uranium.button,hotkeys={["escape"]=true},text=cancel_button,tag=2}
+   end
+   if(other_button) then
+      alert[#alert+1] = {x=20,y=buttony,w=85,h=20,type=uranium.button,hotkeys={["backspace"]=true,["delete"]=true},text=other_button,tag=3}
+   end
+   local sw,sh = screen:GetSize()
+   assert(sw >= alert.w, "Alert too wide for screen! (screen should be >320 pixels wide)")
+   alert.x = math.floor((sw-alert.w)/2)
+   if(sh <= alert.h) then
+      alert.y = sh - alert.h
+   else
+      alert.y = math.floor((sh-alert.h)*2/5)
+   end
+   scui.CompileWidget(alert)
+   return scui.RunModal(alert, nil, uranium.cursor())
+end
