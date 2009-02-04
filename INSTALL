@@ -34,5 +34,8 @@ via DarwinPorts, you may need to set some environment variables like:
 
 Substitute /opt/local for /opt if necessary.
 
-You may also want to install the fontman package and the Liberation fonts, see
-fontman/README for instructions on how to do that.
+SubCritical also includes some useful utilities. Currently:
+  fontman: Font management and consolidation
+  garbage: Standardized garbage collection deferral
+Installing all of these along with the core packages is a very good idea. See
+their appropriate README files for more information.
