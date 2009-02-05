@@ -39,7 +39,7 @@ do
    diagon_tr=SCUtil.MakeFrisketDirectly(SCUtil.RotateRight(diagon))
 end
 
-function button:RenderSelf(active)
+function button:RenderSelf()
    assert(self.x and self.y and self.w and self.h, "malformed button")
    local sx,sy = self._x,self._y
    if (self.active and self.focus and not self.disabled) then
@@ -106,7 +106,7 @@ function button:OnMouseDown()
 end
 
 function button:OnMouseUp()
-   if(self.disabled) then return end
+   if(self.disabled or not self.active) then return end
    self.active = false
    scui.MarkDirty(self)
    if(self.focus) then
@@ -115,13 +115,11 @@ function button:OnMouseUp()
 end
 
 function button:OnMouseEnter()
-   if(self.disabled) then return end
    self.focus = true
    scui.MarkDirty(self)
 end
 
 function button:OnMouseLeave()
-   if(self.disabled) then return end
    self.focus = false
    scui.MarkDirty(self)
 end
