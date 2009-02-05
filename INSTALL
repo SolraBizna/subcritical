@@ -37,5 +37,6 @@ Substitute /opt/local for /opt if necessary.
 SubCritical also includes some useful utilities. Currently:
   fontman: Font management and consolidation
   garbage: Standardized garbage collection deferral
+  scui: A UI toolkit
 Installing all of these along with the core packages is a very good idea. See
 their appropriate README files for more information.
