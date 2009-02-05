@@ -197,10 +197,20 @@ function scui.EventLoop(widget, params, cursor, hotx, hoty)
 	 if(focus_widget and focus_widget.OnMouseLeave) then
 	    ret = focus_widget:OnMouseLeave()
 	 end
-	 focus_widget = new_widget
 	 if(ret) then return end
-	 if(new_widget and new_widget.OnMouseEnter) then
-	    ret = new_widget:OnMouseEnter()
+	 if(focus_widget and focus_widget.OnBlur) then
+	    ret = focus_widget:OnBlur()
+	 end
+	 if(ret) then return end
+	 focus_widget = new_widget
+	 if(new_widget) then
+	    if(new_widget.OnMouseEnter) then
+	       ret = new_widget:OnMouseEnter()
+	    end
+	    if(ret) then return end
+	    if(new_widget.OnFocus) then
+	       ret = new_widget:OnFocus()
+	    end
 	 end
       end
       if(focus_widget and not ret) then
