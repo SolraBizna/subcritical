@@ -39,6 +39,7 @@ end
 dofile(P"box.lua")
 dofile(P"text.lua")
 dofile(P"button.lua")
+dofile(P"field.lua")
 dofile(P"cursor.lua")
 
 function uranium.Alert(text, default_button, cancel_button, other_button)
