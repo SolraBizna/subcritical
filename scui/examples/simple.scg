@@ -32,7 +32,7 @@ widget = {
    -- these are its coordinates and dimensions... since we have no parent
    -- widget, these are absolute coordinates; if we were contained in another
    -- widget, they would be relative to its top-left corner
-   x=32,y=32,w=290,h=210,
+   x=32,y=32,w=290,h=95,
    -- uranium.box is a widget that appears as a box. (shocking!) It's most
    -- useful to contain other widgets. It handles no events on its own.
    type=uranium.box,
@@ -43,13 +43,13 @@ widget = {
    -- w or h members; if we don't, it will grow as needed on the missing
    -- dimensions. (uranium.Alert uses this to dynamically grow the dialog
    -- based on the text)
-   {x=4, y=4, w=248, h=35, type=uranium.text, text="Text test\ntext test\nhi"},
+   {x=20, y=15, w=250, h=35, type=uranium.text, text="Here is some text\nhere is some other text\nThis text is cut off, since the widget is too short"},
    -- uranium.button is a clickable button. (shock---hrrk!) If provided, action
    -- is a function that will be called when the button is clicked. If it
    -- returns any value but nil, the event loop and/or modal session will end
    -- and the function in question (EventLoop or RunModal) will return that
    -- value.
-   {x=20, y=140, w=120, h=20, type=uranium.button, text="No clicking me!", action=
+   {x=20, y=60, w=120, h=20, type=uranium.button, text="No clicking me!", action=
       function(me)
 	 -- uranium.Alert returns which button was pressed. Up to three buttons
 	 -- can be requested. The first one, requested or not, will always be
@@ -80,7 +80,7 @@ widget = {
    -- you also don't provide a tag, you have a button that does nothing. That
    -- would be silly, so we provide a tag.
    -- hotkeys is an optional table of hotkeys that trigger that widget.
-   {x=150, y=140, w=120, h=20, type=uranium.button, text="Click me!", tag="You clicked the right button!", hotkeys={["return"]=true}},
+   {x=150, y=60, w=120, h=20, type=uranium.button, text="Click me!", tag="You clicked the right button!", hotkeys={["return"]=true}},
 }
 
 -- Render a nice, pretty, blue background.
