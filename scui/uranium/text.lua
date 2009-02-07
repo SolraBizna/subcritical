@@ -58,6 +58,8 @@ function uranium.text:RenderSelf()
    end
    local skip = self.skip
    local remh = self.h
+   screen:SetPrimitiveColor(0, 0, 0)
+   screen:DrawRect(x, y, self.w, self.h)
    screen:SetPrimitiveColor(1, 1, 1)
    for i,v in ipairs(self.friskets) do
       if(remh <= 0) then return end
