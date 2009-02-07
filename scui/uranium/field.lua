@@ -37,7 +37,11 @@ function field:RenderSelf()
    if(not self.frisket) then self:UpdateFrisket() end
    screen:SetPrimitiveColor(0, 0, 0)
    screen:DrawRect(sx+1, sy+1, self.w-2, self.h-2)
-   screen:SetPrimitiveColor(1, 1, 1)
+   if(self.disabled) then
+      screen:SetPrimitiveColor(1/4, 1/4, 1/4)
+   else
+      screen:SetPrimitiveColor(1, 1, 1)
+   end
    screen:DrawBox(sx, sy, self.w, self.h)
    local ipp
    if(self.frisket) then
@@ -67,6 +71,7 @@ function field:OnMouseLeave()
 end
 
 function field:OnText(char)
+   if(self.disabled) then return end
    self.frisket = nil
    self.text = self.text or ""
    if(char == "\8" or char == "\127") then -- control-H, backspace
@@ -77,4 +82,18 @@ function field:OnText(char)
       self.text = self.text .. char
    end
    scui.MarkDirty(self)
+end
+
+function field:Disable()
+   if(not self.disabled) then
+      self.disabled = true
+      scui.MarkDirty(self)
+   end
+end
+
+function field:Enable()
+   if(self.disabled) then
+      self.disabled = false
+      scui.MarkDirty(self)
+   end
 end
