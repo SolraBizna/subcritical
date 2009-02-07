@@ -593,18 +593,18 @@ sc.var = {}
 SCVar,scvar,sc.Var = sc.var,sc.var,sc.var
 function sc.var.Read(name)
    name = config_dir..fixvarname(name)
-   return (io.open(name,"rb"))
+   return (old_open(name,"rb"))
 end
 function sc.var.Write(name)
    helper.ckdir(config_dir)
    name = config_dir..fixvarname(name)
-   return cproxy({file=io.open(name.."~","wb+"), sname=name.."~", dname=name})
+   return cproxy({file=old_open(name.."~","wb+"), sname=name.."~", dname=name})
 end
 function sc.var.Update(name)
    helper.ckdir(config_dir)
    name = config_dir..fixvarname(name)
    helper.copy(name.."~", name) -- save memory by not doing this in Lua
-   return cproxy({file=io.open(name.."~","ab+"), sname=name.."~", dname=name})
+   return cproxy({file=old_open(name.."~","ab+"), sname=name.."~", dname=name})
 end
 
 if(hardcheck) then
