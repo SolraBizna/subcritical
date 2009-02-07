@@ -47,22 +47,22 @@ function uranium.Alert(text, default_button, cancel_button, other_button)
    if(cancel_button == true) then cancel_button = "Cancel" end
    if(other_button == true) then other_button = "Abort" end
    local alert = {
-      w=315,
+      w=400,
       type=uranium.box, filled=true,
-      {x=20,y=15,w=260,type=uranium.text,text=text},
+      {x=20,y=15,w=360,type=uranium.text,text=text},
    }
    uranium.text.SetupText(alert[1])
    local buttony = alert[1].h + alert[1].y + 10
    alert.h = buttony + 35
-   alert[#alert+1] = {x=210,y=buttony,w=85,h=20,type=uranium.button,hotkeys={["return"]=true},text=default_button or "OK",tag=1}
+   alert[#alert+1] = {x=295,y=buttony,w=85,h=20,type=uranium.button,hotkeys={["return"]=true},text=default_button or "OK",tag=1}
    if(cancel_button) then
-      alert[#alert+1] = {x=115,y=buttony,w=85,h=20,type=uranium.button,hotkeys={["escape"]=true},text=cancel_button,tag=2}
+      alert[#alert+1] = {x=200,y=buttony,w=85,h=20,type=uranium.button,hotkeys={["escape"]=true},text=cancel_button,tag=2}
    end
    if(other_button) then
-      alert[#alert+1] = {x=20,y=buttony,w=85,h=20,type=uranium.button,hotkeys={["backspace"]=true,["delete"]=true},text=other_button,tag=3}
+      alert[#alert+1] = {x=105,y=buttony,w=85,h=20,type=uranium.button,hotkeys={["backspace"]=true,["delete"]=true},text=other_button,tag=3}
    end
    local sw,sh = screen:GetSize()
-   assert(sw >= alert.w, "Alert too wide for screen! (screen should be >320 pixels wide)")
+   assert(sw >= alert.w, "Alert too wide for screen! (screen should be >=400 pixels wide)")
    alert.x = math.floor((sw-alert.w)/2)
    if(sh <= alert.h) then
       alert.y = sh - alert.h
