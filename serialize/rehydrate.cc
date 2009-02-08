@@ -145,6 +145,7 @@ static void ReadValue(lua_State* L, const unsigned char*& in, size_t& length, id
     case True: lua_pushboolean(L, 1); break;
     case EndTable: throw "EndTable atom at inappropriate place in stream";
     }
+    ++in;
     break;
   }
 }
