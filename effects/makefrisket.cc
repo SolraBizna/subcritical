@@ -135,6 +135,101 @@ SUBCRITICAL_UTILITY(MakeFrisketFromGrayscaleQuickly)(lua_State* L) throw() {
   return 1;
 }
 
+SUBCRITICAL_UTILITY(MakeFrisketFromRed)(lua_State* L) throw() {
+  Drawable* graphic = lua_toobject(L, 1, Drawable);
+  Frisket* ret = new Frisket(graphic->width, graphic->height);
+  int rsh;
+  switch(graphic->layout) {
+  default:
+    fprintf(stderr, "WARNING: Making frisket from unknown format %i!\n", graphic->layout);
+  case FB_xRGB:
+    rsh = 16;
+    break;
+  case FB_xBGR:
+    rsh = 0;
+    break;
+  case FB_RGBx:
+    rsh = 24;
+    break;
+  case FB_BGRx:
+    rsh = 8;
+    break;
+  }
+  Pixel** srcp;
+  Frixel** dstp;
+  for(srcp = graphic->rows, dstp = ret->rows; srcp < graphic->rows + graphic->height; ++srcp, ++dstp) {
+    Pixel* src = *srcp;
+    Frixel* dst = *dstp;
+    size_t rem = graphic->width;
+    UNROLL(rem,
+	   *dst++ = SrgbToLinear[(*src++ >> rsh) & 255] >> 8);
+  }
+  ret->Push(L);
+  return 1;
+}
+
+SUBCRITICAL_UTILITY(MakeFrisketFromGreen)(lua_State* L) throw() {
+  Drawable* graphic = lua_toobject(L, 1, Drawable);
+  Frisket* ret = new Frisket(graphic->width, graphic->height);
+  int gsh;
+  switch(graphic->layout) {
+  default:
+    fprintf(stderr, "WARNING: Making frisket from unknown format %i!\n", graphic->layout);
+  case FB_xRGB:
+  case FB_xBGR:
+    gsh = 8;
+    break;
+  case FB_BGRx:
+  case FB_RGBx:
+    gsh = 16;
+    break;
+  }
+  Pixel** srcp;
+  Frixel** dstp;
+  for(srcp = graphic->rows, dstp = ret->rows; srcp < graphic->rows + graphic->height; ++srcp, ++dstp) {
+    Pixel* src = *srcp;
+    Frixel* dst = *dstp;
+    size_t rem = graphic->width;
+    UNROLL(rem,
+	   *dst++ = SrgbToLinear[(*src++ >> gsh) & 255] >> 8);
+  }
+  ret->Push(L);
+  return 1;
+}
+
+SUBCRITICAL_UTILITY(MakeFrisketFromBlue)(lua_State* L) throw() {
+  Drawable* graphic = lua_toobject(L, 1, Drawable);
+  Frisket* ret = new Frisket(graphic->width, graphic->height);
+  int bsh;
+  switch(graphic->layout) {
+  default:
+    fprintf(stderr, "WARNING: Making frisket from unknown format %i!\n", graphic->layout);
+  case FB_xRGB:
+    bsh = 0;
+    break;
+  case FB_xBGR:
+    bsh = 16;
+    break;
+  case FB_RGBx:
+    bsh = 8;
+    break;
+  case FB_BGRx:
+    bsh = 24;
+    break;
+  }
+  Pixel** srcp;
+  Frixel** dstp;
+  for(srcp = graphic->rows, dstp = ret->rows; srcp < graphic->rows + graphic->height; ++srcp, ++dstp) {
+    Pixel* src = *srcp;
+    Frixel* dst = *dstp;
+    size_t rem = graphic->width;
+    UNROLL(rem,
+	   *dst++ = SrgbToLinear[(*src++ >> bsh) & 255] >> 8);
+  }
+  ret->Push(L);
+  return 1;
+}
+
 SUBCRITICAL_UTILITY(MakeFrisketDirectly)(lua_State* L) throw() {
   Drawable* graphic = lua_toobject(L, 1, Drawable);
   Frisket* ret = new Frisket(graphic->width, graphic->height);
