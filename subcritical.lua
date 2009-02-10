@@ -647,7 +647,7 @@ end
 do
    local before,after
    before = collectgarbage("count")
-   repeat until collectgarbage("step")
+   collectgarbage("collect")
    after = collectgarbage("count")
    dprintf("Collected %.1fKiB of garbage.", before - after)
    collectgarbage("restart")
