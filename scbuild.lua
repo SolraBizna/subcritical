@@ -26,7 +26,7 @@
 
 if(arg and #arg >= 1 and arg[1] == "clean") then
    -- Special case!
-   local clean_command = "rm -f core *~ \\#*\\# *.o *.so *.dylib *.bundle *.dll *.a *.d"
+   local clean_command = "rm -f core *~ \\#*\\# *.o *.so *.scc *.dylib *.bundle *.dll *.a *.d"
    print(clean_command)
    local status = os.execute(clean_command)
    if(status ~= 0 or #arg == 1) then os.exit(status) end
