@@ -49,7 +49,7 @@ SDLSound::SDLSound(SoundStream* slave) throw(const char*) : SoundDevice(slave) {
   InitializeSubsystem(SDL_INIT_AUDIO);
   SDL_AudioSpec desired;
   desired.freq = slave->GetFramerate();
-  desired.format = AUDIO_S16SYS;
+  desired.format = little_endian ? AUDIO_S16LSB : AUDIO_S16MSB;
   desired.channels = 2; // stereo
   desired.samples = 512; // a good sane value
   desired.callback = AudioCallback;
