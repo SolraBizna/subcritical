@@ -8,9 +8,33 @@ using namespace SubCritical;
 
 class LOCAL ProtoPackedArray : public Object {
  public:
+  ProtoPackedArray() : border(0), border_set(false) {}
   virtual ~ProtoPackedArray() {};
   virtual int Lua_Get(lua_State* L) const throw() = 0;
   virtual int Lua_Set(lua_State* L) throw() = 0;
+  int Lua_GetBorder(lua_State* L) const throw() {
+    return oob(L);
+  }
+  int Lua_SetBorder(lua_State* L) throw() {
+    if(lua_isnil(L, 1)) {
+      border_set = false;
+      border = 0;
+    }
+    else {
+      border = luaL_checknumber(L, 1);
+      border_set = true;
+    }
+    return 0;
+  }
+ protected:
+  int oob(lua_State* L) const throw() {
+    if(border_set) lua_pushnumber(L, border);
+    else lua_pushnil(L);
+    return 1;
+  }
+ private:
+  lua_Number border;
+  bool border_set;
 };
 
 template <class T, int order> class PackedArray : public ProtoPackedArray {};
@@ -18,13 +42,13 @@ template <class T, int order> class PackedArray : public ProtoPackedArray {};
 template <class T> class PackedArray<T, 1> : public ProtoPackedArray {
 public:
   PackedArray(long dims[1])
-  : array((T*)calloc(dims[0],sizeof(T))), width(dims[0]) {
+    : array((T*)calloc(dims[0],sizeof(T))), width(dims[0]) {
     if(!array) throw 0;
   }
   virtual ~PackedArray() { free(array); }
   virtual int Lua_Get(lua_State* L) const throw() {
     long x = (long)luaL_checknumber(L, 1);
-    if(x < 0 || x >= width) return luaL_error(L, "array index 1 out of bounds");
+    if(x < 0 || x >= width) return oob(L);
     lua_pushnumber(L, (lua_Number)array[x]);
     return 1;
   }
@@ -49,7 +73,7 @@ public:
   virtual ~PackedArray() { free(array); }
   virtual int Lua_Get(lua_State* L) const throw() {
     long x = (long)luaL_checknumber(L, 1);
-    if(x < 0 || x >= width) return luaL_error(L, "array index 1 out of bounds");
+    if(x < 0 || x >= width) return oob(L);
     lua_pushboolean(L, array[x/32] & (1<<(x%32)));
     return 1;
   }
@@ -71,15 +95,15 @@ private:
 template <class T> class PackedArray<T, 2> : public ProtoPackedArray {
 public:
   PackedArray(long dims[2])
-  : array((T*)calloc(dims[0]*dims[1],sizeof(T))), width(dims[0]), height(dims[1]) {
+    : array((T*)calloc(dims[0]*dims[1],sizeof(T))), width(dims[0]), height(dims[1]) {
     if(!array) throw 0;
   }
   virtual ~PackedArray() { free(array); }
   virtual int Lua_Get(lua_State* L) const throw() {
     long x = (long)luaL_checknumber(L, 1);
-    if(x < 0 || x >= width) return luaL_error(L, "array index 1 out of bounds");
+    if(x < 0 || x >= width) return oob(L);
     long y = (long)luaL_checknumber(L, 2);
-    if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
+    if(y < 0 || y >= height) return oob(L);
     lua_pushnumber(L, (lua_Number)array[x*height+y]);
     return 1;
   }
@@ -106,9 +130,9 @@ public:
   virtual ~PackedArray() { free(array); }
   virtual int Lua_Get(lua_State* L) const throw() {
     long x = (long)luaL_checknumber(L, 1);
-    if(x < 0 || x >= width) return luaL_error(L, "array index 1 out of bounds");
+    if(x < 0 || x >= width) return oob(L);
     long y = (long)luaL_checknumber(L, 2);
-    if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
+    if(y < 0 || y >= height) return oob(L);
     long coord = x*height+y;
     lua_pushboolean(L, array[coord/32] & (1<<(coord%32)));
     return 1;
@@ -140,11 +164,11 @@ public:
   virtual ~PackedArray() { free(array); }
   virtual int Lua_Get(lua_State* L) const throw() {
     long x = (long)luaL_checknumber(L, 1);
-    if(x < 0 || x >= width) return luaL_error(L, "array index 1 out of bounds");
+    if(x < 0 || x >= width) return oob(L);
     long y = (long)luaL_checknumber(L, 2);
-    if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
+    if(y < 0 || y >= height) return oob(L);
     long z = (long)luaL_checknumber(L, 3);
-    if(z < 0 || z >= depth) return luaL_error(L, "array index 3 out of bounds");
+    if(z < 0 || z >= depth) return oob(L);
     lua_pushnumber(L, (lua_Number)array[x*heightdepth+y*height+z]);
     return 1;
   }
@@ -173,11 +197,11 @@ public:
   virtual ~PackedArray() { free(array); }
   virtual int Lua_Get(lua_State* L) const throw() {
     long x = (long)luaL_checknumber(L, 1);
-    if(x < 0 || x >= width) return luaL_error(L, "array index 1 out of bounds");
+    if(x < 0 || x >= width) return oob(L);
     long y = (long)luaL_checknumber(L, 2);
-    if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
+    if(y < 0 || y >= height) return oob(L);
     long z = (long)luaL_checknumber(L, 3);
-    if(z < 0 || z >= depth) return luaL_error(L, "array index 3 out of bounds");
+    if(z < 0 || z >= depth) return oob(L);
     long coord = x*heightdepth+y*height+z;
     lua_pushboolean(L, array[coord/32] & (1<<(coord%32)));
     return 1;
@@ -211,6 +235,8 @@ public: \
 static const struct ObjectMethod name##_Methods[] = { \
   METHOD("Get", &name::Lua_Get), \
   METHOD("Set", &name::Lua_Set), \
+  METHOD("GetBorder", &name::Lua_GetBorder), \
+  METHOD("SetBorder", &name::Lua_SetBorder), \
   NOMOREMETHODS(), \
 }; \
 PROTOCOL_IMP(name, Object, name##_Methods); \

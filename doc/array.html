@@ -57,11 +57,16 @@
 <i>value</i> = <i>array3d</i>:Get(<i>x</i>, <i>y</i>, <i>z</i>)</dt>
 <dd>Get the value currently stored at the given location. Unset values default to false or 0, depending on the array's type.</dd>
 <dd>Coordinates start from 0, not 1.</dd>
+<dd>If the given coordinates are outside the array's bounds, returns the border value (see below).</dd>
 <dt class="code"><i>array1d</i>:Set(<i>value</i>, <i>x</i>)
 <i>array2d</i>:Set(<i>value</i>, <i>x</i>, <i>y</i>)
 <i>array3d</i>:Set(<i>value</i>, <i>x</i>, <i>y</i>, <i>z</i>)</dt>
 <dd>Change the value currently stored at the given location.</dd>
 <dd>Coordinates start from 0, not 1.</dd>
+<dt class="code"><i>border</i> = <i>array</i>:GetBorder()</dt>
+<dd>Return the value that will currently be returned if an access outside the bounds of the array is attempted.</dd>
+<dt class="code"><i>array</i>:SetBorder(<i>border</i>)</dt>
+<dd>Change the value that will be returned if an access outside the bounds of the array is attempted. Valid values are nil or any number. The default is nil, and the number will not be clamped to the range of the array. (Boolean arrays still have number/nil border values.)</dd>
 </dl>
 <p>Here are some examples:</p>
 <pre>-- Create a PackedArray containing a 32x32 quarter-circle.
