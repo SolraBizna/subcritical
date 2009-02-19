@@ -163,11 +163,17 @@ void SDLGraphics::Update(int x, int y, int w, int h) throw() {
   //SDL_Rect r = {x, y, w, h};
   //SDL_BlitSurface(shadow, &r, screen, &r);
   SDL_UpdateRect(screen, x, y, w, h);
+  // prevent asynchronous blitting as well as we can... this is needed on at
+  // least one platform
+  SDL_LockSurface(screen);
+  SDL_UnlockSurface(screen);
 }
 
 void SDLGraphics::UpdateAll() throw() {
   //SDL_BlitSurface(shadow, NULL, screen, NULL);
   SDL_Flip(screen);
+  SDL_LockSurface(screen);
+  SDL_UnlockSurface(screen);
 }
 
 static const struct kmodpair {
