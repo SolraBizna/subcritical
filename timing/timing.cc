@@ -101,20 +101,20 @@ SUBCRITICAL_UTILITY(Sleep)(lua_State* L) {
       continue;
     }
   } while(0);
-#elif (_BSD_SOURCE || _XOPEN_SOURCE >= 500)
+#else //if (_BSD_SOURCE || _XOPEN_SOURCE >= 500)
   if(length >= 1.0) {
     unsigned int rem = (unsigned int)floor(length);
     do { rem = sleep(rem); } while(rem > 0);
     length = length - floor(length);
   }
   usleep((unsigned int)(length * MICROSECOND_SCALE));
-#else
+  /*#else
   if(length >= 1.0) {
     unsigned int rem = (unsigned int)floor(length);
     do { rem = sleep(rem); } while(rem > 0);
     length = length - floor(length);
   }
-  msleep((unsigned int)(length * MILLISECOND_SCALE));
+  msleep((unsigned int)(length * MILLISECOND_SCALE));*/
 #endif
   return 0;
 }
