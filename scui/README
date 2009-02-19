@@ -9,4 +9,4 @@ $ cp -r scui.scu uranium /usr/subcritical/lib/
 
 scui uses (does not require) garbage, and uranium requires fontman and liberation.
 
-Currently, substantial portions of uranium (including aesthetic enhancements and text input) are missing. This is beta software, whaddaya expect?
+Currently, substantial portions of uranium are missing. This is beta software, whaddaya expect?
