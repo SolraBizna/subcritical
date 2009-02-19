@@ -108,6 +108,13 @@ SUBCRITICAL_UTILITY(Sleep)(lua_State* L) {
     length = length - floor(length);
   }
   usleep((unsigned int)(length * MICROSECOND_SCALE));
+#else
+  if(length >= 1.0) {
+    unsigned int rem = (unsigned int)floor(length);
+    do { rem = sleep(rem); } while(rem > 0);
+    length = length - floor(length);
+  }
+  msleep((unsigned int)(length * MILLISECOND_SCALE));
 #endif
   return 0;
 }
