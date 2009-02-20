@@ -162,7 +162,7 @@ static bool recursive_ckdir(lua_State* L, char* dir, const int* slashbuf) {
     ret = recursive_ckdir(L, dir, slashbuf + 1);
     dir[*slashbuf] = '/';
     // If the parent could not be created, we definitely can't.
-    if(ret == 1) return false;
+    if(ret == false) return false;
     // It all depends on mkdir now.
     return !mkdir(dir, 0777);
   }
