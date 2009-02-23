@@ -154,6 +154,7 @@ end
 local cursor_x,cursor_y
 
 function scui.EventLoop(widget, params, cursor, hotx, hoty)
+   cursor_x,cursor_y = screen:GetMousePos()
    local ret = nil
    params = params or {}
    local idle = params.idle
@@ -297,8 +298,8 @@ end
 
 function scui.RunModal(widget, params, cursor, hotx, hoty)
    assert(widget._x and widget._y and widget.w and widget.h, "this needs to be a compiled widget")
-   local cx,cy,cw,cy = screen:GetClipRect()
-   screen:SetClipRect(widget._x, widget._y, widget.w, widget.h)
+   local cx,cy,cw,ch = screen:GetClipRect()
+   screen:SetClipRect(0, 0, screen:GetSize())
    scui.BackupWidget(widget)
    local ret = scui.EventLoop(widget, params, cursor, hotx, hoty)
    scui.RestoreWidget(widget)

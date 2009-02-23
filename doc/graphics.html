@@ -100,6 +100,9 @@ end</pre></dd>
 <dt class="code"><a name="GraphicsDevice:Update" /><i>device</i>:Update()
 <i>device</i>:Update(<i>x</i>, <i>y</i>, <i>width</i>, <i>height</i>)</dt>
 <dd>Copies the pixels inside the given rectangle (or, if none is specified, all pixels) to the screen, where the user can get at them. A common mistake is to forget to call this after you're finished blitting.</dd>
+<dt class="code"><a name="GraphicsDevice:GetMousePos" /><i>x</i>,<i>y</i> = <i>device</i>:GetMousePos()</dt>
+<dd>Returns the current mouse position, in pixels.</dd>
+<dd>This should only be used if you need to know where the mouse is <b>right now</b> and someone else was handling events immediately prior.</dd>
 <dt class="code"><a name="GraphicsDevice:GetEvent" /><i>event</i> = <i>device</i>:GetEvent{[wait=<i>should_wait</i>,] [relmouse=<i>should_relmouse</i>,] [textok=<i>is_textok</i>,]}</dt>
 <dd>If any events are available, return the next one as a table. If <tt>wait</tt> is true, don't return until an event becomes available. If <tt>relmouse</tt> is true, return relative mouse motion directly instead of keeping track of an absolute mouse position. If <tt>textok</tt> is true, process the user's keystrokes and give us every character they type.</dd>
 <dd>The returned table contains a "type" member denoting its type. Its structure is complicated. An example game included in this directory (<tt>printevents.scg</tt>) will print all received events, you can use it to determine the form of the specific events you're looking for.</dd>

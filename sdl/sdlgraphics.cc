@@ -33,6 +33,7 @@ class EXPORT SDLGraphics : public GraphicsDevice {
   virtual void Update(int x, int y, int w, int h) throw();
   virtual void UpdateAll() throw();
   virtual int Lua_GetEvent(lua_State* L) throw();
+  virtual int Lua_GetMousePos(lua_State* L) throw();
   PROTOCOL_PROTOTYPE();
  private:
   int RealGetEvent(lua_State* L, bool wait, bool relmouse, bool textok) throw() LOCAL;
@@ -350,6 +351,14 @@ int SDLGraphics::Lua_GetEvent(lua_State* L) throw() {
   }
   lua_pop(L, lua_gettop(L));
   return RealGetEvent(L, wait, relmouse, textok);
+}
+
+int SDLGraphics::Lua_GetMousePos(lua_State* L) throw() {
+  int x, y;
+  SDL_GetMouseState(&x, &y);
+  lua_pushinteger(L, x);
+  lua_pushinteger(L, y);
+  return 2;
 }
 
 SDLGraphics::~SDLGraphics() {
