@@ -109,7 +109,7 @@ dprintf("exec_path=%s", exec_path)
 
 local default_config_dir
 if(helper.os == "windows") then default_config_dir = (os.getenv("HOMEDRIVE") or "C:") .. (os.getenv("HOMEPATH") or "\\subcritical\\etc\\")
-elseif (helper.os == "macosx") then default_config_dir = (os.getenv("HOME") or "/home").."/Library/Preferences/SubCritical/"
+--elseif (helper.os == "macosx") then default_config_dir = (os.getenv("HOME") or "/home").."/Library/Preferences/SubCritical/"
 else default_config_dir = (os.getenv("HOME") or "/home").."/.subcritical/config/" end
 local config_dir = os.getenv("SUBCRITICAL_CONFIG_DIR") or default_config_dir
 if(config_dir:sub(-1,-1) ~= dirsep) then config_dir = config_dir .. dirsep end
