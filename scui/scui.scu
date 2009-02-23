@@ -297,9 +297,12 @@ end
 
 function scui.RunModal(widget, params, cursor, hotx, hoty)
    assert(widget._x and widget._y and widget.w and widget.h, "this needs to be a compiled widget")
+   local cx,cy,cw,cy = screen:GetClipRect()
+   screen:SetClipRect(widget._x, widget._y, widget.w, widget.h)
    scui.BackupWidget(widget)
    local ret = scui.EventLoop(widget, params, cursor, hotx, hoty)
    scui.RestoreWidget(widget)
    screen:Update(widget._x, widget._y, widget.w, widget.h)
+   screen:SetClipRect(cx,cy,cw,ch)
    return ret
 end
