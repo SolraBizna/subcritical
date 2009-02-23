@@ -845,6 +845,7 @@ PROTOCOL_IMP(Drawable, Object, DMethods);
 static const struct ObjectMethod GDMethods[] = {
   METHOD("Update", &GraphicsDevice::Lua_Update),
   METHOD("GetEvent", &GraphicsDevice::Lua_GetEvent),
+  METHOD("GetMousePos", &GraphicsDevice::Lua_GetMousePos),
   NOMOREMETHODS(),
 };
 PROTOCOL_IMP(GraphicsDevice, Drawable, GDMethods);
