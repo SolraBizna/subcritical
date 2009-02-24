@@ -169,6 +169,17 @@ do
    local eksu_graphic = SCUtil.RenderPreCompressed(eksu_render, 12, 12)
    eksu=SCUtil.MakeFrisketDirectly(eksu_graphic)
 end
+local radio
+do
+   local function radio_render(x,y)
+      x = math.abs(x - 5.5)
+      y = math.abs(y - 5.5)
+      local d = math.sqrt(x*x+y*y)
+      return 0,1-(d-5),0
+   end
+   local radio_graphic = SCUtil.RenderPreCompressed(radio_render, 12, 12)
+   radio=SCUtil.MakeFrisketDirectly(radio_graphic)
+end
 
 function checkbox:RenderSelf()
    assert(self.x and self.y and self.w and self.h, "malformed checkbox")
@@ -210,13 +221,17 @@ function checkbox:RenderSelf()
       else
 	 ty = math.floor((self.h-fh)/2)
       end
-      screen:BlitFrisket(self.frisket, 0, 0, self.w-self.h-2, self.h-ty, sx+self.h+2, sy+ty)
+      screen:BlitFrisket(self.frisket, 0, 0, self.w-self.h-5, self.h-ty, sx+self.h+5, sy+ty)
    end
    if(self.checked) then
       if(self.active and self.focus) then
 	 screen:SetPrimitiveColor(0,0,0)
       end
-      screen:BlitFrisket(eksu, sx+4, sy+4)
+      if(self.radio) then
+	 screen:BlitFrisket(radio, sx+4, sy+4)
+      else
+	 screen:BlitFrisket(eksu, sx+4, sy+4)
+      end
    end
 end
 
@@ -230,7 +245,10 @@ function checkbox:OnMouseUp()
    if(self.disabled or not self.active) then return end
    self.active = false
    if(self.focus) then
-      self.checked = not self.checked
+      if(self.radio) then self.checked = true
+      else
+	 self.checked = not self.checked
+      end
    end
    scui.MarkDirty(self)
    return self:action()
