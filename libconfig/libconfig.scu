@@ -1,0 +1,33 @@
+libconfig = {}
+function libconfig.read(file)
+   file = SCVar.Read(file)
+   if(not file) then
+      return {}
+   else
+      local function work()
+         local a = file:read("*a")
+         file:close()
+         local csum = a:sub(1,4)
+         local data = a:sub(5,-1)
+         assert(csum == SCUtil.QuickChecksum(data), "Checksum mismatch")
+         local re = SCUtil.Rehydrate(data)
+         assert(type(re) == "table", "Malformed configuration file")
+         return re
+      end
+      local s,e = xpcall(work, debug.traceback)
+      if(not s) then
+         return {},e
+      else
+	 return e
+      end
+   end
+end
+
+function libconfig.write(file, config)
+   config = config or {}
+   assert(type(config) == "table")
+   local cel = SCUtil.Dehydrate(config)
+   file = SCVar.Write(file)
+   assert(file:write(SCUtil.QuickChecksum(cel)..cel))
+   file:close()
+end

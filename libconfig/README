@@ -1,0 +1,13 @@
+libconfig is a simple library for saving and loading configuration files.
+
+require "libconfig"
+config = libconfig.read("My Game's Configuration.celduin")
+...
+libconfig.write("My Game's Configuration", config)
+
+libconfig.read tries very hard never to throw an error. libconfig.write is less careful. libconfig.read will always return a table, even if it's empty.
+
+Install by placing libconfig.scu where SubCritical can find it:
+
+$ mkdir -p /usr/subcritical/lib/
+$ cp libconfig.scu /usr/subcritical/lib/
