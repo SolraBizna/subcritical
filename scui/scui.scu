@@ -303,7 +303,36 @@ function scui.RunModal(widget, params, cursor, hotx, hoty)
    scui.BackupWidget(widget)
    local ret = scui.EventLoop(widget, params, cursor, hotx, hoty)
    scui.RestoreWidget(widget)
+   scui.MarkDirty(widget)
    screen:Update(widget._x, widget._y, widget.w, widget.h)
    screen:SetClipRect(cx,cy,cw,ch)
    return ret
+end
+
+function scui.MostlyCenterWidget(widget)
+   local sw,sh = screen:GetSize()
+   if(sw <= widget.w) then
+      widget.x = sw - widget.w
+   else
+      widget.x = math.floor((sw-widget.w)/2)
+   end
+   if(sh <= widget.h) then
+      widget.y = sh - widget.h
+   else
+      widget.y = math.floor((sh-widget.h)*2/5)
+   end
+end
+
+function scui.CenterWidget(widget)
+   local sw,sh = screen:GetSize()
+   if(sw <= widget.w) then
+      widget.x = sw - widget.w
+   else
+      widget.x = math.floor((sw-widget.w)/2)
+   end
+   if(sh <= widget.h) then
+      widget.y = sh - widget.h
+   else
+      widget.y = math.floor((sh-widget.h)/2)
+   end
 end
