@@ -77,18 +77,12 @@ static int f_listfiles(lua_State* L) {
   if(!dir) return 1;
   i = lua_objlen(L, -1) + 1;
   while((ent = readdir(dir))) {
-#if _DIRENT_HAVE_D_TYPE
-    if(ent->d_type == DT_REG || ent->d_type == DT_UNKNOWN) {
-#endif
-      if(strlen(ent->d_name) < extlen) continue; // lol
-      if(strcasecmp(ent->d_name + strlen(ent->d_name) - extlen, ext)) continue;
-      lua_pushvalue(L, 1);
-      lua_pushstring(L, ent->d_name);
-      lua_concat(L, 2);
-      lua_rawseti(L, -2, i++);
-#if _DIRENT_HAVE_D_TYPE
-    }
-#endif
+    if(strlen(ent->d_name) < extlen) continue; // lol
+    if(strcasecmp(ent->d_name + strlen(ent->d_name) - extlen, ext)) continue;
+    lua_pushvalue(L, 1);
+    lua_pushstring(L, ent->d_name);
+    lua_concat(L, 2);
+    lua_rawseti(L, -2, i++);
   }
   closedir(dir);
   return 1;

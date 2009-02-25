@@ -334,7 +334,7 @@ function fake_targets.install()
 end
 
 local hack_flags
-if(os.getenv("STUPID_LINKER_HACK_FLAGS")) then hack_flags = " " .. os.getenv("STUPID_LINKER_HACK_FLAGS")) else hack_flags = "" end
+if(os.getenv("STUPID_LINKER_HACK_FLAGS")) then hack_flags = " " .. os.getenv("STUPID_LINKER_HACK_FLAGS") else hack_flags = "" end
 
 for soname,target in pairs(targets) do
    local sofile = soname..soext
