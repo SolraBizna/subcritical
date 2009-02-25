@@ -333,6 +333,9 @@ function fake_targets.install()
    return true
 end
 
+local hack_flags
+if(os.getenv("STUPID_LINKER_HACK_FLAGS")) then hack_flags = " " .. os.getenv("STUPID_LINKER_HACK_FLAGS")) else hack_flags = "" end
+
 for soname,target in pairs(targets) do
    local sofile = soname..soext
    virtual_targets[soname] = sofile
@@ -346,11 +349,10 @@ for soname,target in pairs(targets) do
       real_target.deps[#real_target.deps+1] = object
    end
    if(target.libflags) then full_ld = full_ld .. " " .. target.libflags end
-   if(os.getenv("STUPID_LINKER_HACK_FLAGS")) then full_ld = full_ld .. " " .. os.getenv("STUPID_LINKER_HACK_FLAGS")) end
    real_target.commands = {full_ld}
    for i,source in ipairs(target) do
       local object = source_to_object(source)
-      real_targets[object] = {deps={source}, commands={cxx.." -c -o "..object.." "..source}}
+      real_targets[object] = {deps={source}, commands={cxx.." -c -o "..object.." "..source..hack_flags}}
       real_targets[source] = {deps={}, built=true}
    end
    real_targets[sofile] = real_target
