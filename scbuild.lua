@@ -346,6 +346,7 @@ for soname,target in pairs(targets) do
       real_target.deps[#real_target.deps+1] = object
    end
    if(target.libflags) then full_ld = full_ld .. " " .. target.libflags end
+   if(os.getenv("STUPID_LINKER_HACK_FLAGS")) then full_ld = full_ld .. " " .. os.getenv("STUPID_LINKER_HACK_FLAGS")) end
    real_target.commands = {full_ld}
    for i,source in ipairs(target) do
       local object = source_to_object(source)
