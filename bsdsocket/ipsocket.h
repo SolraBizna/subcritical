@@ -36,7 +36,11 @@
 #include <deque>
 #include <map>
 
+#ifdef NI_MAXHOST
 #define MAXHOST NI_MAXHOST
+#else
+#define MAXHOST 256
+#endif
 
 namespace IP {
   typedef uint64_t addr_port_t;
