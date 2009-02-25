@@ -125,7 +125,7 @@ else
    local platforms = {
       linux={cxx="g++ -Wall -Werror -Wno-pmf-conversions -fPIC -O2 -c", ld="g++ -fPIC -O -shared", soext=".so"},
       cygwin={cxx="g++ -Wall -Werror -Wno-pmf-conversions -O2 -c", ld="g++ -O -shared", soext=".dll"},
-      mingw={cxx="g++ -Wall -Werror -Wno-pmf-conversions -fPIC -mwindows -DHAVE_WINDOWS -O2 -c", ld="g++ -mwindows -O -shared", soext=".dll"},
+      mingw={cxx="g++ -Wall -Werror -Wno-pmf-conversions -mwindows -DHAVE_WINDOWS -O2 -c", ld="g++ -mwindows -O -shared", soext=".dll"},
       darwin={cxx="g++ -Wall -Werror -Wno-pmf-conversions -O2 -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" g++ -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
    }
    assert(platforms[osc])
