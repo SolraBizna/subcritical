@@ -349,10 +349,10 @@ for soname,target in pairs(targets) do
       real_target.deps[#real_target.deps+1] = object
    end
    if(target.libflags) then full_ld = full_ld .. " " .. target.libflags end
-   real_target.commands = {full_ld}
+   real_target.commands = {full_ld..hack_flags}
    for i,source in ipairs(target) do
       local object = source_to_object(source)
-      real_targets[object] = {deps={source}, commands={cxx.." -c -o "..object.." "..source..hack_flags}}
+      real_targets[object] = {deps={source}, commands={cxx.." -c -o "..object.." "..source}}
       real_targets[source] = {deps={}, built=true}
    end
    real_targets[sofile] = real_target
