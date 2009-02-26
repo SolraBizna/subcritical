@@ -1,9 +1,8 @@
 -- -*- lua -*-
 append_cflags"`freetype-config --cflags`"
-append_ldflags"`freetype-config --libs`"
 
 targets = {
-   ["freetype"]={"freetype.cc"},
+   ["freetype"]={"freetype.cc", libflags="`freetype-config --libs`"},
 }
 
 install = {

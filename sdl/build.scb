@@ -1,10 +1,9 @@
 -- -*- lua -*-
 
-append_ldflags"`sdl-config --libs`"
 append_cflags"`sdl-config --cflags`"
 
 targets = {
-   ["sdl"]={"sdlgraphics.cc","sdlman.cc","sdlsound.cc"},
+   ["sdl"]={"sdlgraphics.cc","sdlman.cc","sdlsound.cc",libflags="`sdl-config --libs`"},
 }
 
 install = {

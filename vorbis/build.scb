@@ -1,3 +1,2 @@
-append_ldflags "-logg -lvorbis -lvorbisfile"
-targets = {vorbis={"loader.cc", "stream.cc"}}
+targets = {vorbis={"loader.cc", "stream.cc", libflags="-logg -lvorbis -lvorbisfile"}}
 install = {packages={"vorbis"}}
