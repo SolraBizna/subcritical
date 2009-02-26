@@ -31,7 +31,9 @@
 #include <inttypes.h>
 
 #define NDEBUG 1
+#undef __cplusplus // work around a dumb bug in Cygwin's system headers
 #include <assert.h>
+#define __cplusplus 1
 
 #ifdef HAVE_ALTIVEC
 #include <altivec.h>
