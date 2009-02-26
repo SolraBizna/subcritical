@@ -3,10 +3,11 @@ append_cflags"-DTEN_MS_BUSYWAIT" -- Remove or comment out this line if the code 
 
 -- if librt is present as a system library, link with it
 local f = io.open("/usr/lib/librt.a", "r") or io.open("/lib/librt.a", "r")
+local libflags
 if(f) then
-   append_ldflags"-lrt"
+   libflags = "-lrt"
    f:close()
 end
 
-targets = {timing={"timing.cc"}}
+targets = {timing={"timing.cc",libflags=libflags}}
 install={packages={"timing"}}

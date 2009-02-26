@@ -1,4 +1,2 @@
-append_ldflags"-lFLAC"
-
-targets = {flac={"flacload.cc", "flacstream.cc"}}
+targets = {flac={"flacload.cc", "flacstream.cc", libflags="-lFLAC"}}
 install = {packages={"flac"}}

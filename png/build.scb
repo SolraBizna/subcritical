@@ -1,3 +1,2 @@
-append_ldflags"-lpng -lz"
-targets = {png={"png.cc"}}
+targets = {png={"png.cc", libflags="-lpng -lz"}}
 install = {packages={"png"}}

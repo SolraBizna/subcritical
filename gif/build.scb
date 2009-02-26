@@ -1,3 +1,2 @@
-append_ldflags"-lgif"
-targets = {gif={"gif.cc"}}
+targets = {gif={"gif.cc", libflags="-lgif"}}
 install = {packages={"gif"}}
