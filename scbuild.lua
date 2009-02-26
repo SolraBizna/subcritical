@@ -348,12 +348,11 @@ for soname,target in pairs(targets) do
       full_ld = full_ld .. " " .. object
       real_target.deps[#real_target.deps+1] = object
    end
-   local libflags
-   if(target.libflags) then libflags = " " .. target.libflags else libflags = "" end
+   if(target.libflags) then full_ld = " " .. target.libflags end
    real_target.commands = {full_ld..hack_flags}
    for i,source in ipairs(target) do
       local object = source_to_object(source)
-      real_targets[object] = {deps={source}, commands={cxx.." -c -o "..object.." "..source..libflags}}
+      real_targets[object] = {deps={source}, commands={cxx.." -c -o "..object.." "..source}}
       real_targets[source] = {deps={}, built=true}
    end
    real_targets[sofile] = real_target
