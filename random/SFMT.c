@@ -11,7 +11,7 @@
  * The new BSD License is applied to this software, see LICENSE.txt
  */
 #include <string.h>
-#include <assert.h>
+// #include <assert.h> DO NOT include assert.h since it will ASPLODE on Cygwin
 #include "SFMT.h"
 #include "SFMT-params.h"
 
