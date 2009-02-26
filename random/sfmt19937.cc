@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-#define assert(p) ((void)p) // work around a dumb bug in Cygwin's libc
+#define assert(p) ((void)(p)) // help work around a dumb bug in Cygwin's libc
 
 #ifdef HAVE_ALTIVEC
 #include <altivec.h>
