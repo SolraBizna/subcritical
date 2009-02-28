@@ -41,3 +41,8 @@ SubCritical also includes some useful utilities. Currently:
   scui: A UI toolkit
 Installing all of these along with the core packages is a very good idea. See
 their appropriate README files for more information.
+Installation is expedited by our new, improved convenience script:
+
+$ ./install_packages.sh
+
+But only if you're installing into the normal place!
