@@ -146,9 +146,9 @@ local include_path = config_question("INCLUDE_PATH",
 				     "/usr/subcritical/include")
 include_path = include_path:gsub("/+$","").."/"
 
-local full_install = config_question("FULL_INSTALL",
+local full_install = --[[config_question("FULL_INSTALL",
 				     "Will you be installing packages UNIX-style? (If you are building for native\n(NOT Cygwin) Windows or for an OSX .app (NOT command-line) then you can\nanswer no here and install manually.)",
-				     "bool")
+"bool")]] true
 local install_lib,install_c,install_lua
 if(full_install) then
    install_lib = config_question("INSTALL_LIB",
