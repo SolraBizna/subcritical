@@ -35,7 +35,7 @@
 <dd>This function always succeeds, unless it throws an error.</dd>
 <dd>It <b>may</b> be an error to call <tt>SetBlocking</tt> on a socket you received from a <a href="#ListenSocket:Accept" class="code">ListenSocket:Accept()</a>, depending on the protocol.</dd>
 <dt class="code"><a name="Socket:GetPrintableAddress" /><i>address</i> = <i>socket</i>:GetPrintableAddress()</dt>
-<dd>Returns a string containing a human-readable network address in whatever format is standard for the protocol in question. For a <a href="#Socket:ListenSocket" class="code">ListenSocket</a>
+<dd>Returns a string containing a human-readable network address in whatever format is standard for the protocol in question. For a <a href="#Socket:ListenSocket" class="code">ListenSocket</a>, this is the address being listened on; for a ConnectedSocket, this is the address of the peer.</dd>
 <dd>It is an error to call this function on a <tt>Socket</tt> that does not have an address. A <tt>Socket</tt> upon which <a href="#Socket:ApplyAddress" class="code">ApplyAddress</a> has succeeded is okay, as is a <tt>Socket</tt> that was returned by <a href="#ListenSocket:Accept" class="code">ListenSocket:Accept()</a>.</dd>
 </dl>
 <h3 class="code"><a name="ListenSocket" />ListenSocket : <a href="#Socket">Socket</a></h3>
