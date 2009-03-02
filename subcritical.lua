@@ -101,14 +101,14 @@ end
 
 dprintf("Groping environment...")
 local default_exec_path
-if(helper.os == "windows") then default_exec_path = "C:\\subcritical\\lib\\"
+if(helper.os == "windows") then default_exec_path = (os.getenv("USERPROFILE") or "C:\\Documents and Settings\\User").."\\SubCritical\\lib\\;C:\\Subcritical\\lib\\"
 else default_exec_path = (os.getenv("HOME") or "/home").."/.subcritical/lib/;/usr/local/subcritical/lib/;/usr/subcritical/lib/;/opt/subcritical/lib/" end
 local exec_path = possible_path(os.getenv("SUBCRITICAL_EXEC_PATH"), default_exec_path)
 dprintf("exec_path=%s", exec_path)
 -- SUBCRITICAL_DATA_PATH? Some day, maybe? (hence the code reuse above)
 
 local default_config_dir
-if(helper.os == "windows") then default_config_dir = (os.getenv("HOMEDRIVE") or "C:") .. (os.getenv("HOMEPATH") or "\\subcritical\\etc\\")
+if(helper.os == "windows") then default_config_dir = (os.getenv("USERPROFILE") or "C:\\Documents and Settings\\User").."\\SubCritical\\Configuration\\")
 --elseif (helper.os == "macosx") then default_config_dir = (os.getenv("HOME") or "/home").."/Library/Preferences/SubCritical/"
 else default_config_dir = (os.getenv("HOME") or "/home").."/.subcritical/config/" end
 local config_dir = os.getenv("SUBCRITICAL_CONFIG_DIR") or default_config_dir
