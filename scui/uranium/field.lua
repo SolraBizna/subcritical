@@ -55,7 +55,7 @@ function field:RenderSelf()
       end
    else ipp = sx+3
    end
-   if(self.focus) then
+   if(self.focus and not self.disabled) then
       screen:DrawRect(ipp, sy+3, 1, self.h-6)
    end
 end
