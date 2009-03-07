@@ -121,7 +121,7 @@ int TCPListenSocket::Lua_Accept(lua_State* L) throw() {
   struct sockaddr_in nuaddr;
   socklen_t nuaddr_len = sizeof(nuaddr);
   int nusock = accept(sock, (struct sockaddr*)&nuaddr, &nuaddr_len);
-  if(nusock) {
+  if(nusock >= 0) {
     (new TCPSocket(L, nusock, nuaddr))->Push(L);
     return 1;
   }
