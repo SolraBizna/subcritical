@@ -116,11 +116,11 @@ int IPSocket::Lua_SubGetPrintableAddress(lua_State* L) throw() {
   if(addr.sin_addr.s_addr != INADDR_ANY) {
     in_addr_t ip = htonl(addr.sin_addr.s_addr);
     in_port_t port = htons(addr.sin_port);
-    lua_pushfstring(L, "%i.%i.%i.%i:%i", (ip >> 24), (ip >> 16) & 255, (ip >> 8) & 255, ip & 255, port);
+    lua_pushfstring(L, "%d.%d.%d.%d:%d", (ip >> 24), (ip >> 16) & 255, (ip >> 8) & 255, ip & 255, port);
   }
   else {
     in_port_t port = htons(addr.sin_port);
-    lua_pushfstring(L, "*:%i", port);
+    lua_pushfstring(L, "*:%d", port);
   }
   return 1;
 }
