@@ -63,7 +63,7 @@ ConnectedSocket::~ConnectedSocket() {
 void* ConnectedSocket::CheckBuf(size_t size) throw(std::bad_alloc) {
   if(size < bufsz) return buf;
   else {
-    void* nubuf = realloc(buf, bufsz);
+    void* nubuf = realloc(buf, size);
     if(!nubuf) throw std::bad_alloc();
     buf = nubuf;
     bufsz = size;
