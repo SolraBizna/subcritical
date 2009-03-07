@@ -108,7 +108,7 @@ dprintf("exec_path=%s", exec_path)
 -- SUBCRITICAL_DATA_PATH? Some day, maybe? (hence the code reuse above)
 
 local default_config_dir
-if(helper.os == "windows") then default_config_dir = (os.getenv("USERPROFILE") or "C:\\Documents and Settings\\User").."\\SubCritical\\Configuration\\")
+if(helper.os == "windows") then default_config_dir = (os.getenv("USERPROFILE") or "C:\\Documents and Settings\\User").."\\SubCritical\\Configuration\\"
 --elseif (helper.os == "macosx") then default_config_dir = (os.getenv("HOME") or "/home").."/Library/Preferences/SubCritical/"
 else default_config_dir = (os.getenv("HOME") or "/home").."/.subcritical/config/" end
 local config_dir = os.getenv("SUBCRITICAL_CONFIG_DIR") or default_config_dir
@@ -521,6 +521,7 @@ function io.open(path, mode, ...)
    if(type(path) ~= "userdata" or path:Identity() ~= "Path") then
       error("Now that SubCritical has control, io.open takes a Path parameter instead of a string.\nWhere before you would say: io.open(path, \"r\")\nTry: io.open(SCPath(path), \"r\")", 1)
    end
+   print(path:GetPath())
    if(not mode) then mode = "rb"
    elseif (not mode:match("b")) then mode = mode .. "b" end
    return old_open(path:GetPath(), mode, ...)
