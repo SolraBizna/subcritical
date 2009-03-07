@@ -521,7 +521,8 @@ function io.open(path, mode, ...)
    if(type(path) ~= "userdata" or path:Identity() ~= "Path") then
       error("Now that SubCritical has control, io.open takes a Path parameter instead of a string.\nWhere before you would say: io.open(path, \"r\")\nTry: io.open(SCPath(path), \"r\")", 1)
    end
-   if(not mode:match("b")) then mode = mode .. "b" end
+   if(not mode) then mode = "rb"
+   elseif (not mode:match("b")) then mode = mode .. "b" end
    return old_open(path:GetPath(), mode, ...)
 end
 -- and the old dofile and loadfile
