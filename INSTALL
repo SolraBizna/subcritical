@@ -35,6 +35,7 @@ via DarwinPorts, you may need to set some environment variables like:
 Substitute /opt/local for /opt if necessary.
 
 SubCritical also includes some useful utilities. Currently:
+  celnet: simplifies Socket communication via Celduins
   fontman: Font management and consolidation
   garbage: Standardized garbage collection deferral
   libconfig: Configuration file management

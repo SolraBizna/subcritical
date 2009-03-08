@@ -1,0 +1,174 @@
+celnet = {}
+
+local celproto = {}
+local celmeta = {__index=celproto}
+
+function celproto:add_sock(sock, identifier)
+   assert(not self.peers[sock], "add_sock used to add an already-added socket?")
+   local a = {id=identifier, sock=sock, sendq={}}
+   self.peers[sock] = a
+   self.peers_by_id[identifier] = a
+end
+
+function celproto:del_sock(identifier)
+   local a = self.peers_by_id[identifier]
+   assert(a, "del_sock used to delete an unknown socket?")
+   self.peers[a.sock] = nil
+   self.peers_by_id[identifier] = nil
+end
+
+local function build_message(what)
+   local cel = SCUtil.Dehydrate(what)
+   local msg = #cel.." "..cel
+   local full = SCUtil.QuickChecksum(msg)..msg
+   return full
+end
+
+function celproto:send_to(identifier, what)
+   local message = build_message(what)
+   local peer = self.peers_by_id[identifier]
+   peer.sendq[#peer.sendq+1] = message
+end
+
+local function check_got(self, got)
+   local tot
+   if(self.recvq) then
+      if(got) then
+	 tot = self.recvq .. got
+      else
+	 tot = self.recvq
+      end
+   elseif (got) then
+      tot = got
+   else
+      return
+   end
+   -- this will never become a valid packet
+   if(tot:match("^....[0-9]*[^0-9 ]")) then return true,nil end
+   local len = tot:match("^....([0-9]+) ")
+   if(len) then
+      local msglen = tonumber(len) + #len + 5
+      if(#tot >= msglen) then
+	 local sub = tot:sub(1,msglen)
+	 tot = tot:sub(msglen+1,-1)
+	 if(#tot == 0) then tot = nil end
+	 self.recvq = tot
+	 local sub_sum = sub:sub(1,4)
+	 local sub_msg = sub:sub(5,-1)
+	 if(SCUtil.QuickChecksum(sub_msg) ~= sub_sum) then
+	    if(self.sock:IsA("SocketDgram")) then
+	       -- unreliable; checksum failures are acceptable
+	       -- drop the message
+	    else
+	       -- reliable; checksum failures are fatal
+	       -- drop the self
+	       return true,nil
+	    end
+	 else
+	    local cel = sub:sub(6+#len,-1)
+	    local val = SCUtil.Rehydrate(cel)
+	    return true,val
+	 end
+      end
+   end
+   self.recvq = tot
+end
+
+function celproto:get_packet()
+   for id,peer in pairs(self.peers_by_id) do
+      while(peer.sendq[1]) do
+	 local sent,e
+	 if(peer.send_part) then
+	    sent,e = peer.sock:Send(peer.sendq[1]:sub(peer.send_part))
+	 else
+	    sent,e = peer.sock:Send(peer.sendq[1])
+	 end
+	 if(sent == nil) then
+	    if(e == "not ready") then break
+	    elseif (e == "packet too big") then
+	       -- only applies for SocketDgram
+	       error("too large packet put into sendq")
+	    else
+	       return id,nil
+	    end
+	 elseif (sent == #peer.sendq[1]) then
+	    peer.send_part = false
+	    table.remove(peer.sendq, 1)
+	 else
+	    peer.send_part = sent + 1
+	 end
+      end
+   end
+   for id,peer in pairs(self.peers_by_id) do
+      local had,ret = check_got(peer)
+      if(had) then return id,ret end
+      local got,reason
+      if(peer.sock:IsA("SocketDgram")) then
+	 got,reason = peer.sock:Receive(65507)
+      else
+	 got,reason = peer.sock:Receive(16384)
+      end
+      if(got) then
+	 had,ret = check_got(peer,got)
+	 if(had) then return id,ret end
+      elseif (reason ~= "not ready") then
+	 return id,nil
+      end
+   end
+end
+
+function celnet.new_server()
+   local ret = {peers={},peers_by_id={}}
+   setmetatable(ret, celmeta)
+   return ret
+end
+
+local celclientproto = {}
+local celclientmeta = {__index=celclientproto}
+
+function celclientproto:receive()
+   while(self.sendq[1]) do
+      local sent,e
+      if(self.send_part) then
+	 sent,e = self.sock:Send(self.sendq[1]:sub(self.send_part))
+      else
+	 sent,e = self.sock:Send(self.sendq[1])
+      end
+      if(sent == nil) then
+	 if(e == "not ready") then break
+	 elseif (e == "packet too big") then
+	    -- only applies for SocketDgram
+	    error("too large packet put into sendq")
+	 else
+	    error("connection lost?")
+	 end
+      elseif (sent == #self.sendq[1]) then
+	 self.send_part = false
+	 table.remove(self.sendq, 1)
+      else
+	 self.send_part = sent + 1
+      end
+   end
+   local had,ret = check_got(self)
+   if(had) then return ret end
+   local got
+   if(self.sock:IsA("SocketDgram")) then
+      got = self.sock:Receive(65507)
+   else
+      got = self.sock:Receive(16384)
+   end
+   if(got) then
+      had,ret = check_got(self, got)
+      if(had) then return ret end
+   end
+end
+
+function celclientproto:send(vas)
+   self.sendq[#self.sendq+1] = build_message(vas)
+end
+
+function celnet.new_client(sock)
+   local ret = {sendq={},sock=sock}
+   setmetatable(ret, celclientmeta)
+   return ret
+end
