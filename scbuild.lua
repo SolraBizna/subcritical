@@ -145,47 +145,54 @@ if(cxx:match("g%+%+")) then
    end
 end
 
-local include_path = config_question("INCLUDE_PATH",
-				     "Enter the path where we should expect to find/install SubCritical include\nfiles: (this string must not need escaping for a shell)",
-				     "freeform",
-				     "/usr/local/subcritical/include")
-include_path = include_path:gsub("/+$","").."/"
+local install_path = config_question("INSTALL_PATH",
+				     "Where do you want SubCritical to live? You can always move it later.",
+				     "list",
+				     "/usr/local/subcritical (default)", "/usr/local/subcritical/",
+				     "/usr/subcritical", "/usr/subcritical/",
+				     "Other", "")
 
-local full_install = --[[config_question("FULL_INSTALL",
-				     "Will you be installing packages UNIX-style? (If you are building for native\n(NOT Cygwin) Windows or for an OSX .app (NOT command-line) then you can\nanswer no here and install manually.)",
-"bool")]] true
-local install_lib,install_c,install_lua
-if(full_install) then
-   install_lib = config_question("INSTALL_LIB",
-				  "Enter the path where we should expect to install SubCritical package files:\n(note that you may need to set SUBCRITICAL_EXEC_PATH in the environment\nif you change this from the default)",
-				  "freeform",
-				  "/usr/local/subcritical/lib")
-   install_lib = install_lib:gsub("/+$","").."/"
-   local cpath
-   for entry in package.cpath:gmatch("[^;]+") do
-      if(entry:sub(1,1) ~= ".") then
-	 cpath = entry:gsub("%?.+$","")
-	 break
-      end
-   end
-   install_c = config_question("INSTALL_C",
-			       "Enter the path where we should expect to install C package files for Lua:\n(note that you may need to set LUA_CPATH in the environment\nif you change this from the default)",
-			       "freeform",
-			       cpath) -- cpath can be nil, making prompt silly
-   install_c = install_c:gsub("/+$","").."/"
-   local lpath
-   for entry in package.path:gmatch("[^;]+") do
-      if(entry:sub(1,1) ~= ".") then
-	 lpath = entry:gsub("%?.+$","")
-	 break
-      end
-   end
-   install_lua = config_question("INSTALL_LUA",
-			       "Enter the path where we should expect to install non-C Lua packages:\n(note that you may need to set LUA_PATH in the environment\nif you change this from the default)",
-			       "freeform",
-			       lpath)
-   install_lua = install_lua:gsub("/+$","").."/"
+if(install_path == "") then
+   install_path = config_question("REAL_INSTALL_PATH", "Enter the full path to where you want SubCritical to live.", "freeform", (os.getenv("HOME") or "/home").."/.subcritical/")
 end
+install_path = (install_path.."/"):gsub("//+", "/")
+
+if(install_path:match("[ \"'!;]")) then
+   print("ERROR: Please pick an install path with as few special characters as possible.")
+   os.exit(1)
+end
+
+local include_path = install_path.."/include/"
+include_path = include_path:gsub("//+", "/")
+
+local install_lib,install_c,install_lua
+install_lib = install_path.."/lib/"
+install_lib = install_lib:gsub("//+", "/")
+
+local cpath
+for entry in package.cpath:gmatch("[^;]+") do
+   if(entry:sub(1,1) ~= ".") then
+      cpath = entry:gsub("%?.+$","")
+      break
+   end
+end
+install_c = config_question("INSTALL_C",
+			    "Enter the path where we should expect to install C package files for Lua:\n(note that you may need to set LUA_CPATH in the environment\nif you change this from the default)",
+			    "freeform",
+			    cpath) -- cpath can be nil, making prompt silly
+install_c = install_c:gsub("/+$","").."/"
+local lpath
+for entry in package.path:gmatch("[^;]+") do
+   if(entry:sub(1,1) ~= ".") then
+      lpath = entry:gsub("%?.+$","")
+      break
+   end
+end
+install_lua = config_question("INSTALL_LUA",
+			      "Enter the path where we should expect to install non-C Lua packages:\n(note that you may need to set LUA_PATH in the environment\nif you change this from the default)",
+			      "freeform",
+			      lpath)
+install_lua = install_lua:gsub("/+$","").."/"
 
 cxx = cxx .. " -I"..include_path
 cxx = cxx .. " -DSO_EXTENSION=\"\\\""..soext.."\\\"\""
@@ -279,59 +286,32 @@ function fake_targets.install()
       end
    end
    if(install.packages) then
-      if(full_install) then
-	 pe("mkdir -p "..install_lib)
-	 if(type(install.packages) == "string") then
-	    print("Ahem! install.packages in your build.scb file needs to be a table. Pretending\nI didn't see that...")
-	    install.packages = {install.packages}
-	 end
-	 for i,package in pairs(install.packages) do
-	    pe("install "..package..soext.." "..install_lib)
-	    pe("install "..package..".scp "..install_lib)
-	 end
-      else
-	 print("Full install disabled, not installing package files.")
+      pe("mkdir -p "..install_lib)
+      if(type(install.packages) == "string") then
+	 print("Ahem! install.packages in your build.scb file needs to be a table. Pretending\nI didn't see that...")
+	 install.packages = {install.packages}
+      end
+      for i,package in pairs(install.packages) do
+	 pe("install "..package..soext.." "..install_lib)
+	 pe("install "..package..".scp "..install_lib)
       end
    end
    if(install.lpackages) then
-      if(full_install) then
-	 pe("mkdir -p "..install_lua)
-	 for i,package in pairs(install.lpackages) do
-	    pe("install "..package.." "..install_lua)
-	 end
-      else
-	 print("Full install disabled, not installing Lua packages.")
+      pe("mkdir -p "..install_lua)
+      for i,package in pairs(install.lpackages) do
+	 pe("install "..package.." "..install_lua)
       end
    end
    if(install.lcpackages) then
-      if(full_install) then
-	 pe("mkdir -p "..install_c)
-	 for i,package in pairs(install.lcpackages) do
-	    pe("install "..package..soext.." "..install_c)
-	 end
-      else
-	 if(not install.lpackages) then
-	    -- this message is redundant in the avoided case
-	    print("Full install disabled, not installing Lua C packages.")
-	 end
-	 if(false) then
-	    -- no longer needed
-	    for i,package in pairs(install.lcpackages) do
-	       if(package == "subcritical_helper") then
-		  print("Note: You will probably have to manually install subcritical_helper before\nproceeding, as it is required by scbuild.")
-	       end
-	    end
-	 end
+      pe("mkdir -p "..install_c)
+      for i,package in pairs(install.lcpackages) do
+	 pe("install "..package..soext.." "..install_c)
       end
    end
    if(install.utilities) then
-      if(full_install) then
-	 pe("mkdir -p "..install_lib)
-	 for i,utility in pairs(install.utilities) do
-	    pe("install "..utility.." "..install_lib)
-	 end
-      else
-	 print("Full install disabled, not installing Lua modules.")
+      pe("mkdir -p "..install_lib)
+      for i,utility in pairs(install.utilities) do
+	 pe("install "..utility.." "..install_lib)
       end
    end
    print("Installed.")
