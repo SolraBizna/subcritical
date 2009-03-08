@@ -1,5 +1,5 @@
 license Compatible
-version 0b4 core
+version 0b5 core
 
 class Drawable
 class GraphicsDevice : Drawable tangible

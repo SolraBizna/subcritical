@@ -1,6 +1,6 @@
 license Compatible
 
-version 0b4 core
+version 0b5 core
 
 class PackedArray1D     concrete
 class PackedArray1D_B   concrete
