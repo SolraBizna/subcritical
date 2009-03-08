@@ -53,13 +53,13 @@ int TCPSocket::Lua_ApplyAddress(lua_State* L) throw() {
 size_t TCPSocket::ReceiveBytes(void* buf, size_t bytes, FailReason& error) throw() {
   ssize_t did_read = read(sock, buf, bytes);
   if(did_read <= 0) {
-    did_read = 0;
     switch(errno) {
-    case EAGAIN: error = NotReady; break;
+    case EAGAIN: if(did_read == -1) { error = NotReady; break; }
     default:
     case EPIPE:
     case ETIMEDOUT: error = Broken; break;
     }
+    did_read = 0;
   }
   return did_read;
 }
