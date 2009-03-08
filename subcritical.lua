@@ -25,6 +25,8 @@ collectgarbage("stop")
 
 local debugging = not not os.getenv("SUBCRITICAL_DEBUG")
 local hardcheck = not not os.getenv("SUBCRITICAL_HARD_CHECK")
+local impcheck = not not os.getenv("SUBCRITICAL_IMP_CHECK")
+local pathcheck = not not os.getenv("SUBCRITICAL_PATH_CHECK")
 
 local dprintf,printf
 if(debugging) then
@@ -49,6 +51,7 @@ end
 
 subcritical = {}
 subcritical.version = 0x0b5
+subcritical.copyright = ("SubCritical %03x \194\169 2008-2009 Solra Bizna."):format(subcritical.version)
 -- aliases
 SubCritical,SC,sc = subcritical,subcritical,subcritical
 
@@ -104,7 +107,7 @@ local default_exec_path
 if(helper.os == "windows") then default_exec_path = (os.getenv("USERPROFILE") or "C:\\Documents and Settings\\User").."\\SubCritical\\lib\\;C:\\Subcritical\\lib\\"
 else default_exec_path = (os.getenv("HOME") or "/home").."/.subcritical/lib/;/usr/local/subcritical/lib/;/usr/subcritical/lib/;/opt/subcritical/lib/" end
 local exec_path = possible_path(os.getenv("SUBCRITICAL_EXEC_PATH"), default_exec_path)
-dprintf("exec_path=%s", exec_path)
+if(pathcheck) then dprintf("exec_path=%s", exec_path) end
 -- SUBCRITICAL_DATA_PATH? Some day, maybe? (hence the code reuse above)
 
 local default_config_dir
@@ -113,7 +116,7 @@ if(helper.os == "windows") then default_config_dir = (os.getenv("USERPROFILE") o
 else default_config_dir = (os.getenv("HOME") or "/home").."/.subcritical/config/" end
 local config_dir = os.getenv("SUBCRITICAL_CONFIG_DIR") or default_config_dir
 if(config_dir:sub(-1,-1) ~= dirsep) then config_dir = config_dir .. dirsep end
-dprintf("config_dir=%s", config_dir)
+if(pathcheck) then dprintf("config_dir=%s", config_dir) end
 
 local so_extension = helper.so_extension
 
@@ -370,7 +373,7 @@ do
 	 table.sort(class.imps, function(a,b)
 				   return a.priority < b.priority
 				end)
-	 if(debugging) then
+	 if(impcheck) then
 	    local t = {}
 	    for i,v in ipairs(class.imps) do
 	       t[i] = v.name
@@ -395,7 +398,6 @@ end
 dprintf("Fudging the path...")
 do
    local nupath = package.path
-   dprintf("Changing package.path...")
    --Leaving this out is harmless, leaving it in is hacky.
    --nupath = nupath:gsub("%.[/\\]%?%.lua","")
    local t = {}
@@ -421,7 +423,7 @@ do
    t[#t+1] = nupath
    nupath = table.concat(t, ";")
    nupath = nupath:gsub(";;",""):gsub("^;",""):gsub(";$","")
-   if(debugging) then
+   if(pathcheck) then
       dprintf("  OLD: %s", package.path)
       dprintf("  NEW: %s", nupath)
    end
