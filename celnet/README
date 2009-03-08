@@ -1,0 +1,53 @@
+celnet is a package that takes a lot of the work out of making a client-server
+game.
+
+require "celnet"
+
+Two objects are provided.
+
+---- Server (one-to-many)
+-- Create a new "server"
+celnet_server = celnet.new_server()
+-- Associate a client socket (SocketDgram or SocketStream) with the server.
+-- When the server wants to tell you that something happened to the given
+-- socket, it will identify it by new_client_id. (If this would be more
+-- convenient, you can use the socket as its own identifier.)
+-- Don't use a blocking socket here, or you'll be sorry.
+celnet_server:add_sock(new_socket, new_client_id)
+-- Queues "message" to be sent to the given client. message can be any value
+-- that would survive SCUtil.Dehydrate. It will come out unscathed on the other
+-- end of the socket. (see doc/serialize.html)
+-- Note that this does not even try to actually send the message! See below.
+celnet_server:send_to(client_id, message)
+-- Returns, if it can, a client and a received message. If the received message
+-- is nil (note that false *is* a sendable message), it signifies that the
+-- client disconnected or a serious error occurred.
+-- Before it even checks to see if any messages have arrived, it tries its
+-- hardest to empty all the message queues of all the associated clients.
+client_id,message = celnet_server:get_packet()
+-- This deassociates a given client socket from the server, without closing it.
+celnet_server:del_sock(client_id)
+---- Client (one-to-one)
+-- Wraps the given socket in a celclient.
+-- It's okay to use a blocking socket here.
+celnet_client = celnet.new_client(server_socket)
+-- Queues a message to be sent to the server. Similar to celnet_server:send_to,
+-- documented above.
+-- Like celnet_server:send_to, this doesn't even try to actually send it! See
+-- below.
+celnet_client:send(message)
+-- Returns, if possible, a received message. Returns nil (note that false *is*
+-- a sendable message) if the connection closed or a serious error occurred.
+-- Before it even checks to see if any messages have arrived, it tries its
+-- hardest to empty the message queue.
+message = celnet_client:receive()
+
+Install by placing celnet.scu somewhere SubCritical can find it:
+
+$ mkdir -p /usr/subcritical/lib/
+$ cp celnet.scu /usr/subcritical/lib/
+
+Receival of VERY large messages entails a few unnecessary memory copies. I
+think that the easy alternative (vastly increasing the receive buffer size) is
+unacceptable. Nevertheless, a future version may sacrifice code simplicity for
+a solution with neither downside.
