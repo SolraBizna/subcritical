@@ -10,14 +10,14 @@
 <p><tt>SubCritical</tt> is a normal Lua module. It can also be addressed by <tt>subcritical</tt>, <tt>SC</tt>, or <tt>sc</tt>.</p>
 <dl>
 <dt class="code"><a name="Choices" /><i>table</i> = SubCritical.Choices(<i>class</i>)</dt>
-<dd>Returns an array containing the names of all available implementors of <i class="code">class</i>, in order from best priority to worst. Normally you do not need this unless you want to offer the user a choice of which implementor to use (see <a href="#ConstructSpecific">ConstructSpecific).</dd>
+<dd>Returns an array containing the names of all available implementors of <i class="code">class</i>, in order from best priority to worst. Normally you do not need this unless you want to offer the user a choice of which implementor to use (see <a href="#ConstructSpecific">ConstructSpecific</a>.)</dd>
 <dt class="code"><a name="Construct" /><i>object</i> = SubCritical.Construct(<i>class</i>, ...)
 <i>object</i> = assert(SubCritical.Construct(<i>class</i>, ...))</dt>
 <dd>Returns, if possible, either an instance of <i class="code">class</i> directly or an instance of a class that inherits from it. If you wish an error to be thrown on failure, it is adviseable to <tt>assert</tt> its return value (as shown above).</dd>
 <dd>Constructors may both return nil or throw an error on failure, depending on the failure. If the failure was caused by malformed constructor parameters, it should throw an error.</dd>
 <dt class="code"><a name="ConstructSpecific" /><i>object</i> = SubCritical.ConstructSpecific(<i>class</i>, ...)
 <i>object</i> = assert(SubCritical.ConstructSpecific(<i>class</i>, ...))</dt>
-<dd>Returns, if possible, an instance of <i class="code">class</i> directly, and not a subclass. If you wish an error to be thrown on failure, it is adviseable to <tt>assert</tt> its return value (as shown above). Normally you do not need this unless you want to offer the user a choice of which implementor to use (see <a href="#Choices">Choices).</dd></dd>
+<dd>Returns, if possible, an instance of <i class="code">class</i> directly, and not a subclass. If you wish an error to be thrown on failure, it is adviseable to <tt>assert</tt> its return value (as shown above). Normally you do not need this unless you want to offer the user a choice of which implementor to use (see <a href="#Choices">Choices</a>.)</dd></dd>
 <dt class="code"><a name="ConstructPath" /><i>true_path</i> = SubCritical.ConstructPath(<i>path</i>[, <i>level</i>])
 <i>true_path</i> = SubCritical.Path(<i>path</i>[, <i>level</i>])
 <i>true_path</i> = SCPath(<i>path</i>[, <i>level</i>])
