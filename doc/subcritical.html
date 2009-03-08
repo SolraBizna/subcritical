@@ -48,6 +48,11 @@
 <i>file</i> = scvar.Update(<i>name</i>)</dt>
 <dd>Returns a Lua <tt>file</tt> (actually, a table shadowing one) to update a file by the name of <i class="code">name</i> in the SubCritical configuration directory. If the file does not exist, it is created. If it does, the file position starts at the end of the file. In either case, the file handle can be seeked, read from, and written to at will. The file is not actually updated until it is explicitly closed (with <tt>:close()</tt>). In particular, if the garbage collector gets it, the file is never updated!</dd>
 <dd>See <a href="var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
+<dt class="code"><a name="version"><i>version_string</i> = ("%03x"):format(SubCritical.version)
+if(SubCritical.version < 0x0b5) then error("This game requires feature X that was added in SubCritical 0b5.") end</dt>
+<dd>The SubCritical version, as a number. Interpreted as a hexadecimal number, the least significant digit is the minor release number, the next most significant the release type, and the rest is the major version. (Example: 0b5; the sixth beta release of major version 0.)</dd>
+<dt class="code"><a name="copyright">print(SubCritical.copyright)</dt>
+<dd>A copyright string relevant to the current version of the SubCritical engine.</dd>
 </dl>
 <p><a href="index.html">Back to index</a></p>
 </body>
