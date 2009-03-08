@@ -148,7 +148,7 @@ end
 local include_path = config_question("INCLUDE_PATH",
 				     "Enter the path where we should expect to find/install SubCritical include\nfiles: (this string must not need escaping for a shell)",
 				     "freeform",
-				     "/usr/subcritical/include")
+				     "/usr/local/subcritical/include")
 include_path = include_path:gsub("/+$","").."/"
 
 local full_install = --[[config_question("FULL_INSTALL",
@@ -159,7 +159,7 @@ if(full_install) then
    install_lib = config_question("INSTALL_LIB",
 				  "Enter the path where we should expect to install SubCritical package files:\n(note that you may need to set SUBCRITICAL_EXEC_PATH in the environment\nif you change this from the default)",
 				  "freeform",
-				  "/usr/subcritical/lib")
+				  "/usr/local/subcritical/lib")
    install_lib = install_lib:gsub("/+$","").."/"
    local cpath
    for entry in package.cpath:gmatch("[^;]+") do
