@@ -122,11 +122,13 @@ if(osc == "other") then
 			   "Enter the extension (including the period, if any) for shared libraries.",
 			   "freeform")
 else
+   local gpp = os.getenv("CXX") or "g++"
+   local gld = os.getenv("LD") or os.getenv("CXX") or "g++"
    local platforms = {
-      linux={cxx="g++ -Wall -Werror -Wno-pmf-conversions -fPIC -O2 -c", ld="g++ -fPIC -O -shared", soext=".so"},
-      cygwin={cxx="g++ -Wall -Werror -Wno-pmf-conversions -O2 -c", ld="g++ -O -shared", soext=".dll"},
-      mingw={cxx="g++ -Wall -Werror -Wno-pmf-conversions -mwindows -mno-cygwin -DHAVE_WINDOWS -O2 -c", ld="g++ -mwindows -mno-cygwin -O -shared", soext=".dll"},
-      darwin={cxx="g++ -Wall -Werror -Wno-pmf-conversions -O2 -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" g++ -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
+      linux={cxx=gpp.." -Wall -Wno-pmf-conversions -fPIC -O2 -c", ld=gld.." -fPIC -O -shared", soext=".so"},
+      cygwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 -c", ld=gld.." -O -shared", soext=".dll"},
+      mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -mwindows -mno-cygwin -DHAVE_WINDOWS -O2 -c", ld=gld.." -mwindows -mno-cygwin -O -shared", soext=".dll"},
+      darwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" "..gld.." -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
    }
    assert(platforms[osc])
    cxx = platforms[osc].cxx
@@ -137,6 +139,9 @@ end
 if(cxx:match("g%+%+")) then
    if(config_question("VISIBILITY_HIDDEN", "Does your GCC support -fvisibility=hidden? (GCC 4.0 and above)", "bool")) then
       cxx = cxx .. " -fvisibility=hidden -fvisibility-inlines-hidden -DHAVE_GCC_VISIBILITY"
+   end
+   if(config_question("WERROR", "Do you wish to use -Werror? (Unless you know you do, you don't.)", "bool")) then
+      cxx = cxx:gsub("%-Wall", "-Wall -Werror")
    end
 end
 
