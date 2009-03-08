@@ -49,7 +49,7 @@ static uint32_t ReadId(const unsigned char*& in, size_t& length) {
     }
     else ret = ret | *in;
   }
-  else ret = *in;
+  else ret = *in & 0x1F;
   soft_next_byte();
   return ret;
 }
