@@ -1,5 +1,5 @@
 -- -*- lua -*-
-append_cflags"-DTEN_MS_BUSYWAIT" -- Remove or comment out this line if the code it enables does more harm than good
+--append_cflags"-DTEN_MS_BUSYWAIT" -- Uncomment this line if needed on your platform
 
 -- if librt is present as a system library, link with it
 local f = io.open("/usr/lib/librt.a", "r") or io.open("/lib/librt.a", "r")
