@@ -37,7 +37,8 @@ celnet_client = celnet.new_client(server_socket)
 -- below.
 celnet_client:send(message)
 -- Returns, if possible, a received message. Returns nil (note that false *is*
--- a sendable message) if the connection closed or a serious error occurred.
+-- a sendable message) only on timeout. Throws an error if the connection
+-- closes or another serious error occurs.
 -- Before it even checks to see if any messages have arrived, it tries its
 -- hardest to empty the message queue.
 message = celnet_client:receive()
