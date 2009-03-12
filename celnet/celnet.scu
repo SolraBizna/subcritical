@@ -10,9 +10,37 @@ function celproto:add_sock(sock, identifier)
    self.peers_by_id[identifier] = a
 end
 
+local function flush_sendq(peer)
+   while(peer.sendq[1]) do
+      local sent,e
+      if(peer.send_part) then
+	 sent,e = peer.sock:Send(peer.sendq[1]:sub(peer.send_part))
+      else
+	 sent,e = peer.sock:Send(peer.sendq[1])
+      end
+      if(sent == nil) then
+	 if(e == "not ready") then break
+	 elseif (e == "packet too big") then
+	    -- only applies for SocketDgram
+	    error("too large packet put into sendq")
+	 else
+	    return id,nil
+	 end
+      elseif (sent == #peer.sendq[1]) then
+	 peer.send_part = false
+	 table.remove(peer.sendq, 1)
+      else
+	 peer.send_part = sent + 1
+      end
+   end
+end
+
 function celproto:del_sock(identifier)
    local a = self.peers_by_id[identifier]
    assert(a, "del_sock used to delete an unknown socket?")
+   if(a.sendq[1]) then
+      flush_sendq(a) -- at least try!
+   end
    self.peers[a.sock] = nil
    self.peers_by_id[identifier] = nil
 end
@@ -76,28 +104,7 @@ end
 
 function celproto:get_packet()
    for id,peer in pairs(self.peers_by_id) do
-      while(peer.sendq[1]) do
-	 local sent,e
-	 if(peer.send_part) then
-	    sent,e = peer.sock:Send(peer.sendq[1]:sub(peer.send_part))
-	 else
-	    sent,e = peer.sock:Send(peer.sendq[1])
-	 end
-	 if(sent == nil) then
-	    if(e == "not ready") then break
-	    elseif (e == "packet too big") then
-	       -- only applies for SocketDgram
-	       error("too large packet put into sendq")
-	    else
-	       return id,nil
-	    end
-	 elseif (sent == #peer.sendq[1]) then
-	    peer.send_part = false
-	    table.remove(peer.sendq, 1)
-	 else
-	    peer.send_part = sent + 1
-	 end
-      end
+      flush_sendq(peer)
    end
    for id,peer in pairs(self.peers_by_id) do
       local had,ret = check_got(peer)
@@ -128,39 +135,28 @@ local celclientmeta = {__index=celclientproto}
 
 function celclientproto:receive()
    while(self.sendq[1]) do
-      local sent,e
-      if(self.send_part) then
-	 sent,e = self.sock:Send(self.sendq[1]:sub(self.send_part))
-      else
-	 sent,e = self.sock:Send(self.sendq[1])
-      end
-      if(sent == nil) then
-	 if(e == "not ready") then break
-	 elseif (e == "packet too big") then
-	    -- only applies for SocketDgram
-	    error("too large packet put into sendq")
-	 else
-	    error("connection lost?")
-	 end
-      elseif (sent == #self.sendq[1]) then
-	 self.send_part = false
-	 table.remove(self.sendq, 1)
-      else
-	 self.send_part = sent + 1
-      end
+      flush_sendq(self)
    end
    local had,ret = check_got(self)
-   if(had) then return ret end
-   local got
+   if(had) then
+      if(ret == nil) then return nil,"bad packet"
+      else return ret end
+   end
+   local got,why
    if(self.sock:IsA("SocketDgram")) then
-      got = self.sock:Receive(65507)
+      got,why = self.sock:Receive(65507)
    else
-      got = self.sock:Receive(16384)
+      got,why = self.sock:Receive(16384)
    end
    if(got) then
       had,ret = check_got(self, got)
-      if(had) then return ret end
+      if(had) then
+	 if(ret == nil) then return nil,"bad packet"
+	 else return ret end
+      else why = "not ready"
+      end
    end
+   return nil,why
 end
 
 function celclientproto:send(vas)

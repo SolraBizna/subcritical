@@ -36,12 +36,14 @@ celnet_client = celnet.new_client(server_socket)
 -- Like celnet_server:send_to, this doesn't even try to actually send it! See
 -- below.
 celnet_client:send(message)
--- Returns, if possible, a received message. Returns nil (note that false *is*
--- a sendable message) only on timeout. Throws an error if the connection
--- closes or another serious error occurs.
+-- Returns, if possible, a received message. Returns nil if no message was
+-- available, as well as a possibly explanation as to why. If this reason is
+-- "not ready," then you should simply call receive again (possibly later); if
+-- it's anything else, either the connection was lost or a bad message was
+-- received (in which case further receives are futile).
 -- Before it even checks to see if any messages have arrived, it tries its
 -- hardest to empty the message queue.
-message = celnet_client:receive()
+message,why = celnet_client:receive()
 
 Install by placing celnet.scu somewhere SubCritical can find it:
 
