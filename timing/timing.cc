@@ -102,11 +102,13 @@ SUBCRITICAL_UTILITY(Sleep)(lua_State* L) {
     }
   } while(0);
 #else //if (_BSD_SOURCE || _XOPEN_SOURCE >= 500)
+#if !HAVE_WINDOWS
   if(length >= 1.0) {
     unsigned int rem = (unsigned int)floor(length);
     do { rem = sleep(rem); } while(rem > 0);
     length = length - floor(length);
   }
+#endif
   usleep((unsigned int)(length * MICROSECOND_SCALE));
   /*#else
   if(length >= 1.0) {

@@ -9,5 +9,5 @@ if(f) then
    f:close()
 end
 
-targets = {timing={"timing.cc",libflags=libflags}}
+targets = {timing={"timing.cc",libflags=libflags,deps={"core"}}}
 install={packages={"timing"}}

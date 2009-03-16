@@ -7,10 +7,13 @@
 -- *** BUILD TARGETS ***
 -- Most build scripts will only have one entry here (that of the package being
 -- compiled)
+local need_libdl = config_question("NEED_LIBDL", "Does your OS require linking with libdl?", "bool")
+
 targets = {
    ["subcritical_helper"]={"helper.cc"},
    ["core"]={"core.cc"},
 }
+if(need_libdl) then targets.subcritical_helper.libflags = "-ldl" end
 
 -- *** INSTALLATION FILES ***
 install = {

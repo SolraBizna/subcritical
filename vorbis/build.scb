@@ -1,2 +1,2 @@
-targets = {vorbis={"loader.cc", "stream.cc", libflags="-logg -lvorbis -lvorbisfile"}}
+targets = {vorbis={"loader.cc", "stream.cc", libflags="-lvorbisfile -lvorbis -logg", deps={"sound","core"}}}
 install = {packages={"vorbis"}}

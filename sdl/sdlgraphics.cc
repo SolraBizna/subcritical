@@ -157,7 +157,12 @@ doing_relmouse(false), doing_textok(false) {
   SDL_EventState(SDL_SYSWMEVENT, SDL_IGNORE);
   SDL_EventState(SDL_VIDEORESIZE, SDL_IGNORE);
   SDL_ShowCursor(SDL_DISABLE);
+#if HAVE_WINDOWS
+  // ...
+  (void)TryGammaCorrection;
+#else
   TryGammaCorrection();
+#endif
 }
 
 void SDLGraphics::Update(int x, int y, int w, int h) throw() {

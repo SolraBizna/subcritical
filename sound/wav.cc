@@ -180,7 +180,7 @@ SoundBuffer* WAVLoader::Load(const char* file) throw() {
 	fclose(f);
 	return NULL;
       }
-      swab(buf, p, read*2);
+      swab((const char*)buf, (char*)p, read*2);
       rem -= read;
       p += read;
     }
@@ -303,7 +303,7 @@ void WAVStream::Mix(Frame* buffer, size_t out_count) throw() {
   else if(hdr.bitspersample == 16) {
     Sample aux[out_samps];
     read = fread(aux, sizeof(Sample), out_samps, f);
-    swab(aux, sbuffer, read*2);
+    swab((const char*)aux, (char*)sbuffer, read*2);
   }
   else /* {fmt.bitspersample == 8} */ {
     uint8_t aux[out_samps];

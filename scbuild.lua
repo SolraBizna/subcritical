@@ -35,7 +35,17 @@ end
 -- Set these in the environment of an automatic build script. You'd be
 -- responsible for setting up a .scbuild with all needed information.
 local noprompt = not not os.getenv("SUBCRITICAL_AUTOMATIC_BUILD")
-local confpath = os.getenv("SUBCRITICAL_BUILD_CONFIG") or ((os.getenv("HOME") or "") .. "/.scbuild")
+local defpath
+local onwindows,home
+if(os.getenv("USERPROFILE") or os.getenv("SCBUILD_WINDOWS")) then
+   home = os.getenv("USERPROFILE") or "C:\\Documents and Settings\\User"
+   onwindows = true
+   defpath = os.getenv("USERPROFILE").."\\scbuild.conf"
+else
+   home = os.getenv("HOME") or "/home"
+   defpath = ((os.getenv("HOME") or "") .. "/.scbuild")
+end
+local confpath = os.getenv("SUBCRITICAL_BUILD_CONFIG") or defpath
 
 local source,err = loadfile("build.scb")
 if(not source) then
@@ -108,7 +118,7 @@ osc = config_question("OS/COMPILER",
 		      "list",
 		      "Generic UNIX with GCC (Linux, BSD)", "linux",
 		      "Cygwin", "cygwin",
-		      "MINGW (or Cygwin, building native)", "mingw",
+		      "MinGW on Windows", "mingw",
 		      "Darwin (Mac OS X)", "darwin",
 		      "Other (manual)", "other")
 if(osc == "other") then
@@ -127,7 +137,7 @@ else
    local platforms = {
       linux={cxx=gpp.." -Wall -Wno-pmf-conversions -fPIC -O2 -c", ld=gld.." -fPIC -O -shared", soext=".so"},
       cygwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 -c", ld=gld.." -O -shared", soext=".dll"},
-      mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -mwindows -mno-cygwin -DHAVE_WINDOWS -O2 -c", ld=gld.." -mwindows -mno-cygwin -O -shared", soext=".dll"},
+      mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 -c", ld=gld.." -O -shared", soext=".dll"},
       darwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" "..gld.." -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
    }
    assert(platforms[osc])
@@ -135,6 +145,10 @@ else
    ld = platforms[osc].ld
    soext = platforms[osc].soext
 end
+
+local install_cmd
+if(onwindows) then install_cmd = "copy" else install_cmd = "install" end
+install_cmd = os.getenv("INSTALL_CMD") or install_cmd
 
 if(cxx:match("g%+%+")) then
    if(config_question("VISIBILITY_HIDDEN", "Does your GCC support -fvisibility=hidden? (GCC 4.0 and above)", "bool")) then
@@ -145,33 +159,62 @@ if(cxx:match("g%+%+")) then
    end
 end
 
-local install_path = config_question("INSTALL_PATH",
+local install_path
+
+if(onwindows) then
+   install_path = config_question("INSTALL_PATH",
+				     "Where do you want SubCritical to live? You can always move it later.",
+				     "list",
+				     home.."\\SubCritical (default)", home.."\\SubCritical\\",
+				     "C:\\SubCritical", "C:\\SubCritical\\",
+				     "Other", "")
+else
+   install_path = config_question("INSTALL_PATH",
 				     "Where do you want SubCritical to live? You can always move it later.",
 				     "list",
 				     "/usr/local/subcritical (default)", "/usr/local/subcritical/",
 				     "/usr/subcritical", "/usr/subcritical/",
 				     "Other", "")
+end
 
 if(install_path == "") then
-   install_path = config_question("REAL_INSTALL_PATH", "Enter the full path to where you want SubCritical to live.", "freeform", (os.getenv("HOME") or "/home").."/.subcritical/")
+   install_path = config_question("REAL_INSTALL_PATH", "Enter the full path to where you want SubCritical to live.", "freeform", home.."/.subcritical/")
 end
-install_path = (install_path.."/"):gsub("//+", "/")
+if(onwindows) then
+   function sanitize_path(path)
+      return (path.."\\"):gsub("\\\\+", "\\")
+   end
+else
+   function sanitize_path(path)
+      return (path.."/"):gsub("//+", "/")
+   end
+end
+install_path = sanitize_path(install_path)
 
 if(install_path:match("[ \"'!;]")) then
    print("ERROR: Please pick an install path with as few special characters as possible.")
    os.exit(1)
 end
 
-local include_path = install_path.."/include/"
-include_path = include_path:gsub("//+", "/")
+local include_path
+if(onwindows) then
+   include_path = install_path.."include\\"
+else
+   include_path = install_path.."include/"
+end
+include_path = sanitize_path(include_path)
 
 local install_lib,install_c,install_lua
-install_lib = install_path.."/lib/"
+if(onwindows) then
+   install_lib = install_path.."lib\\"
+else
+   install_lib = install_path.."lib/"
+end
 install_lib = install_lib:gsub("//+", "/")
 
 local cpath
 for entry in package.cpath:gmatch("[^;]+") do
-   if(entry:sub(1,1) ~= ".") then
+   if(entry:sub(1,1) ~= "." and entry:sub(1,1) ~= "@") then
       cpath = entry:gsub("%?.+$","")
       break
    end
@@ -180,10 +223,10 @@ install_c = config_question("INSTALL_C",
 			    "Enter the path where we should expect to install C package files for Lua:\n(note that you may need to set LUA_CPATH in the environment\nif you change this from the default)",
 			    "freeform",
 			    cpath) -- cpath can be nil, making prompt silly
-install_c = install_c:gsub("/+$","").."/"
+install_c = sanitize_path(install_c)
 local lpath
 for entry in package.path:gmatch("[^;]+") do
-   if(entry:sub(1,1) ~= ".") then
+   if(entry:sub(1,1) ~= "." and entry:sub(1,1) ~= "@") then
       lpath = entry:gsub("%?.+$","")
       break
    end
@@ -192,15 +235,22 @@ install_lua = config_question("INSTALL_LUA",
 			      "Enter the path where we should expect to install non-C Lua packages:\n(note that you may need to set LUA_PATH in the environment\nif you change this from the default)",
 			      "freeform",
 			      lpath)
-install_lua = install_lua:gsub("/+$","").."/"
+install_lua = sanitize_path(install_lua)
 
 cxx = cxx .. " -I"..include_path
 cxx = cxx .. " -DSO_EXTENSION=\"\\\""..soext.."\\\"\""
 
 -- Try our best to find subcritical_helper
-package.cpath = "./?"..soext..";../?"..soext
-if(install_lua) then
-   package.cpath = package.cpath..";"..install_lua.."/?"..soext
+if(not onwindows) then
+   package.cpath = "./?"..soext..";../?"..soext
+   if(install_lua) then
+      package.cpath = package.cpath..";"..install_lua.."/?"..soext
+   end
+else
+   package.cpath = ".\\?"..soext..";../?"..soext
+   if(install_lua) then
+      package.cpath = package.cpath..";"..install_lua.."\\?"..soext
+   end
 end
 
 if(os.getenv("CXXFLAGS") or os.getenv("CFLAGS")) then
@@ -253,6 +303,12 @@ local function source_to_object(name)
    else return name..".o" end
 end
 
+local function mkdir(dir)
+   dir = dir:gsub("[\\/]+$","")
+   print("(checking/making directory \""..dir.."\")")
+   helper.ckdir(dir)
+end
+
 local real_targets,virtual_targets,fake_targets = {},{},{}
 -- clean doesn't need to read the package data, so it's handled at the top
 function fake_targets.install()
@@ -267,11 +323,16 @@ function fake_targets.install()
    end
    assert(install, "build.scb did not provide an install table")
    if(install.headers) then
-      pe("mkdir -p "..include_path.."subcritical")
+      mkdir(include_path.."subcritical")
       for i,header in pairs(install.headers) do
 	 print("(installing and converting "..header..")")
 	 local i = assert(io.open(header, "r"))
-	 local install_path = include_path.."subcritical/"..header
+	 local install_path
+	 if(onwindows) then
+            install_path = include_path.."subcritical\\"..header
+         else
+            install_path = include_path.."subcritical/"..header
+         end
 	 local o,e = io.open(install_path, "w")
 	 if(not o) then
 	    print(e)
@@ -286,32 +347,32 @@ function fake_targets.install()
       end
    end
    if(install.packages) then
-      pe("mkdir -p "..install_lib)
+      mkdir(install_lib)
       if(type(install.packages) == "string") then
 	 print("Ahem! install.packages in your build.scb file needs to be a table. Pretending\nI didn't see that...")
 	 install.packages = {install.packages}
       end
       for i,package in pairs(install.packages) do
-	 pe("install "..package..soext.." "..install_lib)
-	 pe("install "..package..".scp "..install_lib)
+	 pe(install_cmd.." "..package..soext.." \""..install_lib.."\"")
+	 pe(install_cmd.." "..package..".scp \""..install_lib.."\"")
       end
    end
    if(install.lpackages) then
-      pe("mkdir -p "..install_lua)
+      mkdir(install_lua)
       for i,package in pairs(install.lpackages) do
-	 pe("install "..package.." "..install_lua)
+	 pe(install_cmd.." "..package.." \""..install_lua.."\"")
       end
    end
    if(install.lcpackages) then
-      pe("mkdir -p "..install_c)
+      mkdir(install_c)
       for i,package in pairs(install.lcpackages) do
-	 pe("install "..package..soext.." "..install_c)
+	 pe(install_cmd.." "..package..soext.." \""..install_c.."\"")
       end
    end
    if(install.utilities) then
-      pe("mkdir -p "..install_lib)
+      mkdir(install_lib)
       for i,utility in pairs(install.utilities) do
-	 pe("install "..utility.." "..install_lib)
+	 pe(install_cmd.." "..utility.." \""..install_lib.."\"")
       end
    end
    print("Installed.")
@@ -332,6 +393,11 @@ for soname,target in pairs(targets) do
       local object = source_to_object(source)
       full_ld = full_ld .. " " .. object
       real_target.deps[#real_target.deps+1] = object
+   end
+   if(target.deps) then
+      for _,dep in ipairs(target.deps) do
+	 full_ld = full_ld .. " \"" .. install_lib .. dep .. soext .. "\""
+      end
    end
    if(target.libflags) then full_ld = full_ld .. " " .. target.libflags end
    real_target.commands = {full_ld..hack_flags}

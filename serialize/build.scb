@@ -1,2 +1,2 @@
-targets = {serialize={"floats.cc", "dehydrate.cc", "rehydrate.cc", "crc.cc", "sha256.cc"}}
+targets = {serialize={"floats.cc", "dehydrate.cc", "rehydrate.cc", "crc.cc", "sha256.cc", deps={"core"}}}
 install = {packages={"serialize"}}

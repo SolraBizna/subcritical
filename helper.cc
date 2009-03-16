@@ -39,7 +39,12 @@ extern "C" {
 
 #ifdef HAVE_WINDOWS
 # define OS "windows"
-# error NIY
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+# include <dirent.h>
+# include <sys/stat.h>
+# include <unistd.h>
+# include <fcntl.h>
 #else
 # include <dlfcn.h>
 # include <dirent.h>
@@ -88,21 +93,42 @@ static int f_listfiles(lua_State* L) {
   return 1;
 }
 
+#if HAVE_WINDOWS
+static const char* dlerror() {
+  int error = GetLastError();
+  static char buffer[128];
+  if(FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0, buffer, sizeof(buffer), NULL))
+    return buffer; // this is not bad in this specific circumstance
+  else {
+    snprintf(buffer, 128, "system error %i\n", error);
+    return buffer;
+  }
+}
+#endif
+
 static int f_dlopen(lua_State* L) {
+#if HAVE_WINDOWS
+  HINSTANCE lib = LoadLibrary(luaL_checkstring(L, 1));
+#else
   void* lib = dlopen(luaL_checkstring(L, 1), RTLD_NOW|RTLD_GLOBAL);
+#endif
   if(!lib) {
     lua_pushnil(L);
     lua_pushstring(L, dlerror());
     return 2;
   }
   else {
-    lua_pushlightuserdata(L, lib);
+    lua_pushlightuserdata(L, (void*)lib);
     return 1;
   }
 }
 
 static int f_dlsym(lua_State* L) {
+#if HAVE_WINDOWS
+  void* sym = (void*)GetProcAddress((HINSTANCE)lua_topointer(L,1), luaL_checkstring(L, 2));
+#else
   void* sym = dlsym((void*)lua_topointer(L, 1), luaL_checkstring(L, 2));
+#endif
   if(!sym) {
     lua_pushnil(L);
     lua_pushstring(L, dlerror());
@@ -143,30 +169,46 @@ static int f_stat(lua_State* L) {
   return 1;
 }
 
+#if HAVE_WINDOWS
+#define SLASH '\\'
+#else
+#define SLASH '/'
+#endif
+
 static bool recursive_ckdir(lua_State* L, char* dir, const int* slashbuf) {
-  assert(*slashbuf == 0 || dir[*slashbuf] == '/');
+  assert(*slashbuf == 0 || dir[*slashbuf] == SLASH);
   // Check directory.
   struct stat st;
   if(!stat(dir, &st) && S_ISDIR(st.st_mode)) return true;
   // Directory is not present. Try making it.
+#if HAVE_WINDOWS
+  if(!mkdir(dir)) return true;
+  else
+#else
   if(!mkdir(dir, 0777)) return true;
   // Directory could not be created.
-  if(errno == ENOENT) {
+  if(errno == ENOENT)
+#endif
+    {
     // Because a parent is not present.
     // If there is no parent, this is somewhat difficult to do anything about.
     if(*slashbuf == 0) return false;
     int ret;
     dir[*slashbuf] = 0;
     ret = recursive_ckdir(L, dir, slashbuf + 1);
-    dir[*slashbuf] = '/';
+    dir[*slashbuf] = SLASH;
     // If the parent could not be created, we definitely can't.
     if(ret == false) return false;
     // It all depends on mkdir now.
+#if HAVE_WINDOWS
+    return !mkdir(dir);
+#else
     return !mkdir(dir, 0777);
   }
   else {
     // Some other reason. Fail.
     return false;
+#endif
   }
 }
 
@@ -180,11 +222,11 @@ static int f_ckdir(lua_State* L) {
   // Don't count any starting slash or terminating slash
   size_t slashcount = 0;
   for(p = buf + 1; *p; ++p)
-    if(*p == '/' && p[1]) ++slashcount;
+    if(*p == SLASH && p[1]) ++slashcount;
   int* slashbuf = (int*)amalloc((slashcount + 1) * sizeof(int));
   slashbuf[slashcount] = 0;
   for(p = buf + 1, q = slashbuf + slashcount - 1; *p; ++p) {
-    if(*p == '/' && p[1]) *q-- = p - buf;
+    if(*p == SLASH && p[1]) *q-- = p - buf;
   }
   bool success = recursive_ckdir(L, buf, slashbuf);
   free((void*)slashbuf);
@@ -199,12 +241,24 @@ static int f_replace(lua_State* L) {
   src = luaL_checkstring(L, 2);
   int fd = open(src, O_WRONLY);
   if(fd < 0) return luaL_error(L, "couldn't open '%s' to sync caches: %s", src, strerror(errno));
+#if HAVE_WINDOWS
+  HANDLE h = (HANDLE)_get_osfhandle(fd);
+  if(h == INVALID_HANDLE_VALUE) {
+    close(fd);
+    return luaL_error(L, "ehh?!");
+  }
+  if(!FlushFileBuffers(h)) {
+    close(fd);
+    return luaL_error(L, "couldn't sync caches on '%s'", src);
+  }
+#else
   if(fsync(fd)) {
     int _e = errno;
     close(fd);
     errno = _e;
     return luaL_error(L, "couldn't sync caches on '%s': %s", src, strerror(errno));
   }
+#endif
   close(fd);
   if(rename(src, dest))
     return luaL_error(L, "couldn't replace '%s' with '%s': %s", dest, src, strerror(errno));

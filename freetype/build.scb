@@ -1,9 +1,20 @@
 -- -*- lua -*-
-append_cflags"`freetype-config --cflags`"
+local os = config_question("OS/COMPILER")
+if(os == "mingw") then
+   append_cflags"-IC:\\MinGW\\include\\freetype2"
+else
+   append_cflags"`freetype-config --cflags`"
+end
 
 targets = {
-   ["freetype"]={"freetype.cc", libflags="`freetype-config --libs`"},
+   ["freetype"]={"freetype.cc", deps={"graphics","core"}},
 }
+
+if(os == "mingw") then
+   targets.freetype.libflags="-lfreetype -lz"
+else
+   targets.freetype.libflags="`freetype-config --libs`"
+end
 
 install = {
    packages={"freetype"},

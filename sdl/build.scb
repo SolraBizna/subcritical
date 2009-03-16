@@ -1,11 +1,23 @@
 -- -*- lua -*-
 
-append_cflags"`sdl-config --cflags`"
+local os = config_question("OS/COMPILER")
+
+if(os ~= "mingw") then
+   append_cflags"`sdl-config --cflags`"
+else
+   append_cflags"-IC:\\MinGW\\include\\SDL"
+end
 
 targets = {
-   ["sdl"]={"sdlgraphics.cc","sdlman.cc","sdlsound.cc",libflags="`sdl-config --libs`"},
+   ["scsdl"]={"sdlgraphics.cc","sdlman.cc","sdlsound.cc",deps={"graphics","sound","core"}},
 }
 
+if(os ~= "mingw") then
+   targets.scsdl.libflags = "`sdl-config --libs`"
+else
+   targets.scsdl.libflags = "-lSDL"
+end
+
 install = {
-   packages={"sdl"},
+   packages={"scsdl"},
 }

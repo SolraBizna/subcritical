@@ -89,9 +89,10 @@ if(not arg or not arg[1]) then
    end
 end
 
+local dirfrob
 local dirsep,baseexp,dirfrob
 if(helper.os == "windows") then
-   dirsep = "\\","\\[^\\]+$"
+   dirsep,baseexp = "\\","\\[^\\]+$"
    local frob_t = {["/"]="\\",["\\"]="/"}
    function dirfrob(path) return path:gsub("[\\/]",frob_t) end
 else dirsep,baseexp = "/","/[^/]+$" end
@@ -104,7 +105,7 @@ end
 
 dprintf("Groping environment...")
 local default_exec_path
-if(helper.os == "windows") then default_exec_path = (os.getenv("USERPROFILE") or "C:\\Documents and Settings\\User").."\\SubCritical\\lib\\;C:\\Subcritical\\lib\\"
+if(helper.os == "windows") then default_exec_path = (os.getenv("USERPROFILE") or "C:\\Documents and Settings\\User").."\\SubCritical\\lib\\;C:\\SubCritical\\lib\\"
 else default_exec_path = (os.getenv("HOME") or "/home").."/.subcritical/lib/;/usr/local/subcritical/lib/;/usr/subcritical/lib/;/opt/subcritical/lib/" end
 local exec_path = possible_path(os.getenv("SUBCRITICAL_EXEC_PATH"), default_exec_path)
 if(pathcheck) then dprintf("exec_path=%s", exec_path) end
@@ -402,27 +403,27 @@ do
    --nupath = nupath:gsub("%.[/\\]%?%.lua","")
    local t = {}
    if(arg and arg[0] and arg[0]:match(dirsep)) then
-      local target = arg[0]:gsub(baseexp,"/")
+      local target = arg[0]:gsub(baseexp,dirsep)
       t[#t+1] = target.."?.lua"
       t[#t+1] = target.."?.scu"
-      t[#t+1] = target.."?/package.scu"
+      t[#t+1] = target.."?"..dirsep.."package.scu"
    else
       t[#t+1] = "?.lua"
       t[#t+1] = "?.scu"
-      t[#t+1] = "?/package.scu"
+      t[#t+1] = "?"..dirsep.."package.scu"
    end
    for dir in exec_path:gmatch("[^;]+") do
       if(dir:sub(-1,-1) ~= dirsep) then
 	 t[#t+1] = dir .. dirsep .. "?.scu"
-	 t[#t+1] = dir .. dirsep .. "?/package.scu"
+	 t[#t+1] = dir .. dirsep .. "?"..dirsep.."package.scu"
       else
 	 t[#t+1] = dir .. "?.scu"
-	 t[#t+1] = dir .. "?/package.scu"
+	 t[#t+1] = dir .. "?"..dirsep.."package.scu"
       end
    end
    t[#t+1] = nupath
    nupath = table.concat(t, ";")
-   nupath = nupath:gsub(";;",""):gsub("^;",""):gsub(";$","")
+   nupath = nupath:gsub(";;+",";"):gsub("^;",""):gsub(";$","")
    if(pathcheck) then
       dprintf("  OLD: %s", package.path)
       dprintf("  NEW: %s", nupath)
@@ -569,6 +570,7 @@ local function fixvarname(name)
    assert(name:sub(-1,-1) ~= "~", "Var file names must not end with '~'")
    name = name:gsub("/", "_")
    if(dirsep ~= "/") then name = name:gsub(dirsep, "/") end
+   if(dirfrob) then name = dirfrob(name) end
    return name
 end
 

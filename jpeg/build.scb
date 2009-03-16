@@ -1,2 +1,2 @@
-targets = {jpeg={"jpeg.cc", libflags="-ljpeg"}}
+targets = {jpeg={"jpeg.cc", libflags="-ljpeg", deps={"graphics","core"}}}
 install = {packages={"jpeg"}}

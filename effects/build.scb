@@ -1,3 +1,3 @@
 -- -*- lua -*-
-targets={effects={"flip.cc","scale.cc","render.cc","makefrisket.cc"}}
+targets={effects={"flip.cc","scale.cc","render.cc","makefrisket.cc",deps={"graphics","core"}}}
 install={packages={"effects"}}

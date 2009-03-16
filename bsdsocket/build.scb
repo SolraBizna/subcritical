@@ -1,6 +1,6 @@
 local os = config_question("OS/COMPILER")
 if(os ~= "mingw") then
-   targets = {ipsocket={"ipsocket.cc","tcpsockets.cc","udpsockets.cc"}}
+   targets = {ipsocket={"ipsocket.cc","tcpsockets.cc","udpsockets.cc",deps={"core"}}}
    install = {packages={"ipsocket"}, headers={"ipsocket.h"}}
 else
    print("BSD version of IPSocket not built (Windows target)")

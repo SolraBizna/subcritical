@@ -1,2 +1,2 @@
-targets = {socket={"socket.cc"}}
+targets = {socket={"socket.cc", deps={"core"}}}
 install = {packages={"socket"}, headers={"socket.h"}}

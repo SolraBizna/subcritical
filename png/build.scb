@@ -1,2 +1,2 @@
-targets = {png={"png.cc", libflags="-lpng -lz"}}
+targets = {png={"png.cc", libflags="-lpng -lz", deps={"graphics","core"}}}
 install = {packages={"png"}}
