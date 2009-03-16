@@ -1,2 +1,2 @@
-targets = {gif={"gif.cc", libflags="-lgif"}}
+targets = {gif={"gif.cc", libflags="-lgif", deps={"graphics","core"}}}
 install = {packages={"gif"}}

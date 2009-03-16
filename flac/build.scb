@@ -1,2 +1,7 @@
-targets = {flac={"flacload.cc", "flacstream.cc", libflags="-lFLAC"}}
+targets = {flac={"flacload.cc", "flacstream.cc", libflags="-lFLAC -logg", deps={"sound","core"}}}
 install = {packages={"flac"}}
+
+local os = config_question("OS/COMPILER")
+if(os == "mingw") then
+   targets.flac.libflags = targets.flac.libflags .. " -lwsock32"
+end

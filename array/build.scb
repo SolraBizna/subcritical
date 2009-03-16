@@ -1,2 +1,2 @@
-targets = {array={"array.cc"}}
+targets = {array={"array.cc",deps={"core"}}}
 install = {packages={"array"}}
