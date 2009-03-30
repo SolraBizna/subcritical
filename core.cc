@@ -262,6 +262,16 @@ LUA_EXPORT int Init_core(lua_State* L) {
   union { uint8_t small; uint32_t large; } endiantest;
   endiantest.large = 1;
   little_endian = !!endiantest.small;
+#if defined(i386) || defined(__i386) || defined(__i386__)
+  // Change the x87 FPU to use double-precision internally. This doesn't apply
+  // when floating point math is being done with SSE, but that's hard to
+  // detect, and even in that case, this won't hurt anything or anyone. (For
+  // that matter, even when SSE is being used for math, the x87 instructions
+  // will still be used for certain operations.)
+  // http://www.network-theory.co.uk/docs/gccintro/gccintro_70.html
+  unsigned int mode = 0x27F;
+  asm("fldcw %0" : : "m" (*&mode));
+#endif
   return 0;
 }
 
