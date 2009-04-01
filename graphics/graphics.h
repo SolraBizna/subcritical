@@ -35,7 +35,7 @@ namespace SubCritical {
   typedef uint8_t Frixel;
   typedef int32_t Fixed;
   typedef uint16_t Index;
-  class LOCAL CoordArray : public Object {
+  class EXPORT CoordArray : public Object {
   public:
     CoordArray(size_t count);
     virtual ~CoordArray();
@@ -44,7 +44,7 @@ namespace SubCritical {
     size_t count;
     Fixed* coords;
   };
-  class LOCAL IndexArray : public Object {
+  class EXPORT IndexArray : public Object {
   public:
     IndexArray(size_t count);
     virtual ~IndexArray();
