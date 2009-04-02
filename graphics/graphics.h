@@ -24,10 +24,10 @@
 
 #include "subcritical/core.h"
 
-#define F_TO_Q(f) (Fixed)(f*64)
+#define F_TO_Q(f) (Fixed)((f)*64)
 #define I_TO_Q(f) F_TO_Q(f) // that macro is really type-agnostic
-#define Q_TO_I(f) ((f+31)>>6) // rounds down on x.5
-#define Q_FLOOR(f) (f>>6)
+#define Q_TO_I(f) (((f)+31)>>6) // rounds down on x.5
+#define Q_FLOOR(f) ((f)>>6)
 #define Q_CEIL(f) Q_FLOOR((f)+63)
 
 namespace SubCritical {
