@@ -283,6 +283,7 @@ inline void Drawable::DrawSpanA(int y, Fixed l, Fixed r) {
   if(r >= fx_w) r = fx_w - 1;
   l = Q_TO_I(l);
   r = Q_TO_I(r);
+  if(r <= l) return;
   int rem = r - l;
   Pixel* p = rows[y] + l;
   STD_PRIM_UNROLL_ALPHA;
@@ -328,7 +329,7 @@ if(side##e >= side##d) { \
 }
 
 inline void Drawable::DrawTriangleR(const Fixed* top, const Fixed* mid, const Fixed* bot) throw() {
-  int remt = Q_TO_I(mid[1] - 1) - Q_TO_I(top[1]);
+  int remt = Q_TO_I(mid[1]) - Q_TO_I(top[1]);
   int remb = Q_TO_I(bot[1] - 1) - Q_TO_I(mid[1]);
   if(!remt && !remb) return;
   int y = Q_TO_I(top[1]);
@@ -365,7 +366,7 @@ inline void Drawable::DrawTriangleR(const Fixed* top, const Fixed* mid, const Fi
 }
 
 inline void Drawable::DrawTriangleL(const Fixed* top, const Fixed* mid, const Fixed* bot) throw() {
-  int remt = Q_TO_I(mid[1] - 1) - Q_TO_I(top[1]);
+  int remt = Q_TO_I(mid[1]) - Q_TO_I(top[1]);
   int remb = Q_TO_I(bot[1] - 1) - Q_TO_I(mid[1]);
   if(!remt && !remb) return;
   Tri_DDA_Vars(r);
