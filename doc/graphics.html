@@ -65,7 +65,7 @@ end</pre></dd>
 <dd>As with DrawLineStrip, with an additional line between the last and first indices.</dd>
 <dt class="code"><a name="Drawable:DrawTriangles" /><i>destination</i>:DrawTriangles(<i>coords</i>, <i>indices</i>)</dt>
 <dd>Each triple of indices in <i class="code">indices</i> (an IndexArray, see <a href="#CompileIndices" class="code">CompileIndices</a>) designates three coordinate pairs in <i class="code">coords</i> (a CoordArray, see <a href="#CompileCoords" class="code">CompileCoords</a>) which form a triangle that should be drawn with the current primitive color.</dd>
-<dd>Triangles in SubCritical are drawn with subpixel precision, but not antialiased. SubCritical uses a top-left fill convention, so abutting triangles will not have holes or overdraw.</dd>
+<dd>Triangles in SubCritical are drawn with subpixel precision, but not antialiased. SubCritical consistently uses a top-left fill convention, so abutting triangles will not have holes or overdraw. SubCritical also does clipping to the clip rectangle of the <span class="code">Drawable</span>, so you gain nothing from doing such clipping yourself.</dd>
 <dd>Note: Triangles, and all other primitives, fully support alpha in the primitive color.</dd>
 <dt class="code"><a name="Drawable:DrawTriangleStrip" /><i>destination</i>:DrawTriangleStrip(<i>coords</i>, <i>indices</i>)</dt>
 <dd>As with DrawTriangles, but <i class="code">indices</i> are handled differently. The first triple designates a triangle, then each index after that designates a new triangle between it and the two indices before it.</dd>
