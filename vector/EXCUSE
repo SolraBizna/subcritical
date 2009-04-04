@@ -1,0 +1,14 @@
+The implementation of this code is a spaghetti mess. Even more so than the rest
+of SubCritical. It had very little design ahead of time, and a great deal of
+the work is done in the C preprocessor. Not to mention that, during most of the
+actual writing, I was having a seizure. In the interests of finishing this
+package, I did not go back and update any of the existing code with new design
+paradigms; that is why, for example, the generalized splatting code is only
+used to implement a few matrix operations.
+
+Don't even think about trying to read this code to learn matrix math. As for
+debugging it, $DEITY help you.
+
+Sorry!
+
+-:sigma.SB
