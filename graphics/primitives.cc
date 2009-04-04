@@ -21,6 +21,7 @@
 #include "graphics.h"
 
 #include <math.h>
+#include <string.h>
 
 using namespace SubCritical;
 
@@ -264,10 +265,30 @@ int Drawable::Lua_BlitFrisket(lua_State* L) throw() {
 }
 
 inline void Drawable::DrawSpan(int y, Fixed l, Fixed r) {
-  const Fixed fx_w = width << 6;
-  if(y < 0 || y >= height || l >= fx_w || r < 0) return;
-  if(l < 0) l = 0;
-  if(r >= fx_w) r = fx_w - 1;
+  if(y < clip_top || y > clip_bottom) return;
+  l = Q_TO_I(l);
+  r = Q_TO_I(r);
+  if(l < clip_left) l = clip_left;
+  if(r > clip_right + 1) r = clip_right + 1;
+  if(r <= l) return;
+  int rem = r - l;
+  Pixel* p = rows[y] + l;
+  STD_PRIM_UNROLL;
+}
+
+inline void Drawable::DrawSpanA(int y, Fixed l, Fixed r) {
+  if(y < clip_top || y > clip_bottom) return;
+  l = Q_TO_I(l);
+  r = Q_TO_I(r);
+  if(l < clip_left) l = clip_left;
+  if(r > clip_right + 1) r = clip_right + 1;
+  if(r <= l) return;
+  int rem = r - l;
+  Pixel* p = rows[y] + l;
+  STD_PRIM_UNROLL_ALPHA;
+}
+
+inline void Drawable::NoclipDrawSpan(int y, Fixed l, Fixed r) {
   l = Q_TO_I(l);
   r = Q_TO_I(r);
   if(r <= l) return;
@@ -276,11 +297,7 @@ inline void Drawable::DrawSpan(int y, Fixed l, Fixed r) {
   STD_PRIM_UNROLL;
 }
 
-inline void Drawable::DrawSpanA(int y, Fixed l, Fixed r) {
-  const Fixed fx_w = width << 6;
-  if(y < 0 || y >= height || l >= fx_w || r < 0) return;
-  if(l < 0) l = 0;
-  if(r >= fx_w) r = fx_w - 1;
+inline void Drawable::NoclipDrawSpanA(int y, Fixed l, Fixed r) {
   l = Q_TO_I(l);
   r = Q_TO_I(r);
   if(r <= l) return;
@@ -339,12 +356,12 @@ inline void Drawable::DrawTriangleR(const Fixed* top, const Fixed* mid, const Fi
     Tri_DDA_Vars(t);
     Tri_DDA_Init(t, top, mid, 1);
     if(primitive_alpha) while(remt-- > 0) {
-      DrawSpanA(y++, l, t);
+      NoclipDrawSpanA(y++, l, t);
       Tri_DDA_Step(l);
       Tri_DDA_Step(t);
     }
     else while(remt-- > 0) {
-      DrawSpan(y++, l, t);
+      NoclipDrawSpan(y++, l, t);
       Tri_DDA_Step(l);
       Tri_DDA_Step(t);
     }
@@ -353,12 +370,12 @@ inline void Drawable::DrawTriangleR(const Fixed* top, const Fixed* mid, const Fi
     Tri_DDA_Vars(b);
     Tri_DDA_Init(b, mid, bot, 1);
     if(primitive_alpha) while(remb-- > 0) {
-      DrawSpanA(y++, l, b);
+      NoclipDrawSpanA(y++, l, b);
       Tri_DDA_Step(l);
       Tri_DDA_Step(b);
     }
     else while(remb-- > 0) {
-      DrawSpan(y++, l, b);
+      NoclipDrawSpan(y++, l, b);
       Tri_DDA_Step(l);
       Tri_DDA_Step(b);
     }
@@ -376,12 +393,12 @@ inline void Drawable::DrawTriangleL(const Fixed* top, const Fixed* mid, const Fi
     Tri_DDA_Vars(t);
     Tri_DDA_Init(t, top, mid, 1);
     if(primitive_alpha) while(remt-- > 0) {
-      DrawSpanA(y++, t, r);
+      NoclipDrawSpanA(y++, t, r);
       Tri_DDA_Step(r);
       Tri_DDA_Step(t);
     }
     else while(remt-- > 0) {
-      DrawSpan(y++, t, r);
+      NoclipDrawSpan(y++, t, r);
       Tri_DDA_Step(r);
       Tri_DDA_Step(t);
     }
@@ -390,12 +407,12 @@ inline void Drawable::DrawTriangleL(const Fixed* top, const Fixed* mid, const Fi
     Tri_DDA_Vars(b);
     Tri_DDA_Init(b, mid, bot, 1);
     if(primitive_alpha) while(remb-- > 0) {
-      DrawSpanA(y++, b, r);
+      NoclipDrawSpanA(y++, b, r);
       Tri_DDA_Step(r);
       Tri_DDA_Step(b);
     }
     else while(remb-- > 0) {
-      DrawSpan(y++, b, r);
+      NoclipDrawSpan(y++, b, r);
       Tri_DDA_Step(r);
       Tri_DDA_Step(b);
     }
@@ -449,6 +466,174 @@ inline void Drawable::DrawTriangle(const Fixed* a, const Fixed* b, const Fixed* 
   if(mid[0] < mx) DrawTriangleL(top, mid, bot);
   else if(mid[0] > mx) DrawTriangleR(top, mid, bot);
   // else, infinitely thin triangle
+}
+
+#define CLIP_LINE(coord, clip, a, b, c) \
+i = clip - a[coord]; \
+q = b[coord] - a[coord]; \
+if(coord == 0) c[0] = clip; \
+else c[0] = a[0] + ((b[0]-a[0]) * i / q); \
+if(coord == 1) c[1] = clip; \
+else c[1] = a[1] + ((b[1]-a[1]) * i / q)
+
+#define Clipf(name, coord, dir) \
+static inline int Clip##name(Fixed clip, const Fixed* a, const Fixed* b, const Fixed* c, Fixed* d, Fixed* e, int dn, int en, int mia[3], int via[3]) { \
+  Fixed i, q; \
+  if(a[coord] dir clip) { \
+    if(b[coord] dir clip) { \
+      if(c[coord] dir clip) return -1; \
+      CLIP_LINE(coord, clip, a, c, d); \
+      CLIP_LINE(coord, clip, b, c, e); \
+      mia[0] = dn; \
+      mia[1] = en; \
+      return 1; \
+    } \
+    else if(c[coord] dir clip) { \
+      CLIP_LINE(coord, clip, a, b, d); \
+      CLIP_LINE(coord, clip, c, b, e); \
+      mia[0] = dn; \
+      mia[2] = en; \
+      return 1; \
+    } \
+    else { \
+      CLIP_LINE(coord, clip, a, b, d); \
+      CLIP_LINE(coord, clip, a, c, e); \
+      via[0] = dn; \
+      via[1] = mia[1]; \
+      via[2] = mia[2]; \
+      mia[0] = dn; \
+      mia[1] = mia[2]; \
+      mia[2] = en; \
+      return 2; \
+    } \
+  } \
+  else if(b[coord] dir clip) { \
+    if(c[coord] dir clip) { \
+      CLIP_LINE(coord, clip, a, b, d); \
+      CLIP_LINE(coord, clip, a, c, e); \
+      mia[1] = dn; \
+      mia[2] = en; \
+      return 1; \
+    } \
+    else { \
+      CLIP_LINE(coord, clip, b, a, d); \
+      CLIP_LINE(coord, clip, b, c, e); \
+      via[0] = dn; \
+      via[1] = mia[0]; \
+      via[2] = mia[2]; \
+      mia[0] = dn; \
+      mia[1] = en; \
+      /*mia[2] = mia[2];*/			\
+      return 2; \
+    } \
+  } \
+  else if(c[coord] dir clip) { \
+    CLIP_LINE(coord, clip, c, a, d); \
+    CLIP_LINE(coord, clip, c, b, e); \
+    via[0] = dn; \
+    via[1] = mia[0]; \
+    via[2] = mia[1]; \
+    mia[0] = dn; \
+    mia[2] = mia[1]; \
+    mia[1] = en; \
+    return 2; \
+  } \
+  else return 0; \
+}
+
+Clipf(Left, 0, <);
+Clipf(Right, 0, >);
+Clipf(Up, 1, <);
+Clipf(Down, 1, >);
+
+inline void Drawable::ClipNDrawTriangle(const Fixed* a, const Fixed* b, const Fixed* c) throw() {
+#define MAXCLIPVERTICES (3+(MAXCLIPTRIANGLES*2))
+#define MAXCLIPTRIANGLES 16
+  Fixed* vertices[MAXCLIPVERTICES] = {const_cast<Fixed*>(a), const_cast<Fixed*>(b), const_cast<Fixed*>(c)};
+  Fixed nuvertices[MAXCLIPTRIANGLES*2][2];
+  for(int n = 0; n < MAXCLIPTRIANGLES; ++n) {
+    vertices[n*2+3] = nuvertices[n*2];
+    vertices[n*2+4] = nuvertices[n*2+1];
+  }
+  int numvertices = 3;
+  int triangles[MAXCLIPTRIANGLES][3] = {{0, 1, 2}};
+  int numtriangles = 1;
+  Fixed coord;
+  coord = I_TO_Q(clip_left);
+  for(int n = numtriangles-1; n >= 0; --n) {
+    switch(ClipLeft(coord, vertices[triangles[n][0]], vertices[triangles[n][1]], vertices[triangles[n][2]], vertices[numvertices], vertices[numvertices+1], numvertices, numvertices+1, triangles[n], triangles[numtriangles])) {
+    case -1:
+      memmove(triangles[n], triangles[n+1], (numtriangles-n-1) * sizeof(*triangles));
+      --numtriangles;
+      break;
+    case 0:
+    default:
+      break;
+    case 2:
+      numtriangles += 1;
+    case 1:
+      numvertices += 2;
+      break;
+    }
+  }
+  coord = I_TO_Q(clip_right)+63;
+  for(int n = numtriangles-1; n >= 0; --n) {
+    switch(ClipRight(coord, vertices[triangles[n][0]], vertices[triangles[n][1]], vertices[triangles[n][2]], vertices[numvertices], vertices[numvertices+1], numvertices, numvertices+1, triangles[n], triangles[numtriangles])) {
+    case -1:
+      memmove(triangles[n], triangles[n+1], (numtriangles-n-1) * sizeof(*triangles));
+      --numtriangles;
+      break;
+    case 0:
+    default:
+      break;
+    case 2:
+      numtriangles += 1;
+    case 1:
+      numvertices += 2;
+      break;
+    }
+  }
+  coord = I_TO_Q(clip_bottom)+63;
+  for(int n = numtriangles-1; n >= 0; --n) {
+    int ot[3] = {triangles[n][0], triangles[n][1], triangles[n][2]};
+    switch(ClipDown(coord, vertices[triangles[n][0]], vertices[triangles[n][1]], vertices[triangles[n][2]], vertices[numvertices], vertices[numvertices+1], numvertices, numvertices+1, triangles[n], triangles[numtriangles])) {
+    case -1:
+      memmove(triangles[n], triangles[n+1], (numtriangles-n-1) * sizeof(*triangles));
+      --numtriangles;
+      break;
+    case 0:
+    default:
+      break;
+    case 2:
+      if(ot[0] != triangles[n][0] || ot[1] != triangles[n][1] || ot[2] != triangles[n][2])
+      numtriangles += 1;
+    case 1:
+      numvertices += 2;
+      break;
+    }
+  }
+  coord = I_TO_Q(clip_top);
+  for(int n = numtriangles-1; n >= 0; --n) {
+    int ot[3] = {triangles[n][0], triangles[n][1], triangles[n][2]};
+    switch(ClipUp(coord, vertices[triangles[n][0]], vertices[triangles[n][1]], vertices[triangles[n][2]], vertices[numvertices], vertices[numvertices+1], numvertices, numvertices+1, triangles[n], triangles[numtriangles])) {
+    case -1:
+      memmove(triangles[n], triangles[n+1], (numtriangles-n-1) * sizeof(*triangles));
+      --numtriangles;
+      break;
+    case 0:
+    default:
+      break;
+    case 2:
+      if(ot[0] != triangles[n][0] || ot[1] != triangles[n][1] || ot[2] != triangles[n][2])
+      numtriangles += 1;
+    case 1:
+      numvertices += 2;
+      break;
+    }
+  }
+  for(int n = 0; n < numtriangles; ++n) {
+    DrawTriangle(vertices[triangles[n][0]],vertices[triangles[n][1]],vertices[triangles[n][2]]);
+  }
 }
 
 inline void Drawable::DrawBresenlineV(const Fixed* top, const Fixed* bot) {
@@ -767,14 +952,14 @@ void Drawable::DrawLineLoop(lua_Number size, const Fixed* coords, const Index* i
 void Drawable::DrawTriangles(const Fixed* coords, const Index* indices, size_t indexcount) throw() {
   size_t n;
   for(n = 0; n < indexcount - 2; n += 3) {
-    DrawTriangle(coords + indices[n] * 2, coords + indices[n+1] * 2, coords + indices[n+2] * 2);
+    ClipNDrawTriangle(coords + indices[n] * 2, coords + indices[n+1] * 2, coords + indices[n+2] * 2);
   }
 }
 
 void Drawable::DrawTriangleStrip(const Fixed* coords, const Index* indices, size_t indexcount) throw() {
   size_t n;
   for(n = 0; n < indexcount - 2; ++n) {
-    DrawTriangle(coords + indices[n] * 2, coords + indices[n+1] * 2, coords + indices[n+2] * 2);
+    ClipNDrawTriangle(coords + indices[n] * 2, coords + indices[n+1] * 2, coords + indices[n+2] * 2);
   }
 }
 
@@ -782,7 +967,7 @@ void Drawable::DrawTriangleFan(const Fixed* coords, const Index* indices, size_t
   size_t n;
   const Fixed* base = coords + indices[0] * 2;
   for(n = 1; n < indexcount - 1; n += 2) {
-    DrawTriangle(base, coords + indices[n] * 2, coords + indices[n+1] * 2);
+    ClipNDrawTriangle(base, coords + indices[n] * 2, coords + indices[n+1] * 2);
   }
 }
 
