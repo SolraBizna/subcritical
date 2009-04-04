@@ -148,12 +148,15 @@ namespace SubCritical {
     uint8_t rsh, gsh, bsh, ash;
     LOCAL void DrawSpan(int y, Fixed l, Fixed r);
     LOCAL void DrawSpanA(int y, Fixed l, Fixed r);
+    LOCAL void NoclipDrawSpan(int y, Fixed l, Fixed r);
+    LOCAL void NoclipDrawSpanA(int y, Fixed l, Fixed r);
     LOCAL void DrawBresenline(const Fixed* a, const Fixed* b);
     LOCAL void DrawBresenlineH(const Fixed* left, const Fixed* right);
     LOCAL void DrawBresenlineV(const Fixed* left, const Fixed* right);
     LOCAL void DrawQuad(const Fixed* top, const Fixed* left, const Fixed* right, const Fixed* bot);
     LOCAL void DrawQuadA(const Fixed* top, const Fixed* left, const Fixed* right, const Fixed* bot);
     LOCAL void DrawQuadLine(Fixed width, const Fixed* top, const Fixed* bot);
+    LOCAL void ClipNDrawTriangle(const Fixed* a, const Fixed* b, const Fixed* c) throw();
     LOCAL void DrawTriangle(const Fixed* a, const Fixed* b, const Fixed* c) throw();
     LOCAL void DrawTriangleL(const Fixed* top, const Fixed* mid, const Fixed* bot) throw();
     LOCAL void DrawTriangleR(const Fixed* top, const Fixed* mid, const Fixed* bot) throw();
