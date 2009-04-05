@@ -13,6 +13,10 @@
 <p>The <tt>effects</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
 <h2>Utility functions</h2>
 <dl>
+<dt class="code"><a name="BoxDown" />SCUtil.BoxDown(<i>source</i>, <i>destination</i>, <i>xf</i>, <i>yf</i>)</dt>
+<dd>This quickly copies the pixel data in <i class="code">source</i> to <i class="code">destination</i>, scaling down by a factor of <i class="code">xf</i> on the X axis and <i class="code">yf</i> on the Y axis using a simple box filter. <i class="code">source</i> must be <i class="code">xf</i> times wider and <i class="code">yf</i> times taller than <i class="code">destination</i>.</dd>
+<dd>This is suitable for simple oversampling, whereby you render at a much higher resolution and scale down for display. In that case, the <i class="code">destination</i> will probably be the screen.</dd>
+<dd>The case of <i class="code">xf</i>=2,<i class="code">yf</i>=2 is specially optimized.</dd>
 <dt class="code"><a name="Flip" /><i>new_graphic</i> = SCUtil.Flip(<i>old_graphic</i>)</dt>
 <dd><i class="code">old_graphic</i> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">new_graphic</i> will be a new <a href="graphics.html#Graphic" class="code">Graphic</a> containing the image data from <i class="code">old_graphic</i> rotated 180 degrees.</dd>
 <dt class="code"><a name="MakeFrisketDirectly" /><i>frisket</i> = SCUtil.MakeFrisketDirectly(<i>graphic</i>)</dt>

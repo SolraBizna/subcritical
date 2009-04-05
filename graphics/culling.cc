@@ -24,7 +24,7 @@
 using namespace SubCritical;
 
 #define double_area_triangle(a,b,c) \
-(((a)[0]*(b)[1] - (b)[0]*(a)[1]) + ((b)[0]*(c)[1] - (c)[0]*(b)[1]) + ((c)[0]*(a)[1] - (a)[0]*(c)[1]))
+  (((a)[0]*(b)[1] - (b)[0]*(a)[1]) + ((b)[0]*(c)[1] - (c)[0]*(b)[1]) + ((c)[0]*(a)[1] - (a)[0]*(c)[1]))
 #define cull_triangle(a,b,c,dir) \
   (double_area_triangle(a,b,c) dir 0)
 

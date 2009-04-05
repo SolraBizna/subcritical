@@ -48,8 +48,8 @@
 <dd>Draw points <i class="code">diameter</i> in diameter at every coordinate in <i class="code">coords</i> (a CoordArray, see <a href="#CompileCoords" class="code">CompileCoords</a>) using the current primitive color.</dd>
 <dd>Note: Points, and all other primitives, fully support alpha in the primitive color.</dd>
 <dd>Note 2: Currently, points are rendered as rectangles and lack subpixel precision. In the future, they may be rendered as circles and gain subpixel precision.</dd>
-<dt class="code"><a name="Drawable:DrawLines" /><i>destination</i>:DrawLines(<i>coords</i>, <i>indices</i>, <i>width</i>)</dt>
-<dd>Each pair of indices in <i class="code">indices</i> (an IndexArray, see <a href="#CompileIndices" class="code">CompileIndices</a>) designates two coordinate pairs in <i class="code">coords</i> (a CoordArray, see <a href="#CompileCoords" class="code">CompileCoords</a>) between which a <i class="code">width</i> (possibly non-integer) pixel wide line should be drawn using the current primitive color.</dd>
+<dt class="code"><a name="Drawable:DrawLines" /><i>destination</i>:DrawLines(<i>coords</i>, <i>indices</i>, <i>width</i>, [<i>height</i>])</dt>
+<dd>Each pair of indices in <i class="code">indices</i> (an IndexArray, see <a href="#CompileIndices" class="code">CompileIndices</a>) designates two coordinate pairs in <i class="code">coords</i> (a CoordArray, see <a href="#CompileCoords" class="code">CompileCoords</a>) between which a <i class="code">width</i> (possibly non-integer) pixel wide line should be drawn using the current primitive color. (<i class="code">height</i> should only be specified to handle non-1:1 aspect ratios.)</dd>
 <dd>Lines in SubCritical are drawn with subpixel precision, but not antialiased.</dd>
 <dd>If you wish to draw only a single line, the following code is more convenient:</dd>
 <dd><pre>local _i = SCUtil.CompileIndices{0,1}
@@ -59,9 +59,9 @@ function draw_line(destination, width, x1, y1, x2, y2)
 end</pre></dd>
 <dd>If you want to draw only straight horizontal or vertical lines, you should use <a href="#Drawable:DrawRect" class="code">DrawRect</a> (or <a href="#Drawable:DrawBox" class="code">DrawBox</a>) instead, since its results are easier to control. (DrawLine might disagree with your expectations on exactly what pixels get filled.)</dd>
 <dd>Note: Lines, and all other primitives, fully support alpha in the primitive color.</dd>
-<dt class="code"><a name="Drawable:DrawLineStrip" /><i>destination</i>:DrawLineStrip(<i>coords</i>, <i>indices</i>, <i>width</i>)</dt>
+<dt class="code"><a name="Drawable:DrawLineStrip" /><i>destination</i>:DrawLineStrip(<i>coords</i>, <i>indices</i>, <i>width</i>, [<i>height</i>])</dt>
 <dd>As with DrawLines, but <i class="code">indices</i> are handled differently. The first index does nothing on its own. All indices after it designate a line between themselves and the index before them. (Essentially, <i>indices</i> designates a continuous strip of lines, hence the name.)</dd>
-<dt class="code"><a name="Drawable:DrawLineLoop" /><i>destination</i>:DrawLineLoop(<i>coords</i>, <i>indices</i>, <i>width</i>)</dt>
+<dt class="code"><a name="Drawable:DrawLineLoop" /><i>destination</i>:DrawLineLoop(<i>coords</i>, <i>indices</i>, <i>width</i>, [<i>height</i>])</dt>
 <dd>As with DrawLineStrip, with an additional line between the last and first indices.</dd>
 <dt class="code"><a name="Drawable:DrawTriangles" /><i>destination</i>:DrawTriangles(<i>coords</i>, <i>indices</i>)</dt>
 <dd>Each triple of indices in <i class="code">indices</i> (an IndexArray, see <a href="#CompileIndices" class="code">CompileIndices</a>) designates three coordinate pairs in <i class="code">coords</i> (a CoordArray, see <a href="#CompileCoords" class="code">CompileCoords</a>) which form a triangle that should be drawn with the current primitive color.</dd>
