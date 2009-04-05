@@ -264,7 +264,7 @@ int Drawable::Lua_BlitFrisket(lua_State* L) throw() {
   }
 }
 
-inline void Drawable::DrawSpan(int y, Fixed l, Fixed r) {
+/*inline void Drawable::DrawSpan(int y, Fixed l, Fixed r) {
   if(y < clip_top || y > clip_bottom) return;
   l = Q_TO_I(l);
   r = Q_TO_I(r);
@@ -286,7 +286,7 @@ inline void Drawable::DrawSpanA(int y, Fixed l, Fixed r) {
   int rem = r - l;
   Pixel* p = rows[y] + l;
   STD_PRIM_UNROLL_ALPHA;
-}
+  }*/
 
 inline void Drawable::NoclipDrawSpan(int y, Fixed l, Fixed r) {
   l = Q_TO_I(l);
@@ -895,12 +895,13 @@ inline void Drawable::DrawQuadA(const Fixed* top, const Fixed* left, const Fixed
 #undef SWAP
 }*/
 
-inline void Drawable::DrawQuadLine(Fixed width, const Fixed* top, const Fixed* bot) {
-  Fixed rad = width >> 1;
+inline void Drawable::DrawQuadLine(Fixed width, Fixed height, const Fixed* top, const Fixed* bot) {
+  Fixed radx = width >> 1;
+  Fixed rady = height >> 1;
   Fixed off[2] = {-(bot[1] - top[1]), bot[0] - top[0]};
   Fixed mag = QuickFixedSqrt(((long long)off[0]*off[0] + (long long)off[1]*off[1]) >> 6);
-  off[0] = off[0] * rad / mag;
-  off[1] = off[1] * rad / mag;
+  off[0] = off[0] * radx / mag;
+  off[1] = off[1] * rady / mag;
   Fixed a[2] = {top[0] - off[0], top[1] - off[1]};
   Fixed b[2] = {top[0] + off[0], top[1] + off[1]};
   Fixed c[2] = {bot[0] - off[0], bot[1] - off[1]};
@@ -911,39 +912,41 @@ inline void Drawable::DrawQuadLine(Fixed width, const Fixed* top, const Fixed* b
   ClipNDrawTriangle(b, c, d);
 }
 
-void Drawable::DrawLines(lua_Number size, const Fixed* coords, const Index* indices, size_t indexcount) throw() {
+void Drawable::DrawLines(lua_Number width, lua_Number height, const Fixed* coords, const Index* indices, size_t indexcount) throw() {
   size_t n;
-  if(size <= 1.0) {
+  if(width <= 1.0 && height <= 1.0) {
     for(n = 0; n < indexcount - 1; n += 2) {
       DrawBresenline(coords + indices[n] * 2, coords + indices[n+1] * 2);
     }
   }
   else {
-    Fixed width = F_TO_Q(size);
+    Fixed width_ = F_TO_Q(width);
+    Fixed height_ = F_TO_Q(height);
     for(n = 0; n < indexcount - 1; n += 2) {
-      DrawQuadLine(width, coords + indices[n] * 2, coords + indices[n+1] * 2);
+      DrawQuadLine(width_, height_, coords + indices[n] * 2, coords + indices[n+1] * 2);
     }
   } 
 }
 
-void Drawable::DrawLineStrip(lua_Number size, const Fixed* coords, const Index* indices, size_t indexcount) throw() {
+void Drawable::DrawLineStrip(lua_Number width, lua_Number height, const Fixed* coords, const Index* indices, size_t indexcount) throw() {
   size_t n;
-  if(size <= 1.0) {
+  if(width <= 1.0 && height <= 1.0) {
     for(n = 0; n < indexcount - 1; ++n) {
       DrawBresenline(coords + indices[n] * 2, coords + indices[n+1] * 2);
     }
   }
   else {
-    Fixed width = F_TO_Q(size);
+    Fixed width_ = F_TO_Q(width);
+    Fixed height_ = F_TO_Q(height);
     for(n = 0; n < indexcount - 1; ++n) {
-      DrawQuadLine(width, coords + indices[n] * 2, coords + indices[n+1] * 2);
+      DrawQuadLine(width_, height_, coords + indices[n] * 2, coords + indices[n+1] * 2);
     }
   } 
 }
 
-void Drawable::DrawLineLoop(lua_Number size, const Fixed* coords, const Index* indices, size_t indexcount) throw() {
+void Drawable::DrawLineLoop(lua_Number width, lua_Number height, const Fixed* coords, const Index* indices, size_t indexcount) throw() {
   size_t n;
-  if(size <= 1.0) {
+  if(width <= 1.0 && height <= 1.0) {
     for(n = 0; n < indexcount - 1; ++n) {
       DrawBresenline(coords + indices[n] * 2, coords + indices[n+1] * 2);
     }
@@ -951,11 +954,12 @@ void Drawable::DrawLineLoop(lua_Number size, const Fixed* coords, const Index* i
 				      coords + indices[0] * 2);
   }
   else {
-    Fixed width = F_TO_Q(size);
+    Fixed width_ = F_TO_Q(width);
+    Fixed height_ = F_TO_Q(height);
     for(n = 0; n < indexcount - 1; ++n) {
-      DrawQuadLine(width, coords + indices[n] * 2, coords + indices[n+1] * 2);
+      DrawQuadLine(width_, height_, coords + indices[n] * 2, coords + indices[n+1] * 2);
     }
-    if(indexcount > 2) DrawQuadLine(width, coords + indices[indexcount-1] * 2,
+    if(indexcount > 2) DrawQuadLine(width_, height_, coords + indices[indexcount-1] * 2,
 				    coords + indices[0] * 2);
   } 
 }
@@ -986,9 +990,9 @@ int Drawable::Lua_DrawLines(lua_State* L) throw() {
   if(has_alpha) return luaL_error(L, "Graphics with alpha channels cannot be modified with this function.");
   CoordArray* r = lua_toobject(L, 1, CoordArray);
   IndexArray* i = lua_toobject(L, 2, IndexArray);
-  lua_Number size = luaL_checknumber(L, 3);
-  size_t count = luaL_optinteger(L, 4, i->count);
-  DrawLines(size, r->coords, i->indices, count);
+  lua_Number width = luaL_checknumber(L, 3);
+  lua_Number height = luaL_optnumber(L, 4, width);
+  DrawLines(width, height, r->coords, i->indices, i->count);
   return 0;
 }
 
@@ -996,9 +1000,9 @@ int Drawable::Lua_DrawLineStrip(lua_State* L) throw() {
   if(has_alpha) return luaL_error(L, "Graphics with alpha channels cannot be modified with this function.");
   CoordArray* r = lua_toobject(L, 1, CoordArray);
   IndexArray* i = lua_toobject(L, 2, IndexArray);
-  lua_Number size = luaL_checknumber(L, 3);
-  size_t count = luaL_optinteger(L, 4, i->count);
-  DrawLineStrip(size, r->coords, i->indices, count);
+  lua_Number width = luaL_checknumber(L, 3);
+  lua_Number height = luaL_optnumber(L, 4, width);
+  DrawLineStrip(width, height, r->coords, i->indices, i->count);
   return 0;
 }
 
@@ -1006,9 +1010,9 @@ int Drawable::Lua_DrawLineLoop(lua_State* L) throw() {
   if(has_alpha) return luaL_error(L, "Graphics with alpha channels cannot be modified with this function.");
   CoordArray* r = lua_toobject(L, 1, CoordArray);
   IndexArray* i = lua_toobject(L, 2, IndexArray);
-  lua_Number size = luaL_checknumber(L, 3);
-  size_t count = luaL_optinteger(L, 4, i->count);
-  DrawLineLoop(size, r->coords, i->indices, count);
+  lua_Number width = luaL_checknumber(L, 3);
+  lua_Number height = luaL_optnumber(L, 4, width);
+  DrawLineLoop(width, height, r->coords, i->indices, i->count);
   return 0;
 }
 
