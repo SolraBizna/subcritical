@@ -732,13 +732,22 @@ inline void Drawable::DrawBresenline(const Fixed* a, const Fixed* b) {
 
 // Returns 0 instead of complex numbers.
 inline static Fixed QuickFixedSqrt(signed long long n) {
-  Fixed i;
-  for(i = 1; i < 65536 && (((long long)i*i)>>6) < n; ++i)
-    ;
+  Fixed i = 32768, ib = 16384;
+  // I can't believe I thought this would be fast enough!
+  //for(i = 1; i < 65536 && (((long long)i*i)>>6) < n; ++i)
+  //;
+  do {
+    if((((long long)i*i)>>6) >= n)
+      i -= ib;
+    else
+      i += ib;
+    ib = ib >> 1;
+  } while(ib);
   return i - 1;
 }
 
-inline void Drawable::DrawQuad(const Fixed* top, const Fixed* left, const Fixed* right, const Fixed* bot) {
+/* Removed to speed up compilation and simplify clipping */
+/*inline void Drawable::DrawQuad(const Fixed* top, const Fixed* left, const Fixed* right, const Fixed* bot) {
   const Fixed* sw;
 #define SWAP(a,b) do { sw = a; a = b; b = sw; } while(0)
 #define Quad_StepDualSub(subsmall, sublarge) \
@@ -884,7 +893,7 @@ inline void Drawable::DrawQuadA(const Fixed* top, const Fixed* left, const Fixed
 #undef Quad_StepSingleSub
 #undef Quad_StepDualSub
 #undef SWAP
-}
+}*/
 
 inline void Drawable::DrawQuadLine(Fixed width, const Fixed* top, const Fixed* bot) {
   Fixed rad = width >> 1;
@@ -896,8 +905,10 @@ inline void Drawable::DrawQuadLine(Fixed width, const Fixed* top, const Fixed* b
   Fixed b[2] = {top[0] + off[0], top[1] + off[1]};
   Fixed c[2] = {bot[0] - off[0], bot[1] - off[1]};
   Fixed d[2] = {bot[0] + off[0], bot[1] + off[1]};
-  if(primitive_alpha) DrawQuadA(a, b, c, d);
-  else DrawQuad(a, b, c, d);
+  /*if(primitive_alpha) DrawQuadA(a, b, c, d);
+    else DrawQuad(a, b, c, d);*/
+  ClipNDrawTriangle(a, b, c);
+  ClipNDrawTriangle(b, c, d);
 }
 
 void Drawable::DrawLines(lua_Number size, const Fixed* coords, const Index* indices, size_t indexcount) throw() {
