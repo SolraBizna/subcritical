@@ -131,6 +131,9 @@ end</pre></dd>
 <dd>Returns a <tt>CoordArray</tt> suitable for passing to many of <a href="#Drawable" class="code">Drawable</a>'s drawing functions. <i class="code">table</i> should be an array directly containing coordinate pairs in the form of <tt>number</tt>s, and in particular must <b>not</b> be an array of <tt>table</tt>s.</dd>
 <dt class="code"><a name="CompileIndices" /><i>indices</i> = SCUtil.CompileIndices(<i>table</i>)</dt>
 <dd>Returns an <tt>IndexArray</tt> suitable for passing to many of <a href="#Drawable" class="code">Drawable</a>'s drawing functions. <i class="code">table</i> should be an array directly containing 0-based indices in the form of <tt>number</tt>s.</dd>
+<dt class="code"><a name="CullTriangles" /><i>new_indices</i> = SCUtil.CullTriangles<i>CW</i>(<i>coords</i>, <i>indices</i>)
+<i>new_indices</i> = SCUtil.CullTriangles<i>CCW</i>(<i>coords</i>, <i>indices</i>)</dt>
+<dd>Returns an <tt>IndexArray</tt> containing only those triangles described by <i class="code">coords</i> and <i class="code">indices</i> that wind in the specified direction (clockwise for <tt>CW</tt> and counter-clockwise for <tt>CCW</tt>).</dd>
 </dl>
 <p><a href="index.html">Back to index</a></p>
 </body>

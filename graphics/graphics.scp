@@ -10,6 +10,8 @@ class GraphicDumper tangible
 
 utility CompileCoords
 utility CompileIndices
+utility CullTrianglesCW
+utility CullTrianglesCCW
 
 // These are not documented because you want to use PNG (or ANYTHING else) instead.
 class SCILoader : GraphicLoader concrete @ 1000000
