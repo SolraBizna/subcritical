@@ -20,18 +20,6 @@
   Please see doc/license.html for clarifications.
 */
 
-#if A > C
-#define E A
-#else
-#define E C
-#endif
-#if B > D
-#define F B
-#else
-#define F D
-#endif
-
-#define PRIME C4(Mat,E,x,F)
 #define LEFT C4(Mat,A,x,B)
 
 static int C4(mat_unpack_,A,x,B)(lua_State* L, const LEFT& a) {
@@ -80,10 +68,6 @@ static int C4(mat_unpack_,A,x,B)(lua_State* L, const LEFT& a) {
 #include "splat_c.h"
 #undef SPLAT_C
 #undef SPLAT_D
-
-#undef E
-#undef F
-#undef PRIME
 
 #define SPLAT_C "mat_vec.h"
 #include "splat_c.h"
