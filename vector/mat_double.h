@@ -22,6 +22,18 @@
 
 // Try not to explode.
 
+#if A > C
+#define E A
+#else
+#define E C
+#endif
+#if B > D
+#define F B
+#else
+#define F D
+#endif
+
+#define PRIME C4(Mat,E,x,F)
 #if A > B
 #define MAX_ARC A
 #else
@@ -278,6 +290,10 @@ static PRIME* C6(mat_mul_,A,B,_,C,D)(const LEFT& a, const RIGHT& b) {
 #undef B_ww
   return ret;
 }
+
+#undef E
+#undef F
+#undef PRIME
 
 #undef RIGHT
 #undef MAX_RC
