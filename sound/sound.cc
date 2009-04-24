@@ -389,22 +389,28 @@ static int ParseSoundCommand(lua_State* L, int i, SoundCommand& cmd, bool target
       cmd.target = (void*)o;
       if(o->IsA("SoundBuffer")) {
 	lua_Integer len;
-	if(o->IsA("MonoSoundBuffer")) len = ((MonoSoundBuffer*)o)->frames;
+	uint32_t framerate;
+	if(o->IsA("MonoSoundBuffer")) {
+	  len = ((MonoSoundBuffer*)o)->frames;
+	  framerate = ((MonoSoundBuffer*)o)->framerate;
+	}
 	// we should really assert here
-	else len = ((StereoSoundBuffer*)o)->frames;
+	else {
+	  len = ((StereoSoundBuffer*)o)->frames;
+	  framerate = ((StereoSoundBuffer*)o)->framerate;
+	}
 	lua_getfield(L, i, "loop_left");
 	if(!lua_isnil(L, -1)) {
 	  if(!lua_isnumber(L, -1)) return luaL_error(L, "\"loop_left\" parameter must be a number");
-	  lua_Integer ll = lua_tointeger(L, -1);
+	  lua_Integer ll = (lua_Integer)(lua_tonumber(L, -1) * framerate);
 	  if(ll < 0) return luaL_error(L, "loop_left must be >= 0");
 	  else if(ll >= len) return luaL_error(L, "loop_left must be inside the sample");
-	  cmd.loop_left = ll;
 	}
 	lua_pop(L, 1);
 	lua_getfield(L, i, "loop_right");
 	if(!lua_isnil(L, -1)) {
 	  if(!lua_isnumber(L, -1)) return luaL_error(L, "\"loop_right\" parameter must be a number");
-	  lua_Integer lr = lua_tointeger(L, -1);
+	  lua_Integer ll = (lua_Integer)(lua_tonumber(L, -1) * framerate);
 	  if(lr < 0) return luaL_error(L, "loop_right must be >= 0");
 	  else if(lr >= len) return luaL_error(L, "loop_right must be inside the sample");
 	  cmd.loop_right = lr;

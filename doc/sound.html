@@ -65,9 +65,9 @@
 <dt class="code">repeats</dt>
 <dd>Optional. Ignored unless accompanied by <tt>sound</tt>. If present, and <tt>sound</tt> is a <tt>SoundBuffer</tt>, the number of times to repeat playback of <tt>sound</tt>.</dd>
 <dt class="code">loop_left</dt>
-<dd>Optional. Ignored unless accompanied by <tt>sound</tt>. If present, and <tt>sound</tt> is a <tt>SoundBuffer</tt>, and repeats is greater than 0, the sample offset to repeat from. (Specified in samples, not seconds!)</dd>
+<dd>Optional. Ignored unless accompanied by <tt>sound</tt>. If present, and <tt>sound</tt> is a <tt>SoundBuffer</tt>, and repeats is greater than 0, the sample offset to repeat from. (Specified in seconds.)</dd>
 <dt class="code">loop_right</dt>
-<dd>Optional. Ignored unless accompanied by <tt>sound</tt>. If present, and <tt>sound</tt> is a <tt>SoundBuffer</tt>, the sample offset to treat as the end of the sound. (Specified in samples, not seconds!)</dd>
+<dd>Optional. Ignored unless accompanied by <tt>sound</tt>. If present, and <tt>sound</tt> is a <tt>SoundBuffer</tt>, the sample offset to treat as the end of the sound. (Specified in seconds.)</dd>
 <dt class="code">pan</dt>
 <dd>Optional. Not ignored by <tt>Stop</tt> but it's silly to put it in. Changes the pan matrix in use by the channel. (If <tt>sound</tt> is provided, this will play <tt>sound</tt> with the provided pan matrix, otherwise it will change the pan matrix of the currently playing sound.)</dd>
 <dd><tt>pan</tt> should be a table with 1, 2, or 4 elements, all numbers >= -4 or so and <= 4 or so. If it contains 1 element, both channels of the source will be amplified by that factor. If it contains 2 elements, the left channel will be amplified by the first factor and the right channel by the second. If it contains 4 elements, the sound output is determined by the following pseudocode:</dd>
