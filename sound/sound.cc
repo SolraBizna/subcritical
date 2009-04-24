@@ -95,6 +95,7 @@ struct SoundCommand {
   uint32_t pan_present:1, rate_present:1,
     flag1:1, flag2:1, flag3:1, flag4:1,
     delay:26; // in target samples
+  uint32_t loop_left, loop_right;
 };
 
 class LOCAL SubCritical::SoundChannel {
@@ -129,6 +130,8 @@ public:
 	  // these have no meaning for PlayStream
 	  repeats = Q.repeats;
 	  target_position = 0;
+	  loop_left = Q.loop_left;
+	  loop_right = Q.loop_right;
 	case SoundOpcode::PlayStream:
 	  irp = 32768; // 100% new sample
 	  have_rate = true;
@@ -199,7 +202,7 @@ public:
 	{
 	  StereoSoundBuffer* target = ((StereoSoundBuffer*)this->target);
 	  for(Frame* p = target->buffer + target_position;
-	      frames_left > 0 && target_position < target->frames;
+	      frames_left > 0 && (target_position < target->frames && (!loop_right || target_position < loop_right));
 	      --frames_left, --frames, ++p, ++buffer, ++target_position) {
 	    (*buffer)[0] += (*p)[0] * pan[0] / 4096 + (*p)[1] * pan[1] / 4096;
 	    (*buffer)[1] += (*p)[0] * pan[2] / 4096 + (*p)[1] * pan[3] / 4096;
@@ -209,7 +212,7 @@ public:
 	{
 	  MonoSoundBuffer* target = ((MonoSoundBuffer*)this->target);
 	  for(Sample* p = target->buffer + target_position;
-	      frames_left > 0 && target_position < target->frames;
+	      frames_left > 0 && (target_position < target->frames && (!loop_right || target_position < loop_right));
 	      --frames_left, --frames, ++p, ++buffer, ++target_position) {
 	    (*buffer)[0] += *p * pan[0] / 4096 + *p * pan[1] / 4096;
 	    (*buffer)[1] += *p * pan[2] / 4096 + *p * pan[3] / 4096;
@@ -232,7 +235,7 @@ public:
 	  case SoundOpcode::PlayStereoBuffer:
 	    {
 	      StereoSoundBuffer* target = ((StereoSoundBuffer*)this->target);
-	      if(target_position >= target->frames) goto blah;
+	      if(target_position >= target->frames || (loop_right && target_position >= loop_right)) goto blah;
 	      tsugi_frame[0] = target->buffer[target_position][0];
 	      tsugi_frame[1] = target->buffer[target_position][1];
 	      ++target_position;
@@ -241,7 +244,7 @@ public:
 	  case SoundOpcode::PlayMonoBuffer:
 	    {
 	      MonoSoundBuffer* target = ((MonoSoundBuffer*)this->target);
-	      if(target_position >= target->frames) goto blah;
+	      if(target_position >= target->frames || (loop_right && target_position >= loop_right)) goto blah;
 	      tsugi_frame[1] = tsugi_frame[0] = target->buffer[target_position];
 	      ++target_position;
 	    }
@@ -273,10 +276,10 @@ public:
 	  target_position = 0;
 	  break;
 	case SoundOpcode::PlayMonoBuffer:
-	  target_position -= ((MonoSoundBuffer*)target)->frames;
-	  break;
 	case SoundOpcode::PlayStereoBuffer:
-	  target_position -= ((StereoSoundBuffer*)target)->frames;
+	  target_position = loop_left;
+	  // target_position -= ((MonoSoundBuffer*)target)->frames;
+	  // target_position -= ((StereoSoundBuffer*)target)->frames;
 	  break;
 	}
       }
@@ -363,6 +366,8 @@ static int ParseSoundCommand(lua_State* L, int i, SoundCommand& cmd, bool target
   cmd.rate_present = 0;
   cmd.flag4 = cmd.flag3 = cmd.flag2 = cmd.flag1 = 0;
   cmd.delay = 0;
+  cmd.loop_left = 0;
+  cmd.loop_right = 0;
   if(!lua_istable(L, i)) {
     if(lua_isnil(L, i)) return 0;
     else return luaL_typerror(L, i, "table");
@@ -382,6 +387,30 @@ static int ParseSoundCommand(lua_State* L, int i, SoundCommand& cmd, bool target
 	cmd.op = SoundOpcode::PlayStereoBuffer;
       else return luaL_error(L, "\"sound\" parameter must be either nil or a SoundStream, MonoSoundBuffer, or StereoSoundBuffer");
       cmd.target = (void*)o;
+      if(o->IsA("SoundBuffer")) {
+	lua_Integer len;
+	if(o->IsA("MonoSoundBuffer")) len = ((MonoSoundBuffer*)o)->frames;
+	// we should really assert here
+	else len = ((StereoSoundBuffer*)o)->frames;
+	lua_getfield(L, i, "loop_left");
+	if(!lua_isnil(L, -1)) {
+	  if(!lua_isnumber(L, -1)) return luaL_error(L, "\"loop_left\" parameter must be a number");
+	  lua_Integer ll = lua_tointeger(L, -1);
+	  if(ll < 0) return luaL_error(L, "loop_left must be >= 0");
+	  else if(ll >= len) return luaL_error(L, "loop_left must be inside the sample");
+	  cmd.loop_left = ll;
+	}
+	lua_pop(L, 1);
+	lua_getfield(L, i, "loop_right");
+	if(!lua_isnil(L, -1)) {
+	  if(!lua_isnumber(L, -1)) return luaL_error(L, "\"loop_right\" parameter must be a number");
+	  lua_Integer lr = lua_tointeger(L, -1);
+	  if(lr < 0) return luaL_error(L, "loop_right must be >= 0");
+	  else if(lr >= len) return luaL_error(L, "loop_right must be inside the sample");
+	  cmd.loop_right = lr;
+	}
+	lua_pop(L, 1);
+      }
     }
     lua_getfield(L, i, "repeats");
     if(!lua_isnil(L, -1)) {
