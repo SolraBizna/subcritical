@@ -304,6 +304,7 @@ public:
   uint32_t out_rate;
   void* target;
   size_t target_position; // for Buffers only
+  uint32_t loop_left, loop_right;
   SoundOpcode::SoundOpcode target_type;
   int16_t repeats;
   uint8_t flags[NUM_CHANNEL_FLAGS];
@@ -410,7 +411,7 @@ static int ParseSoundCommand(lua_State* L, int i, SoundCommand& cmd, bool target
 	lua_getfield(L, i, "loop_right");
 	if(!lua_isnil(L, -1)) {
 	  if(!lua_isnumber(L, -1)) return luaL_error(L, "\"loop_right\" parameter must be a number");
-	  lua_Integer ll = (lua_Integer)(lua_tonumber(L, -1) * framerate);
+	  lua_Integer lr = (lua_Integer)(lua_tonumber(L, -1) * framerate);
 	  if(lr < 0) return luaL_error(L, "loop_right must be >= 0");
 	  else if(lr >= len) return luaL_error(L, "loop_right must be inside the sample");
 	  cmd.loop_right = lr;
