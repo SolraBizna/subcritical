@@ -96,6 +96,7 @@ struct SoundCommand {
     flag1:1, flag2:1, flag3:1, flag4:1,
     delay:26; // in target samples
   uint32_t loop_left, loop_right;
+  lua_Number delay_error;
 };
 
 class LOCAL SubCritical::SoundChannel {
@@ -117,6 +118,11 @@ public:
       const SoundCommand& Q = q[front];
       if(delay < 0 && Q.delay) {
 	delay = Q.delay;
+	delay_error += Q.delay_error;
+	while(delay_error >= 1) {
+	  ++delay;
+	  --delay_error;
+	}
       }
       else if(delay <= 0) {
 	delay = -1;
@@ -132,6 +138,12 @@ public:
 	  target_position = 0;
 	  loop_left = Q.loop_left;
 	  loop_right = Q.loop_right;
+	  if(!loop_right) {
+	    uint32_t frames;
+	    if(Q.op == SoundOpcode::PlayMonoBuffer) frames = ((MonoSoundBuffer*)Q.target)->frames;
+	    else frames = ((StereoSoundBuffer*)Q.target)->frames;
+	    loop_right = frames;
+	  }
 	case SoundOpcode::PlayStream:
 	  irp = 32768; // 100% new sample
 	  have_rate = true;
@@ -176,9 +188,9 @@ public:
     size_t frames_left = frames;
     if(delay >= 0) {
       if((size_t)delay < frames_left) frames_left = delay;
-      delay -= frames_left;
     }
     if(target_type == SoundOpcode::Nop) {
+      delay -= frames_left;
       if(delay == 0) {
 	frames -= frames_left;
 	buffer += frames_left;
@@ -193,7 +205,7 @@ public:
       case SoundOpcode::PlayStream:
 	((SoundStream*)target)->Mix(aux, frames_left);
 	for(Frame* p = aux;
-	    frames_left > 0; --frames_left, --frames, ++p, ++buffer) {
+	    frames_left > 0; --frames_left, --delay, --frames, ++p, ++buffer) {
 	  (*buffer)[0] += (*p)[0] * pan[0] / 4096 + (*p)[1] * pan[1] / 4096;
 	  (*buffer)[1] += (*p)[0] * pan[2] / 4096 + (*p)[1] * pan[3] / 4096;
 	}
@@ -202,8 +214,8 @@ public:
 	{
 	  StereoSoundBuffer* target = ((StereoSoundBuffer*)this->target);
 	  for(Frame* p = target->buffer + target_position;
-	      frames_left > 0 && (target_position < target->frames && (!loop_right || target_position < loop_right));
-	      --frames_left, --frames, ++p, ++buffer, ++target_position) {
+	      frames_left > 0 && target_position < loop_right;
+	      --frames_left, --frames, --delay, ++p, ++buffer, ++target_position) {
 	    (*buffer)[0] += (*p)[0] * pan[0] / 4096 + (*p)[1] * pan[1] / 4096;
 	    (*buffer)[1] += (*p)[0] * pan[2] / 4096 + (*p)[1] * pan[3] / 4096;
 	  }
@@ -212,8 +224,8 @@ public:
 	{
 	  MonoSoundBuffer* target = ((MonoSoundBuffer*)this->target);
 	  for(Sample* p = target->buffer + target_position;
-	      frames_left > 0 && (target_position < target->frames && (!loop_right || target_position < loop_right));
-	      --frames_left, --frames, ++p, ++buffer, ++target_position) {
+	      frames_left > 0 && target_position < loop_right;
+	      --frames_left, --frames, --delay, ++p, ++buffer, ++target_position) {
 	    (*buffer)[0] += *p * pan[0] / 4096 + *p * pan[1] / 4096;
 	    (*buffer)[1] += *p * pan[2] / 4096 + *p * pan[3] / 4096;
 	  }
@@ -235,7 +247,7 @@ public:
 	  case SoundOpcode::PlayStereoBuffer:
 	    {
 	      StereoSoundBuffer* target = ((StereoSoundBuffer*)this->target);
-	      if(target_position >= target->frames || (loop_right && target_position >= loop_right)) goto blah;
+	      if(target_position >= loop_right) goto blah;
 	      tsugi_frame[0] = target->buffer[target_position][0];
 	      tsugi_frame[1] = target->buffer[target_position][1];
 	      ++target_position;
@@ -244,7 +256,7 @@ public:
 	  case SoundOpcode::PlayMonoBuffer:
 	    {
 	      MonoSoundBuffer* target = ((MonoSoundBuffer*)this->target);
-	      if(target_position >= target->frames || (loop_right && target_position >= loop_right)) goto blah;
+	      if(target_position >= loop_right) goto blah;
 	      tsugi_frame[1] = tsugi_frame[0] = target->buffer[target_position];
 	      ++target_position;
 	    }
@@ -260,6 +272,7 @@ public:
 	  (*buffer)[1] += inner_frame[0] * pan[2] / 4096 + inner_frame[1] * pan[3] / 4096;
 	  irp += rate;
 	  --frames_left;
+	  --delay;
 	  --frames;
 	  ++buffer;
 	} while(irp < 32768 && frames_left);
@@ -277,9 +290,7 @@ public:
 	  break;
 	case SoundOpcode::PlayMonoBuffer:
 	case SoundOpcode::PlayStereoBuffer:
-	  target_position = loop_left;
-	  // target_position -= ((MonoSoundBuffer*)target)->frames;
-	  // target_position -= ((StereoSoundBuffer*)target)->frames;
+	  target_position -= loop_right - loop_left;
 	  break;
 	}
       }
@@ -291,7 +302,7 @@ public:
       MixOut(buffer, aux, frames);
     }
   }
-  SoundChannel(size_t qlen, uint32_t out_rate) throw(std::bad_alloc) : q((SoundCommand*)malloc(sizeof(SoundCommand)*qlen)),qlen(qlen),front(0),back(0),qmask(qlen-1),pan((PanMatrix){4096,0,0,4096}),delay(-1),out_rate(out_rate),target(NULL),target_type(SoundOpcode::Nop),flags((uint8_t[]){false,false,false,false}) {
+  SoundChannel(size_t qlen, uint32_t out_rate) throw(std::bad_alloc) : q((SoundCommand*)malloc(sizeof(SoundCommand)*qlen)),qlen(qlen),front(0),back(0),qmask(qlen-1),pan((PanMatrix){4096,0,0,4096}),delay(-1),delay_error(0),out_rate(out_rate),target(NULL),target_type(SoundOpcode::Nop),flags((uint8_t[]){false,false,false,false}) {
   }
   ~SoundChannel() { free((void*)q); }
   SoundCommand* q;
@@ -300,6 +311,7 @@ public:
   Frame irp_frame, tsugi_frame;
   uint32_t irp; // Q17.15
   int32_t delay;
+  lua_Number delay_error;
   uint32_t rate; // Q17.15
   uint32_t out_rate;
   void* target;
@@ -367,6 +379,7 @@ static int ParseSoundCommand(lua_State* L, int i, SoundCommand& cmd, bool target
   cmd.rate_present = 0;
   cmd.flag4 = cmd.flag3 = cmd.flag2 = cmd.flag1 = 0;
   cmd.delay = 0;
+  cmd.delay_error = 0;
   cmd.loop_left = 0;
   cmd.loop_right = 0;
   if(!lua_istable(L, i)) {
@@ -406,6 +419,7 @@ static int ParseSoundCommand(lua_State* L, int i, SoundCommand& cmd, bool target
 	  lua_Integer ll = (lua_Integer)(lua_tonumber(L, -1) * framerate);
 	  if(ll < 0) return luaL_error(L, "loop_left must be >= 0");
 	  else if(ll >= len) return luaL_error(L, "loop_left must be inside the sample");
+	  cmd.loop_left = ll;
 	}
 	lua_pop(L, 1);
 	lua_getfield(L, i, "loop_right");
@@ -484,7 +498,9 @@ static int ParseSoundCommand(lua_State* L, int i, SoundCommand& cmd, bool target
     lua_Number delay = lua_tonumber(L, -1);
     lua_pop(L, 1);
     if(delay < 0) return luaL_error(L, "negative \"delay\" specified");
-    cmd.delay = (uint32_t)floor(delay*out_rate);
+    delay = delay * out_rate;
+    cmd.delay = (uint32_t)floor(delay);
+    cmd.delay_error = delay - cmd.delay;
   }
   else lua_pop(L, 1);
   lua_getfield(L, i, "flag1");
