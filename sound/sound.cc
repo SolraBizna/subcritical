@@ -288,8 +288,8 @@ public:
   blah:
     if(frames_left > 0) {
       // Sound ended, delay (if any) not up
-      if(repeats > 0) {
-	--repeats;
+      if(repeats != 0) {
+	if(repeats > 0) { --repeats; }
 	switch(target_type) {
 	default:
 	  // NOTREACHED
@@ -443,10 +443,15 @@ static int ParseSoundCommand(lua_State* L, int i, SoundCommand& cmd, bool target
     }
     lua_getfield(L, i, "repeats");
     if(!lua_isnil(L, -1)) {
-      if(!lua_isnumber(L, -1)) return luaL_error(L, "\"repeats\" parameter must be a number");
-      lua_Integer repeats = lua_tointeger(L, -1);
+      if(lua_isboolean(L, -1)) {
+	cmd.repeats = -lua_toboolean(L, -1);
+      }
+      else {
+	if(!lua_isnumber(L, -1)) return luaL_error(L, "\"repeats\" parameter must be a number");
+	lua_Integer repeats = lua_tointeger(L, -1);
+	cmd.repeats = repeats;
+      }
       lua_pop(L, 1);
-      cmd.repeats = repeats;
     }
     else {
       lua_pop(L, 1);
