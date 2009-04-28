@@ -63,7 +63,7 @@
 <dd>Optional. Ignored by <tt>Stop</tt>. If present, should be a <tt>SoundBuffer</tt> or <tt>SoundStream</tt>, which will replace the currently playing source (if any) when this command is executed. (resetting the pan matrix, playback rate, etc. to defaults unless new ones are specified in the same table.)</dd>
 <dd><b>DO NOT</b> allow the object in question to be garbage collected while it could still be in use! (This is as simple as keeping a reference around somewhere, such as in a variable.)</dd>
 <dt class="code">repeats</dt>
-<dd>Optional. Ignored unless accompanied by <tt>sound</tt>. If present, and <tt>sound</tt> is a <tt>SoundBuffer</tt>, the number of times to repeat playback of <tt>sound</tt>.</dd>
+<dd>Optional. Ignored unless accompanied by <tt>sound</tt>. If present, and <tt>sound</tt> is a <tt>SoundBuffer</tt>, its effect depends on its type. If it is a number, it is the number of times to repeat playback of <tt>sound</tt> (numbers < 0 or > 32767 will repeat indefinitely). If it is a boolean, it is whether to repeat the sound or not (if true, repeat indefinitely; this is the preferred way to have an indefinite loop).</dd>
 <dt class="code">loop_left</dt>
 <dd>Optional. Ignored unless accompanied by <tt>sound</tt>. If present, and <tt>sound</tt> is a <tt>SoundBuffer</tt>, and repeats is greater than 0, the sample offset to repeat from. (Specified in seconds.)</dd>
 <dt class="code">loop_right</dt>
