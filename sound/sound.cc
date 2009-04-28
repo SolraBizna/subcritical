@@ -236,7 +236,9 @@ public:
     else {
       while(frames_left > 0) {
 	if(irp >= 32768) {
-	  irp -= 32768;
+	  Sample backup_frame[2];
+	  backup_frame[0] = irp_frame[0];
+	  backup_frame[1] = irp_frame[1];
 	  irp_frame[0] = tsugi_frame[0];
 	  irp_frame[1] = tsugi_frame[1];
 	  switch(target_type) {
@@ -247,7 +249,7 @@ public:
 	  case SoundOpcode::PlayStereoBuffer:
 	    {
 	      StereoSoundBuffer* target = ((StereoSoundBuffer*)this->target);
-	      if(target_position >= loop_right) goto blah;
+	      if(target_position >= loop_right) goto bloh;
 	      tsugi_frame[0] = target->buffer[target_position][0];
 	      tsugi_frame[1] = target->buffer[target_position][1];
 	      ++target_position;
@@ -256,13 +258,18 @@ public:
 	  case SoundOpcode::PlayMonoBuffer:
 	    {
 	      MonoSoundBuffer* target = ((MonoSoundBuffer*)this->target);
-	      if(target_position >= loop_right) goto blah;
+	      if(target_position >= loop_right) goto bloh;
 	      tsugi_frame[1] = tsugi_frame[0] = target->buffer[target_position];
 	      ++target_position;
 	    }
 	    break;
 	  }
+	  irp -= 32768;
 	  continue;
+	bloh:
+	  irp_frame[0] = backup_frame[0];
+	  irp_frame[1] = backup_frame[1];
+	  goto blah;
 	}
 	Frame inner_frame;
 	do {
