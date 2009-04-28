@@ -565,6 +565,12 @@ function subcritical.Choices(class, ...)
    return t
 end
 
+function subcritical.ParseCommandLine(cmdline)
+   local ret = {}
+   helper.parse_command_line(ret, cmdline)
+   return ret
+end
+
 local function fixvarname(name)
    assert(name:sub(1,1) ~= ".", "Var file names must not begin with '.'")
    assert(name:sub(-1,-1) ~= "~", "Var file names must not end with '~'")
