@@ -459,7 +459,7 @@ inline void Drawable::DrawTriangle(const Fixed* a, const Fixed* b, const Fixed* 
     }
   }
   // Next, we determine whether the middle vertex sticks out left or right
-  Fixed max, fact;
+  signed long long max, fact; /* 64-bit math for great justice */
   max = bot[1] - top[1];
   fact = mid[1] - top[1];
   Fixed mx = (top[0] * (max - fact) + bot[0] * fact) / max;
@@ -478,7 +478,7 @@ else c[1] = a[1] + ((b[1]-a[1]) * i / q)
 
 #define Clipf(name, coord, dir) \
 static inline int Clip##name(Fixed clip, const Fixed* a, const Fixed* b, const Fixed* c, Fixed* d, Fixed* e, int dn, int en, int mia[3], int via[3]) { \
-  Fixed i, q; \
+  signed long long i, q; /* use 64-bit math for great justice */ \
   if(a[coord] dir clip) { \
     if(b[coord] dir clip) { \
       if(c[coord] dir clip) return -1; \
