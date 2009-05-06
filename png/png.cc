@@ -105,8 +105,12 @@ bool PNGDumper::Dump(Graphic* graphic, DumpOut& out, const char*& err) throw() {
   try {
     if(setjmp(png_jmpbuf(libpng)))
       throw false;
-    graphic->ChangeLayout(little_endian ? FB_xBGR : FB_RGBx);
-    png_set_IHDR(libpng, info, graphic->width, graphic->height, 8, PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    /* libpng won't let you specify FILLER_AFTER for png_write_png */
+    if(graphic->has_alpha)
+      graphic->ChangeLayout(little_endian ? FB_xBGR : FB_RGBx);
+    else
+      graphic->ChangeLayout(little_endian ? FB_BGRx : FB_xRGB);
+    png_set_IHDR(libpng, info, graphic->width, graphic->height, 8, graphic->has_alpha ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
     png_set_sRGB_gAMA_and_cHRM(libpng, info, PNG_sRGB_INTENT_PERCEPTUAL);
     png_text comment;
     comment.compression = PNG_TEXT_COMPRESSION_NONE;
@@ -116,7 +120,7 @@ bool PNGDumper::Dump(Graphic* graphic, DumpOut& out, const char*& err) throw() {
     png_set_text(libpng, info, &comment, 1);
     png_set_filter(libpng, 0, filters);
     png_set_rows(libpng, info, (png_bytepp)graphic->rows);
-    png_write_png(libpng, info, PNG_TRANSFORM_IDENTITY, NULL);
+    png_write_png(libpng, info, PNG_TRANSFORM_IDENTITY|(graphic->has_alpha?0:PNG_TRANSFORM_STRIP_FILLER), NULL);
     png_write_end(libpng, info);
   }
   catch(...) {
