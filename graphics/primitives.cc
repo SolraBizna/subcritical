@@ -651,6 +651,7 @@ inline void Drawable::DrawBresenlineV(const Fixed* top, const Fixed* bot) {
     while((Q_TO_I(line) < 0 || Q_TO_I(line) >= width ||
 	   y < 0 || y >= height) &&
 	   rem-- > 0) {
+      ++y;
       Tri_DDA_Step(line);
     }
     while(Q_TO_I(line) >= 0 && Q_TO_I(line) < width &&
@@ -665,6 +666,7 @@ inline void Drawable::DrawBresenlineV(const Fixed* top, const Fixed* bot) {
     while((Q_TO_I(line) < 0 || Q_TO_I(line) >= width ||
 	   y < 0 || y >= height) &&
 	  rem-- > 0) {
+      ++y;
       Tri_DDA_Step(line);
     }
     while(Q_TO_I(line) >= 0 && Q_TO_I(line) < width &&
@@ -692,6 +694,7 @@ inline void Drawable::DrawBresenlineH(const Fixed* left, const Fixed* right) {
     while((Q_TO_I(line) < 0 || Q_TO_I(line) >= height ||
 	   x < 0 || x >= width) &&
 	   rem-- > 0) {
+      ++x;
       Tri_DDA_Step(line);
     }
     while(Q_TO_I(line) >= 0 && Q_TO_I(line) < height &&
@@ -706,8 +709,7 @@ inline void Drawable::DrawBresenlineH(const Fixed* left, const Fixed* right) {
     while((Q_TO_I(line) < 0 || Q_TO_I(line) >= height ||
 	   x < 0 || x >= width) &&
 	   rem-- > 0) {
-      Pixel* p = rows[Q_TO_I(line)] + x++;
-      STD_PRIM;
+      ++x;
       Tri_DDA_Step(line);
     }
     while(Q_TO_I(line) >= 0 && Q_TO_I(line) < height &&
@@ -724,6 +726,7 @@ inline void Drawable::DrawBresenline(const Fixed* a, const Fixed* b) {
   Fixed rise, run;
   rise = b[1] - a[1];
   run = b[0] - a[0];
+  if(rise == 0 && run == 0) return;
   if(rise < 0) rise = -rise;
   if(run < 0) run = -run;
   if(rise > run) DrawBresenlineV(a, b);
