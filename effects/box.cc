@@ -23,23 +23,7 @@
 
 using namespace SubCritical;
 
-static void BoxDown_2x2(const Drawable* src, Drawable* dst) {
-  int sh1, sh2, sh3;
-  switch(src->layout) {
-  default:
-  case FB_xRGB:
-  case FB_xBGR:
-    sh1 = 16;
-    sh2 = 8;
-    sh3 = 0;
-    break;
-  case FB_RGBx:
-  case FB_BGRx:
-    sh1 = 24;
-    sh2 = 16;
-    sh3 = 8;
-    break;
-  }
+template<int sh1, int sh2, int sh3> void BoxDown_2x2(const Drawable* src, Drawable* dst) {
   const Pixel* srcpa, *srcpb;
   Pixel* dstp;
   for(int dy = 0; dy < dst->height; ++dy) {
@@ -64,6 +48,20 @@ static void BoxDown_2x2(const Drawable* src, Drawable* dst) {
 	   SrgbToLinear[(srcpb[1] >> sh3) & 255];
 	   srcpa += 2; srcpb += 2;
 	   *dstp++ = (LinearToSrgb[(s1/4)]<<sh1)|(LinearToSrgb[(s2/4)]<<sh2)|(LinearToSrgb[(s3/4)]<<sh3););
+  }
+}
+
+static void BoxDown_2x2(const Drawable* src, Drawable* dst) {
+  switch(src->layout) {
+  default:
+  case FB_xRGB:
+  case FB_xBGR:
+    BoxDown_2x2<16,8,0>(src,dst);
+    return;
+  case FB_RGBx:
+  case FB_BGRx:
+    BoxDown_2x2<24,16,8>(src,dst);
+    return;
   }
 }
 

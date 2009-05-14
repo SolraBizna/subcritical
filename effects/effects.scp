@@ -24,3 +24,5 @@ utility MakeFrisketFromBlue
 utility MakeFrisketDirectly
 
 utility BoxDown
+
+class FakeDrawable : Drawable concrete
