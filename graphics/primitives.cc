@@ -984,7 +984,7 @@ void Drawable::DrawTriangleStrip(const Fixed* coords, const Index* indices, size
 void Drawable::DrawTriangleFan(const Fixed* coords, const Index* indices, size_t indexcount) throw() {
   size_t n;
   const Fixed* base = coords + indices[0] * 2;
-  for(n = 1; n < indexcount - 1; n += 2) {
+  for(n = 1; n < indexcount - 1; ++n) {
     ClipNDrawTriangle(base, coords + indices[n] * 2, coords + indices[n+1] * 2);
   }
 }
