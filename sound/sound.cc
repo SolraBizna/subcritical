@@ -435,7 +435,7 @@ static int ParseSoundCommand(lua_State* L, int i, SoundCommand& cmd, bool target
 	  lua_Integer lr = (lua_Integer)(lua_tonumber(L, -1) * framerate);
 	  if(lr <= 0) return luaL_error(L, "loop_right must be > 0");
 	  else if(lr > len) return luaL_error(L, "loop_right must be inside the sample");
-	  else if(lr <= cmd.loop_left) return luaL_error(L, "loop_right must be AFTER loop_left");
+	  else if(lr <= (lua_Integer)cmd.loop_left) return luaL_error(L, "loop_right must be AFTER loop_left");
 	  cmd.loop_right = lr;
 	}
 	lua_pop(L, 1);
