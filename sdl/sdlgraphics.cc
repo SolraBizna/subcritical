@@ -112,8 +112,6 @@ static void TryGammaCorrection() throw() {
 
 SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title) :
 doing_relmouse(false), doing_textok(false) {
-  this->width = width;
-  this->height = height;
   InitializeSubsystem(SDL_INIT_VIDEO);
   Uint32 initflags = windowed ? 0 : SDL_FULLSCREEN;
   screen = SDL_SetVideoMode(width, height, 32, initflags);
@@ -129,6 +127,8 @@ doing_relmouse(false), doing_textok(false) {
     QuitSubsystem(SDL_INIT_VIDEO);
     throw (const char*)SDL_GetError();
   }
+  this->width = screen->w;
+  this->height = screen->h;
   SDL_WM_SetCaption(title, title);
   // Determine the best layout to use.
   if(screen->format->BytesPerPixel != 4) throw (const char*)"Non-32-bit mode given";
