@@ -461,6 +461,7 @@ inline void Drawable::DrawTriangle(const Fixed* a, const Fixed* b, const Fixed* 
   // Next, we determine whether the middle vertex sticks out left or right
   signed long long max, fact; /* 64-bit math for great justice */
   max = bot[1] - top[1];
+  if(max == 0) return;
   fact = mid[1] - top[1];
   Fixed mx = (top[0] * (max - fact) + bot[0] * fact) / max;
   if(mid[0] < mx) DrawTriangleL(top, mid, bot);
