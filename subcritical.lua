@@ -88,6 +88,23 @@ if(not arg or not arg[1]) then
       helper.parse_command_line(arg, os.getenv("SUBCRITICAL_COMMAND_LINE"))
    end
 end
+if(not arg[0]) then
+   local level = 2
+   local t
+   repeat
+      t = debug.getinfo(level, "S")
+      if(not t) then break
+      elseif (t.what ~= "tail" and t.what ~= "C" and t.source:sub(1,1) == "@") then break
+      end
+      level = level + 1
+   until false
+   if(t) then
+      arg[0] = t.source:sub(2,-1)
+      dprintf("Fake arg[0]: %s", arg[0])
+   else
+      dprintf("Couldn't make a fake arg[0]. Let's hope nobody notices.")
+   end
+end
 
 local dirfrob
 local dirsep,baseexp,dirfrob
