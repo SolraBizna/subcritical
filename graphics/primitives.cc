@@ -345,7 +345,7 @@ if(side##e >= side##d) { \
   side += side##i; \
 }
 
-inline void Drawable::DrawTriangleR(const Fixed* top, const Fixed* mid, const Fixed* bot) throw() {
+inline void Drawable::DrawTriangleR(const Fixed*restrict top, const Fixed*restrict mid, const Fixed*restrict bot) throw() {
   int remt = Q_TO_I(mid[1]) - Q_TO_I(top[1]);
   int remb = Q_TO_I(bot[1] - 1) - Q_TO_I(mid[1]);
   if(!remt && !remb) return;
@@ -382,7 +382,7 @@ inline void Drawable::DrawTriangleR(const Fixed* top, const Fixed* mid, const Fi
   }
 }
 
-inline void Drawable::DrawTriangleL(const Fixed* top, const Fixed* mid, const Fixed* bot) throw() {
+inline void Drawable::DrawTriangleL(const Fixed*restrict top, const Fixed*restrict mid, const Fixed*restrict bot) throw() {
   int remt = Q_TO_I(mid[1]) - Q_TO_I(top[1]);
   int remb = Q_TO_I(bot[1] - 1) - Q_TO_I(mid[1]);
   if(!remt && !remb) return;
@@ -419,8 +419,8 @@ inline void Drawable::DrawTriangleL(const Fixed* top, const Fixed* mid, const Fi
   }
 }
 
-inline void Drawable::DrawTriangle(const Fixed* a, const Fixed* b, const Fixed* c) throw() {
-  const Fixed* top, *mid, *bot;
+inline void Drawable::DrawTriangle(const Fixed*restrict a, const Fixed*restrict b, const Fixed*restrict c) throw() {
+  const Fixed*restrict top, *restrict mid, *restrict bot;
   // We need to sort the triangle from top to bottom.
   if(a[1] > b[1]) {
     // A>B
@@ -478,7 +478,7 @@ if(coord == 1) c[1] = clip; \
 else c[1] = a[1] + ((b[1]-a[1]) * i / q)
 
 #define Clipf(name, coord, dir) \
-static inline int Clip##name(Fixed clip, const Fixed* a, const Fixed* b, const Fixed* c, Fixed* d, Fixed* e, int dn, int en, int mia[3], int via[3]) { \
+static inline int Clip##name(Fixed clip, const Fixed*restrict a, const Fixed*restrict b, const Fixed*restrict c, Fixed*restrict d, Fixed*restrict e, int dn, int en, int mia[3], int via[3]) { \
   signed long long i, q; /* use 64-bit math for great justice */ \
   if(a[coord] dir clip) { \
     if(b[coord] dir clip) { \
@@ -547,10 +547,10 @@ Clipf(Right, 0, >);
 Clipf(Up, 1, <);
 Clipf(Down, 1, >);
 
-inline void Drawable::ClipNDrawTriangle(const Fixed* a, const Fixed* b, const Fixed* c) throw() {
+inline void Drawable::ClipNDrawTriangle(const Fixed*restrict a, const Fixed*restrict b, const Fixed*restrict c) throw() {
 #define MAXCLIPVERTICES (3+(MAXCLIPTRIANGLES*2))
 #define MAXCLIPTRIANGLES 16
-  Fixed* vertices[MAXCLIPVERTICES] = {const_cast<Fixed*>(a), const_cast<Fixed*>(b), const_cast<Fixed*>(c)};
+  Fixed*restrict vertices[MAXCLIPVERTICES] = {const_cast<Fixed*>(a), const_cast<Fixed*>(b), const_cast<Fixed*>(c)};
   Fixed nuvertices[MAXCLIPTRIANGLES*2][2];
   for(int n = 0; n < MAXCLIPTRIANGLES; ++n) {
     vertices[n*2+3] = nuvertices[n*2];
@@ -637,7 +637,7 @@ inline void Drawable::ClipNDrawTriangle(const Fixed* a, const Fixed* b, const Fi
   }
 }
 
-inline void Drawable::DrawBresenlineV(const Fixed* top, const Fixed* bot) {
+inline void Drawable::DrawBresenlineV(const Fixed*restrict top, const Fixed*restrict bot) {
   if(top[1] > bot[1]) {
     const Fixed* t;
     t = top; top = bot; bot = t;
@@ -680,7 +680,7 @@ inline void Drawable::DrawBresenlineV(const Fixed* top, const Fixed* bot) {
   }
 }
 
-inline void Drawable::DrawBresenlineH(const Fixed* left, const Fixed* right) {
+inline void Drawable::DrawBresenlineH(const Fixed*restrict left, const Fixed*restrict right) {
   if(left[0] > right[0]) {
     const Fixed* t;
     t = left; left = right; right = t;
@@ -723,7 +723,7 @@ inline void Drawable::DrawBresenlineH(const Fixed* left, const Fixed* right) {
   }
 }
 
-inline void Drawable::DrawBresenline(const Fixed* a, const Fixed* b) {
+inline void Drawable::DrawBresenline(const Fixed*restrict a, const Fixed*restrict b) {
   Fixed rise, run;
   rise = b[1] - a[1];
   run = b[0] - a[0];
@@ -899,11 +899,12 @@ inline void Drawable::DrawQuadA(const Fixed* top, const Fixed* left, const Fixed
 #undef SWAP
 }*/
 
-inline void Drawable::DrawQuadLine(Fixed width, Fixed height, const Fixed* top, const Fixed* bot) {
+inline void Drawable::DrawQuadLine(Fixed width, Fixed height, const Fixed*restrict top, const Fixed*restrict bot) {
   Fixed radx = width >> 1;
   Fixed rady = height >> 1;
   Fixed off[2] = {-(bot[1] - top[1]), bot[0] - top[0]};
   Fixed mag = QuickFixedSqrt(((long long)off[0]*off[0] + (long long)off[1]*off[1]) >> 6);
+  if(mag == 0) return;
   off[0] = off[0] * radx / mag;
   off[1] = off[1] * rady / mag;
   Fixed a[2] = {top[0] - off[0], top[1] - off[1]};

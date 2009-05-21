@@ -63,28 +63,28 @@ namespace SubCritical {
   public:
     Frisket(int width, int height);
     virtual ~Frisket();
-    void CopyFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
-    void CopyFrisket(const Frisket*, int dx, int dy) throw();
-    int Lua_CopyFrisket(lua_State* L) throw();
-    void ModulateFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
-    void ModulateFrisket(const Frisket*, int dx, int dy) throw();
-    int Lua_ModulateFrisket(lua_State* L) throw();
-    void AddFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
-    void AddFrisket(const Frisket*, int dx, int dy) throw();
-    int Lua_AddFrisket(lua_State* L) throw();
-    void SubtractFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
-    void SubtractFrisket(const Frisket*, int dx, int dy) throw();
-    int Lua_SubtractFrisket(lua_State* L) throw();
-    void MinFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
-    void MinFrisket(const Frisket*, int dx, int dy) throw();
-    int Lua_MinFrisket(lua_State* L) throw();
-    void MaxFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
-    void MaxFrisket(const Frisket*, int dx, int dy) throw();
-    int Lua_MaxFrisket(lua_State* L) throw();
+    void CopyFrisketRect(const Frisket*restrict, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw();
+    void CopyFrisket(const Frisket*restrict, int dx, int dy) restrict throw();
+    int Lua_CopyFrisket(lua_State* L) restrict throw();
+    void ModulateFrisketRect(const Frisket*restrict, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw();
+    void ModulateFrisket(const Frisket*restrict, int dx, int dy) restrict throw();
+    int Lua_ModulateFrisket(lua_State* L) restrict throw();
+    void AddFrisketRect(const Frisket*restrict, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw();
+    void AddFrisket(const Frisket*restrict, int dx, int dy) restrict throw();
+    int Lua_AddFrisket(lua_State* L) restrict throw();
+    void SubtractFrisketRect(const Frisket*restrict, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw();
+    void SubtractFrisket(const Frisket*restrict, int dx, int dy) restrict throw();
+    int Lua_SubtractFrisket(lua_State* L) restrict throw();
+    void MinFrisketRect(const Frisket*restrict, int sx, int sy, int sw, int sh, int dx, int dy) throw();
+    void MinFrisket(const Frisket*restrict, int dx, int dy) restrict throw();
+    int Lua_MinFrisket(lua_State* L) restrict throw();
+    void MaxFrisketRect(const Frisket*restrict, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw();
+    void MaxFrisket(const Frisket*restrict, int dx, int dy) restrict throw();
+    int Lua_MaxFrisket(lua_State* L) restrict throw();
     int Lua_GetSize(lua_State* L) const throw();
     PROTOCOL_PROTOTYPE();
     int width, height;
-    Frixel** rows;
+    Frixel*restrict* rows;
     Frixel* buffer;
   };
   class Drawable;
@@ -93,11 +93,11 @@ namespace SubCritical {
   public:
     virtual ~Drawable();
     int Lua_GetSize(lua_State* L) const throw();
-    void BlitRect(const Drawable*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
-    void Blit(const Drawable*, int dx, int dy) throw();
-    void BlitRectT(const Drawable*, int sx, int sy, int sw, int sh, int dx, int dy, lua_Number a) throw();
-    void BlitT(const Drawable*, int dx, int dy, lua_Number a) throw();
-    int Lua_Blit(lua_State* L) throw();
+    void BlitRect(const Drawable*restrict, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw();
+    void Blit(const Drawable*restrict, int dx, int dy) restrict throw();
+    void BlitRectT(const Drawable*restrict, int sx, int sy, int sw, int sh, int dx, int dy, lua_Number a) restrict throw();
+    void BlitT(const Drawable*restrict, int dx, int dy, lua_Number a) restrict throw();
+    int Lua_Blit(lua_State* L) restrict throw();
     void BlitFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
     void BlitFrisket(const Frisket*, int dx, int dy) throw();
     int Lua_BlitFrisket(lua_State* L) throw();
@@ -128,7 +128,7 @@ namespace SubCritical {
     int width, height;
     bool has_alpha, simple_alpha, fake_alpha;
     enum FBLayout layout;
-    Pixel** rows;
+    Pixel*restrict* rows;
     Pixel* buffer;
     static int PadWidth(int width);
     PROTOCOL_PROTOTYPE();
@@ -150,16 +150,16 @@ namespace SubCritical {
     //LOCAL void DrawSpanA(int y, Fixed l, Fixed r);
     LOCAL void NoclipDrawSpan(int y, Fixed l, Fixed r);
     LOCAL void NoclipDrawSpanA(int y, Fixed l, Fixed r);
-    LOCAL void DrawBresenline(const Fixed* a, const Fixed* b);
-    LOCAL void DrawBresenlineH(const Fixed* left, const Fixed* right);
-    LOCAL void DrawBresenlineV(const Fixed* left, const Fixed* right);
+    LOCAL void DrawBresenline(const Fixed*restrict a, const Fixed*restrict b);
+    LOCAL void DrawBresenlineH(const Fixed*restrict left, const Fixed*restrict right);
+    LOCAL void DrawBresenlineV(const Fixed*restrict left, const Fixed*restrict right);
     //LOCAL void DrawQuad(const Fixed* top, const Fixed* left, const Fixed* right, const Fixed* bot);
     //LOCAL void DrawQuadA(const Fixed* top, const Fixed* left, const Fixed* right, const Fixed* bot);
-    LOCAL void DrawQuadLine(Fixed width, Fixed height, const Fixed* top, const Fixed* bot);
-    LOCAL void ClipNDrawTriangle(const Fixed* a, const Fixed* b, const Fixed* c) throw();
-    LOCAL void DrawTriangle(const Fixed* a, const Fixed* b, const Fixed* c) throw();
-    LOCAL void DrawTriangleL(const Fixed* top, const Fixed* mid, const Fixed* bot) throw();
-    LOCAL void DrawTriangleR(const Fixed* top, const Fixed* mid, const Fixed* bot) throw();
+    LOCAL void DrawQuadLine(Fixed width, Fixed height, const Fixed*restrict top, const Fixed*restrict bot);
+    LOCAL void ClipNDrawTriangle(const Fixed*restrict a, const Fixed*restrict b, const Fixed*restrict c) throw();
+    LOCAL void DrawTriangle(const Fixed*restrict a, const Fixed*restrict b, const Fixed*restrict c) throw();
+    LOCAL void DrawTriangleL(const Fixed*restrict top, const Fixed*restrict mid, const Fixed*restrict bot) throw();
+    LOCAL void DrawTriangleR(const Fixed*restrict top, const Fixed*restrict mid, const Fixed*restrict bot) throw();
   };
   class EXPORT Graphic : public Drawable {
   public:
@@ -167,7 +167,7 @@ namespace SubCritical {
     Graphic(Drawable& other);
     void CheckAlpha() throw();
     void ChangeLayout(enum FBLayout newlayout) throw();
-    int Lua_OptimizeFor(lua_State* L) throw();
+    int Lua_OptimizeFor(lua_State* L) restrict throw();
     PROTOCOL_PROTOTYPE();
   };
   class EXPORT GraphicsDevice : public Drawable {

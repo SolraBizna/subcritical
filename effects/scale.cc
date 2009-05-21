@@ -26,11 +26,12 @@
 using namespace SubCritical;
 
 SUBCRITICAL_UTILITY(ScaleFast)(lua_State* L) {
-  Drawable* source = lua_toobject(L, 1, Drawable);
-  Graphic* dest = new Graphic(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3), source->layout);
+  Drawable*restrict source = lua_toobject(L, 1, Drawable);
+  Graphic*restrict dest = new Graphic(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3), source->layout);
+  if(source == dest) return luaL_error(L, "source and destination must differ");
   dest->has_alpha = source->has_alpha;
   dest->simple_alpha = source->simple_alpha;
-  Pixel** srows = source->rows;
+  Pixel**restrict srows = source->rows;
   int syn = source->height, syd = dest->height, sye = 0, sys;
   int sxn = source->width, sxd = dest->width, sxs;
   sys = syn / syd;
@@ -38,8 +39,8 @@ SUBCRITICAL_UTILITY(ScaleFast)(lua_State* L) {
   sxs = sxn / sxd;
   sxn = sxn % sxd;
   for(int y = 0; y < dest->height; ++y) {
-    Pixel* d = dest->rows[y];
-    Pixel* s = *srows;
+    Pixel*restrict d = dest->rows[y];
+    Pixel*restrict s = *srows;
     int sxe = 0;
     int rem = dest->width;
     UNROLL(rem,
@@ -87,8 +88,9 @@ static float L3(float x) {
 }
 
 SUBCRITICAL_UTILITY(ScaleBest)(lua_State* L) {
-  Drawable* source = lua_toobject(L, 1, Drawable);
-  Graphic* dest = new Graphic(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3), source->layout);
+  Drawable*restrict source = lua_toobject(L, 1, Drawable);
+  Graphic*restrict dest = new Graphic(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3), source->layout);
+  if(source == dest) return luaL_error(L, "source and destination must differ");
   int rsh, gsh, bsh, ash;
   switch(source->layout) {
 #define DO_FBLAYOUT(layout, _rsh, _gsh, _bsh, _ash)			\
@@ -115,7 +117,7 @@ SUBCRITICAL_UTILITY(ScaleBest)(lua_State* L) {
     dest->has_alpha = true;
     dest->simple_alpha = false; // if it was simple before, it won't be soon
     for(int y = 0; y < dest->height; ++y) {
-      Pixel* d = dest->rows[y];
+      Pixel*restrict d = dest->rows[y];
       int x = 0;
       float ycenter = (float)(y + 0.5f) * yfact;
       int uy = (int)(ycenter - (2.5f * ywind));
@@ -135,7 +137,7 @@ SUBCRITICAL_UTILITY(ScaleBest)(lua_State* L) {
 	int sub_x, sub_y;
 	float x_sinc, y_sinc;
 	for(sub_y = uy, y_sinc = ys; sub_y < dy; ++sub_y, y_sinc += rywind) {
-	  Pixel* src = source->rows[sub_y] + lx;
+	  Pixel*restrict src = source->rows[sub_y] + lx;
 	  sub_x = lx;
 	  x_sinc = xs;
 	  float sincy = L3(y_sinc);
@@ -180,7 +182,7 @@ SUBCRITICAL_UTILITY(ScaleBest)(lua_State* L) {
     Pixel mask = 0xFF << ash;
     dest->has_alpha = false;
     for(int y = 0; y < dest->height; ++y) {
-      Pixel* d = dest->rows[y];
+      Pixel*restrict d = dest->rows[y];
       int x = 0;
       float ycenter = (float)(y + 0.5f) * yfact;
       int uy = (int)(ycenter - (2.5f * ywind));
@@ -200,7 +202,7 @@ SUBCRITICAL_UTILITY(ScaleBest)(lua_State* L) {
 	int sub_x, sub_y;
 	float x_sinc, y_sinc;
 	for(sub_y = uy, y_sinc = ys; sub_y < dy; ++sub_y, y_sinc += rywind) {
-	  Pixel* src = source->rows[sub_y] + lx;
+	  Pixel*restrict src = source->rows[sub_y] + lx;
 	  sub_x = lx;
 	  x_sinc = xs;
 	  float sincy = L3(y_sinc);
