@@ -54,7 +54,7 @@
 
 #define RIGHT C4(Mat,C,x,D)
 
-static PRIME* C6(mat_mul_,A,B,_,C,D)(const LEFT& a, const RIGHT& b) {
+static PRIME*restrict C6(mat_mul_,A,B,_,C,D)(const LEFT&restrict a, const RIGHT&restrict b) {
 #define A_xx a.xx
 #define A_xy a.xy
 #if B >= 3
@@ -179,7 +179,7 @@ static PRIME* C6(mat_mul_,A,B,_,C,D)(const LEFT& a, const RIGHT& b) {
 #define B_wz 0
 #define B_ww 1
 #endif
-  PRIME* ret = new PRIME();
+  PRIME*restrict ret = new PRIME();
 #define COL x
 #define ROW x
 #include "mat_sum_out.h"

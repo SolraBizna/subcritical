@@ -20,9 +20,9 @@
   Please see doc/license.html for clarifications.
 */
 
-int Vec2::Normalize(lua_State* L) {
+int Vec2::Normalize(lua_State* L) restrict {
   Scalar magnitude = x*x + y*y;
-  Vec2* ret;
+  Vec2*restrict ret;
   if(magnitude != 0) {
     magnitude = 1.0 / sqrt(magnitude);
     ret = new Vec2(x*magnitude, y*magnitude);
@@ -45,49 +45,49 @@ int Vec2::MagnitudeSquared(lua_State* L) {
   return 1;
 }
 
-static Vec2* vec_mul_2(const Vec2& a, Scalar b) {
-  Vec2* ret = new Vec2();
+static Vec2*restrict vec_mul_2(const Vec2&restrict a, Scalar b) {
+  Vec2*restrict ret = new Vec2();
   ret->x = a.x * b;
   ret->y = a.y * b;
   return ret;
 }
 
-static Vec2* vec_unm_2(const Vec2& a) {
-  Vec2* ret = new Vec2();
+static Vec2*restrict vec_unm_2(const Vec2&restrict a) {
+  Vec2*restrict ret = new Vec2();
   ret->x = -a.x;
   ret->y = -a.y;
   return ret;
 }
 
-static Vec2* vec_add_222(const Vec2& a, const Vec2& b) {
-  Vec2* ret = new Vec2();
+static Vec2*restrict vec_add_222(const Vec2&restrict a, const Vec2&restrict b) {
+  Vec2*restrict ret = new Vec2();
   ret->x = a.x + b.x;
   ret->y = a.y + b.y;
   return ret;
 }
 
-static Vec2* vec_sub_222(const Vec2& a, const Vec2& b) {
-  Vec2* ret = new Vec2();
+static Vec2*restrict vec_sub_222(const Vec2&restrict a, const Vec2&restrict b) {
+  Vec2*restrict ret = new Vec2();
   ret->x = a.x - b.x;
   ret->y = a.y - b.y;
   return ret;
 }
 
-static Scalar vec_concat_222(const Vec2& a, const Vec2& b) {
+static Scalar vec_concat_222(const Vec2&restrict a, const Vec2&restrict b) {
   return a.x*b.x + a.y*b.y;
 }
 
-static bool vec_eq_2(const Vec2& a, const Vec2& b) {
+static bool vec_eq_2(const Vec2&restrict a, const Vec2&restrict b) {
   return a.x == b.x && a.y == b.y;
 }
 
-static int vec_unpack_2(lua_State* L, const Vec2& a) {
+static int vec_unpack_2(lua_State* L, const Vec2&restrict a) {
   lua_pushnumber(L, a.x);
   lua_pushnumber(L, a.y);
   return 2;
 }
 
-static Scalar vec_index_2(lua_State* L, const Vec2& a, int n) {
+static Scalar vec_index_2(lua_State* L, const Vec2&restrict a, int n) {
   switch(n) {
   case 1: return a.x;
   case 2: return a.y;
@@ -97,7 +97,7 @@ static Scalar vec_index_2(lua_State* L, const Vec2& a, int n) {
   }
 }
 
-static int vec_newindex_2(lua_State* L, Vec2& a, int n, Scalar v) {
+static int vec_newindex_2(lua_State* L, Vec2&restrict a, int n, Scalar v) {
   switch(n) {
   case 1: a.x = v; break;
   case 2: a.y = v; break;

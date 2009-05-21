@@ -44,8 +44,8 @@
 #define bw 1
 #endif
 
-static Vec4* C3(vec_add_4,an,bn)(const A& a, const B& b) {
-  Vec4* ret = new Vec4();
+static Vec4*restrict C3(vec_add_4,an,bn)(const A&restrict a, const B&restrict b) {
+  Vec4*restrict ret = new Vec4();
   ret->x = a.x + b.x;
   ret->y = a.y + b.y;
   ret->z = az + bz;
@@ -53,8 +53,8 @@ static Vec4* C3(vec_add_4,an,bn)(const A& a, const B& b) {
   return ret;
 }
 
-static Vec4* C3(vec_sub_4,an,bn)(const A& a, const B& b) {
-  Vec4* ret = new Vec4();
+static Vec4*restrict C3(vec_sub_4,an,bn)(const A&restrict a, const B&restrict b) {
+  Vec4*restrict ret = new Vec4();
   ret->x = a.x - b.x;
   ret->y = a.y - b.y;
   ret->z = az - bz;
@@ -62,7 +62,7 @@ static Vec4* C3(vec_sub_4,an,bn)(const A& a, const B& b) {
   return ret;
 }
 
-static Scalar C3(vec_concat_4,an,bn)(const A& a, const B& b) {
+static Scalar C3(vec_concat_4,an,bn)(const A&restrict a, const B&restrict b) {
   return a.x*b.x + a.y*b.y + az*bz + aw*bw;
 }
 
