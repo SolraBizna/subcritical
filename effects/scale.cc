@@ -31,7 +31,7 @@ SUBCRITICAL_UTILITY(ScaleFast)(lua_State* L) {
   if(source == dest) return luaL_error(L, "source and destination must differ");
   dest->has_alpha = source->has_alpha;
   dest->simple_alpha = source->simple_alpha;
-  Pixel**restrict srows = source->rows;
+  Pixel*restrict*restrict srows = source->rows;
   int syn = source->height, syd = dest->height, sye = 0, sys;
   int sxn = source->width, sxd = dest->width, sxs;
   sys = syn / syd;
