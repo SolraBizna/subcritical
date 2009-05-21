@@ -32,23 +32,23 @@
 #define bz 0
 #endif
 
-static Vec3* C3(vec_add_3,an,bn)(const A& a, const B& b) {
-  Vec3* ret = new Vec3();
+static Vec3*restrict C3(vec_add_3,an,bn)(const A&restrict a, const B&restrict b) {
+  Vec3*restrict ret = new Vec3();
   ret->x = a.x + b.x;
   ret->y = a.y + b.y;
   ret->z = az + bz;
   return ret;
 }
 
-static Vec3* C3(vec_sub_3,an,bn)(const A& a, const B& b) {
-  Vec3* ret = new Vec3();
+static Vec3*restrict C3(vec_sub_3,an,bn)(const A&restrict a, const B&restrict b) {
+  Vec3*restrict ret = new Vec3();
   ret->x = a.x - b.x;
   ret->y = a.y - b.y;
   ret->z = az - bz;
   return ret;
 }
 
-static Scalar C3(vec_concat_3,an,bn)(const A& a, const B& b) {
+static Scalar C3(vec_concat_3,an,bn)(const A&restrict a, const B&restrict b) {
   return a.x*b.x + a.y*b.y + az*bz;
 }
 

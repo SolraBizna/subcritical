@@ -26,8 +26,8 @@
 #undef SPLAT_A
 #undef SPLAT_B
 
-typedef Matrix*(*op_mmm)(const Matrix&, const Matrix&);
-typedef Vector*(*op_vmv)(const Matrix&, const Vector&);
+typedef Matrix*restrict(*op_mmm)(const Matrix&restrict, const Matrix&restrict);
+typedef Vector*restrict(*op_vmv)(const Matrix&, const Vector&restrict);
 typedef int(*op_Lm)(lua_State* L, const Matrix&);
 
 static const op_Lm mat_unpack[9] = {
@@ -72,17 +72,17 @@ static int f_matrix_unpack(lua_State* L) {
 }
 
 static int f_matrix_mul(lua_State* L) {
-  Matrix* a = lua_toobject(L, 1, Matrix);
-  MatrixOrVector* b_ = lua_toobject(L, 2, MatrixOrVector);
+  Matrix*restrict a = lua_toobject(L, 1, Matrix);
+  MatrixOrVector*restrict b_ = lua_toobject(L, 2, MatrixOrVector);
   if(b_->IsA("Matrix")) {
-    Matrix* b = (Matrix*)b_;
-    Matrix* ret = (mat_mul[(b->c-2) + (b->r-2)*3 + (a->c-2)*9 + (a->r-2)*27])(*a, *b);
+    Matrix*restrict b = (Matrix*)b_;
+    Matrix*restrict ret = (mat_mul[(b->c-2) + (b->r-2)*3 + (a->c-2)*9 + (a->r-2)*27])(*a, *b);
     ret->Push(L);
     return 1;
   }
   else {
-    Vector* b = (Vector*)b_;
-    Vector* ret = (mat_mul_v[(b->n-2) + (a->c-2)*3 + (a->r-2)*9])(*a, *b);
+    Vector*restrict b = (Vector*)b_;
+    Vector*restrict ret = (mat_mul_v[(b->n-2) + (a->c-2)*3 + (a->r-2)*9])(*a, *b);
     ret->Push(L);
     return 1;
   }

@@ -20,9 +20,9 @@
   Please see doc/license.html for clarifications.
 */
 
-int Vec3::Normalize(lua_State* L) {
+int Vec3::Normalize(lua_State* L) restrict {
   Scalar magnitude = x*x + y*y + z*z;
-  Vec3* ret;
+  Vec3*restrict ret;
   if(magnitude != 0) {
     magnitude = 1.0 / sqrt(magnitude);
     ret = new Vec3(x*magnitude, y*magnitude, z*magnitude);
@@ -45,23 +45,23 @@ int Vec3::MagnitudeSquared(lua_State* L) {
   return 1;
 }
 
-static Vec3* vec_mul_3(const Vec3& a, Scalar b) {
-  Vec3* ret = new Vec3();
+static Vec3*restrict vec_mul_3(const Vec3& a, Scalar b) {
+  Vec3*restrict ret = new Vec3();
   ret->x = a.x * b;
   ret->y = a.y * b;
   ret->z = a.z * b;
   return ret;
 }
 
-static Vec3* vec_unm_3(const Vec3& a) {
-  Vec3* ret = new Vec3();
+static Vec3*restrict vec_unm_3(const Vec3&restrict a) {
+  Vec3*restrict ret = new Vec3();
   ret->x = -a.x;
   ret->y = -a.y;
   ret->z = -a.z;
   return ret;
 }
 
-static bool vec_eq_3(const Vec3& a, const Vec3& b) {
+static bool vec_eq_3(const Vec3&restrict a, const Vec3&restrict b) {
   return a.x == b.x && a.y == b.y && a.z == b.z;
 }
 

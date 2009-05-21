@@ -20,9 +20,9 @@
   Please see doc/license.html for clarifications.
 */
 
-int Vec4::Normalize(lua_State* L) {
+int Vec4::Normalize(lua_State* L) restrict {
   Scalar magnitude = x*x + y*y + z*z + w*w;
-  Vec4* ret;
+  Vec4*restrict ret;
   if(magnitude != 0) {
     magnitude = 1.0 / sqrt(magnitude);
     ret = new Vec4(x*magnitude, y*magnitude, z*magnitude, w*magnitude);
@@ -45,8 +45,8 @@ int Vec4::MagnitudeSquared(lua_State* L) {
   return 1;
 }
 
-static Vec4* vec_mul_4(const Vec4& a, Scalar b) {
-  Vec4* ret = new Vec4();
+static Vec4*restrict vec_mul_4(const Vec4&restrict a, Scalar b) {
+  Vec4*restrict ret = new Vec4();
   ret->x = a.x * b;
   ret->y = a.y * b;
   ret->z = a.z * b;
@@ -54,8 +54,8 @@ static Vec4* vec_mul_4(const Vec4& a, Scalar b) {
   return ret;
 }
 
-static Vec4* vec_unm_4(const Vec4& a) {
-  Vec4* ret = new Vec4();
+static Vec4*restrict vec_unm_4(const Vec4& a) {
+  Vec4*restrict ret = new Vec4();
   ret->x = -a.x;
   ret->y = -a.y;
   ret->z = -a.z;

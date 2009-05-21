@@ -23,7 +23,7 @@
 #define PRIME C2(Vec,A)
 #define RIGHT C2(Vec,C)
 
-static PRIME* C5(mat_mul_,A,B,_,C)(const LEFT& a, const RIGHT& b) {
+static PRIME*restrict C5(mat_mul_,A,B,_,C)(const LEFT&restrict a, const RIGHT&restrict b) {
 #define A_xx a.xx
 #define A_xy a.xy
 #if B >= 3
@@ -98,7 +98,7 @@ static PRIME* C5(mat_mul_,A,B,_,C)(const LEFT& a, const RIGHT& b) {
 #else
 #define B_w 1
 #endif
-  PRIME* ret = new PRIME();
+  PRIME*restrict ret = new PRIME();
   ret->x = (A_xx * B_x) + (A_xy * B_y)
 #if C >= 3 || B >= 3
     + (A_xz * B_z)
