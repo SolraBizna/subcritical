@@ -27,6 +27,12 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#if __GNUC__ >= 3
+#define restrict __restrict__
+#else
+#define restrict
+#endif
+
 #if NO_DUFF
 #define UNROLL(rem, code) do { while(rem >= 4) { rem -= 4; {code;} code; {code;} code; } switch(rem) { case 3: {code;} case 2: {code;} case 1: {code;} default: break; } } while(0)
 #define UNROLL_MORE(rem, code) do { while(rem >= 8) { rem -= 8; {code;} code; {code;} code; {code;} code; {code;} code; } switch(rem) { case 7: {code;} case 6: {code;} case 5: {code;} case 4: {code;} case 3: {code;} case 2: {code;} case 1: {code;} default: break; } } while(0)

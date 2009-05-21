@@ -23,9 +23,9 @@
 
 using namespace SubCritical;
 
-template<int sh1, int sh2, int sh3> void BoxDown_2x2(const Drawable* src, Drawable* dst) {
-  const Pixel* srcpa, *srcpb;
-  Pixel* dstp;
+template<int sh1, int sh2, int sh3> void BoxDown_2x2(const Drawable*restrict src, Drawable*restrict dst) {
+  const Pixel*restrict srcpa, *restrict srcpb;
+  Pixel*restrict dstp;
   for(int dy = 0; dy < dst->height; ++dy) {
     size_t rem = dst->width;
     unsigned long s1, s2, s3;
@@ -51,7 +51,7 @@ template<int sh1, int sh2, int sh3> void BoxDown_2x2(const Drawable* src, Drawab
   }
 }
 
-static void BoxDown_2x2(const Drawable* src, Drawable* dst) {
+static void BoxDown_2x2(const Drawable*restrict src, Drawable*restrict dst) {
   switch(src->layout) {
   default:
   case FB_xRGB:
@@ -65,7 +65,7 @@ static void BoxDown_2x2(const Drawable* src, Drawable* dst) {
   }
 }
 
-static void BoxDown_NxN(const Drawable* src, Drawable* dst, int xf, int yf) {
+static void BoxDown_NxN(const Drawable*restrict src, Drawable*restrict dst, int xf, int yf) {
   int sh1, sh2, sh3;
   switch(src->layout) {
   default:
@@ -82,8 +82,8 @@ static void BoxDown_NxN(const Drawable* src, Drawable* dst, int xf, int yf) {
     sh3 = 8;
     break;
   }
-  const Pixel* srcp[yf];
-  Pixel* dstp;
+  const Pixel*restrict srcp[yf];
+  Pixel*restrict dstp;
   unsigned long tf = xf * yf;
   for(int dy = 0; dy < dst->height; ++dy) {
     for(int y = 0; y < yf; ++y) srcp[y] = src->rows[dy*yf+y];
@@ -104,8 +104,10 @@ static void BoxDown_NxN(const Drawable* src, Drawable* dst, int xf, int yf) {
 }
 
 SUBCRITICAL_UTILITY(BoxDown)(lua_State* L) {
-  Drawable* src = lua_toobject(L, 1, Drawable);
-  Drawable* dst = lua_toobject(L, 2, Drawable);
+  Drawable*restrict src = lua_toobject(L, 1, Drawable);
+  Drawable*restrict dst = lua_toobject(L, 2, Drawable);
+  if(src == dst)
+    return luaL_error(L, "Source and destination Drawables must differ");
   if(src->layout != dst->layout) {
     if(src->IsA("Graphic"))
       ((Graphic*)src)->ChangeLayout(dst->layout);

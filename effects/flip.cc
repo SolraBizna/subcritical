@@ -24,12 +24,12 @@
 using namespace SubCritical;
 
 SUBCRITICAL_UTILITY(MirrorHorizontal)(lua_State* L) {
-  Drawable* old = lua_toobject(L, 1, Drawable);
-  Graphic* graphic = new Graphic(old->width, old->height, old->layout);
+  Drawable*restrict old = lua_toobject(L, 1, Drawable);
+  Graphic*restrict graphic = new Graphic(old->width, old->height, old->layout);
   graphic->has_alpha = old->has_alpha;
   graphic->simple_alpha = old->simple_alpha;
   for(int y = 0; y < graphic->height; ++y) {
-    Pixel* pl = old->rows[y], *pr = graphic->rows[y] + graphic->width - 1;
+    Pixel*restrict pl = old->rows[y], *restrict pr = graphic->rows[y] + graphic->width - 1;
     int rem = graphic->width;
     UNROLL_MORE(rem,
 		*pr-- = *pl++);
@@ -39,7 +39,7 @@ SUBCRITICAL_UTILITY(MirrorHorizontal)(lua_State* L) {
 }
 
 SUBCRITICAL_UTILITY(MirrorVertical)(lua_State* L) {
-  Graphic* graphic = new Graphic(*lua_toobject(L, 1, Drawable));
+  Graphic*restrict graphic = new Graphic(*lua_toobject(L, 1, Drawable));
   Pixel** pt = graphic->rows, **pb = graphic->rows + graphic->height - 1, *sw;
   int rem = graphic->height / 2;
   UNROLL_MORE(rem,
@@ -50,12 +50,12 @@ SUBCRITICAL_UTILITY(MirrorVertical)(lua_State* L) {
 }
 
 SUBCRITICAL_UTILITY(Flip)(lua_State* L) {
-  Drawable* old = lua_toobject(L, 1, Drawable);
-  Graphic* graphic = new Graphic(old->width, old->height, old->layout);
+  Drawable*restrict old = lua_toobject(L, 1, Drawable);
+  Graphic*restrict graphic = new Graphic(old->width, old->height, old->layout);
   graphic->has_alpha = old->has_alpha;
   graphic->simple_alpha = old->simple_alpha;
   for(int y = 0; y < graphic->height; ++y) {
-    Pixel* pl = old->rows[y], *pr = graphic->rows[y] + graphic->width - 1;
+    Pixel*restrict pl = old->rows[y], *restrict pr = graphic->rows[y] + graphic->width - 1;
     int rem = graphic->width;
     UNROLL_MORE(rem,
 		*pr-- = *pl++;);
@@ -72,8 +72,8 @@ SUBCRITICAL_UTILITY(Flip)(lua_State* L) {
 }
 
 SUBCRITICAL_UTILITY(RotateRight)(lua_State* L) {
-  Drawable* old = lua_toobject(L, 1, Drawable);
-  Graphic* graphic = new Graphic(old->height, old->width, old->layout);
+  Drawable*restrict old = lua_toobject(L, 1, Drawable);
+  Graphic*restrict graphic = new Graphic(old->height, old->width, old->layout);
   graphic->has_alpha = old->has_alpha;
   graphic->simple_alpha = old->simple_alpha;
   for(int y = 0; y < old->height; ++y) {
@@ -88,12 +88,12 @@ SUBCRITICAL_UTILITY(RotateRight)(lua_State* L) {
 }
 
 SUBCRITICAL_UTILITY(RotateLeft)(lua_State* L) {
-  Drawable* old = lua_toobject(L, 1, Drawable);
-  Graphic* graphic = new Graphic(old->height, old->width, old->layout);
+  Drawable*restrict old = lua_toobject(L, 1, Drawable);
+  Graphic*restrict graphic = new Graphic(old->height, old->width, old->layout);
   graphic->has_alpha = old->has_alpha;
   graphic->simple_alpha = old->simple_alpha;
   for(int y = 0; y < old->height; ++y) {
-    Pixel* src = old->rows[y];
+    Pixel*restrict src = old->rows[y];
     int rem = old->width;
     int x = old->width - 1;
     UNROLL(rem,

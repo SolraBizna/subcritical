@@ -77,7 +77,7 @@ Graphic::Graphic(Drawable& other) {
       mask = 0xFF000000; break;
     }
     for(int y = 0; y < height; ++y) {
-      Pixel* src, *dst;
+      Pixel*restrict src, *restrict dst;
       src = other.rows[y];
       dst = rows[y];
       size_t rem = width;
@@ -85,7 +85,7 @@ Graphic::Graphic(Drawable& other) {
 		  *dst++ = *src++ | mask);
     }
   }
-  else for(Pixel** p = rows, **q = other.rows; p - rows < height; ++p, ++q) {
+  else for(Pixel*restrict*restrict p = rows, *restrict*restrict q = other.rows; p - rows < height; ++p, ++q) {
     memcpy(*p, *q, width * sizeof(Pixel));
   }
 }
@@ -93,8 +93,8 @@ Graphic::Graphic(Drawable& other) {
 Frisket::Frisket(int width, int height) : width(width), height(height) {
   int pitch = force_align(width) * sizeof(Pixel);
   buffer = (Frixel*)calloc(pitch, height + height * sizeof(Frixel*));
-  rows = (Frixel**)(buffer + pitch * height);
-  for(Frixel** p = rows; p - rows < height; ++p) {
+  rows = (Frixel*restrict*)(buffer + pitch * height);
+  for(Frixel*restrict* p = rows; p - rows < height; ++p) {
     *p = buffer + pitch * (p - rows);
   }
 }
@@ -146,7 +146,7 @@ void Graphic::ChangeLayout(FBLayout nulayout) throw() {
     layout = nulayout;
     return;
   }
-  for(Pixel** p = rows; p < rows + height; ++p) func(*p, width);
+  for(Pixel*restrict* p = rows; p < rows + height; ++p) func(*p, width);
   layout = nulayout;
   UpdateShifts();
 }
@@ -165,8 +165,8 @@ void Graphic::CheckAlpha() throw() {
   }
   has_alpha = false; // If we don't find alpha, there isn't any
   simple_alpha = true; // If we don't find partial alpha, there isn't any
-  for(Pixel** p = rows; p < rows + height; ++p) {
-    Pixel* q = *p;
+  for(Pixel*restrict*restrict p = rows; p < rows + height; ++p) {
+    Pixel*restrict q = *p;
     size_t rem = width;
     UNROLL(rem,
 	   if((*q & mask) != mask) {
@@ -189,8 +189,9 @@ int Frisket::Lua_GetSize(lua_State* L) const throw() {
   return 2;
 }
 
-int Graphic::Lua_OptimizeFor(lua_State* L) throw() {
-  Drawable* dev = lua_toobject(L, 1, Drawable);
+int Graphic::Lua_OptimizeFor(lua_State* L) restrict throw() {
+  Drawable*restrict dev = lua_toobject(L, 1, Drawable);
+  if(dev == this) return luaL_error(L, "Source and destination Frisket must differ");
   ChangeLayout(dev->layout);
   return 0;
 }
@@ -227,10 +228,10 @@ void Drawable::SetupDrawable(bool invert_y) throw() {
   buffer = (Pixel*)calloc(1, pitch * height * sizeof(Pixel) + height * sizeof(Pixel*));
   assert(buffer);
   rows = (Pixel**)(buffer + pitch * height);
-  if(invert_y) for(Pixel** p = rows + height - 1; p >= rows; --p) {
+  if(invert_y) for(Pixel*restrict* p = rows + height - 1; p >= rows; --p) {
     *p = buffer + pitch * (height - (p - rows) - 1);
   }
-  else for(Pixel** p = rows; p - rows < height; ++p) {
+  else for(Pixel*restrict* p = rows; p - rows < height; ++p) {
     *p = buffer + pitch * (p - rows);
   }
   UpdateShifts();
@@ -244,12 +245,12 @@ void Drawable::SetupDrawable(bool invert_y) throw() {
 void Drawable::SetupDrawable(void* buffer, int32_t pitch) throw() {
   assert(force_align(pitch) == pitch);
   this->buffer = (Pixel*)buffer;
-  rows = (Pixel**)calloc(sizeof(Pixel*), height);
+  rows = (Pixel*restrict*)calloc(sizeof(Pixel*), height);
   assert(rows);
-  if(pitch < 0) for(Pixel** p = rows + height - 1; p >= rows; --p) {
+  if(pitch < 0) for(Pixel*restrict* p = rows + height - 1; p >= rows; --p) {
     *p = this->buffer + -pitch * (height - (p - rows) - 1);
   }
-  else for(Pixel** p = rows; p - rows < height; ++p) {
+  else for(Pixel*restrict* p = rows; p - rows < height; ++p) {
     *p = this->buffer + pitch * (p - rows);
   }
   UpdateShifts();
@@ -277,8 +278,11 @@ Drawable::~Drawable() {
   if(buffer) {
     if(merged_rows)
       free((void*)buffer);
-    else
-      free((void*)rows); // buffer was allocated somewhere else
+    else {
+      // buffer was allocated somewhere else
+      Pixel** _rows = (Pixel**)rows; // work around restrict qualifier
+      free((void*)_rows);
+    }
   }
 }
 
@@ -414,11 +418,11 @@ SUBCRITICAL_UTILITY(CompileIndices)(lua_State* L) {
   return 1;
 }
 
-void Frisket::CopyFrisket(const Frisket* gfk, int dx, int dy) throw() {
+void Frisket::CopyFrisket(const Frisket*restrict gfk, int dx, int dy) restrict throw() {
   CopyFrisketRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
 }
 
-void Frisket::CopyFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+void Frisket::CopyFrisketRect(const Frisket*restrict gfk, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw() {
   int sl, st, sr, sb;
   sl = sx;
   st = sy;
@@ -430,7 +434,7 @@ void Frisket::CopyFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh
   if(sb >= gfk->height) sb = gfk->height - 1;
   if(sr < sl || sb < st) return;
   for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-    Frixel* src, *dst;
+    Frixel*restrict src, *restrict dst;
     src = gfk->rows[sY] + sl;
     dst = rows[dY] + dx;
     memcpy(dst, src, (sr - sl + 1) * sizeof(Frixel));
@@ -440,11 +444,11 @@ void Frisket::CopyFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh
   }
 }
 
-void Frisket::ModulateFrisket(const Frisket* gfk, int dx, int dy) throw() {
+void Frisket::ModulateFrisket(const Frisket*restrict gfk, int dx, int dy) restrict throw() {
   ModulateFrisketRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
 }
 
-void Frisket::ModulateFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+void Frisket::ModulateFrisketRect(const Frisket*restrict gfk, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw() {
   int sl, st, sr, sb;
   sl = sx;
   st = sy;
@@ -456,7 +460,7 @@ void Frisket::ModulateFrisketRect(const Frisket* gfk, int sx, int sy, int sw, in
   if(sb >= gfk->height) sb = gfk->height - 1;
   if(sr < sl || sb < st) return;
   for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-    Frixel* src, *dst;
+    Frixel*restrict src, *restrict dst;
     src = gfk->rows[sY] + sl;
     dst = rows[dY] + dx;
     size_t rem = sr - sl + 1;
@@ -466,11 +470,11 @@ void Frisket::ModulateFrisketRect(const Frisket* gfk, int sx, int sy, int sw, in
   }
 }
 
-void Frisket::AddFrisket(const Frisket* gfk, int dx, int dy) throw() {
+void Frisket::AddFrisket(const Frisket*restrict gfk, int dx, int dy) restrict throw() {
   AddFrisketRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
 }
 
-void Frisket::AddFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+void Frisket::AddFrisketRect(const Frisket*restrict gfk, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw() {
   int sl, st, sr, sb;
   sl = sx;
   st = sy;
@@ -482,7 +486,7 @@ void Frisket::AddFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh,
   if(sb >= gfk->height) sb = gfk->height - 1;
   if(sr < sl || sb < st) return;
   for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-    Frixel* src, *dst;
+    Frixel*restrict src, *restrict dst;
     int res;
     src = gfk->rows[sY] + sl;
     dst = rows[dY] + dx;
@@ -494,11 +498,11 @@ void Frisket::AddFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh,
   }
 }
 
-void Frisket::SubtractFrisket(const Frisket* gfk, int dx, int dy) throw() {
+void Frisket::SubtractFrisket(const Frisket*restrict gfk, int dx, int dy) restrict throw() {
   SubtractFrisketRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
 }
 
-void Frisket::SubtractFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+void Frisket::SubtractFrisketRect(const Frisket*restrict gfk, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw() {
   int sl, st, sr, sb;
   sl = sx;
   st = sy;
@@ -510,7 +514,7 @@ void Frisket::SubtractFrisketRect(const Frisket* gfk, int sx, int sy, int sw, in
   if(sb >= gfk->height) sb = gfk->height - 1;
   if(sr < sl || sb < st) return;
   for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-    Frixel* src, *dst;
+    Frixel*restrict src, *restrict dst;
     int res;
     src = gfk->rows[sY] + sl;
     dst = rows[dY] + dx;
@@ -522,11 +526,11 @@ void Frisket::SubtractFrisketRect(const Frisket* gfk, int sx, int sy, int sw, in
   }
 }
 
-void Frisket::MinFrisket(const Frisket* gfk, int dx, int dy) throw() {
+void Frisket::MinFrisket(const Frisket*restrict gfk, int dx, int dy) restrict throw() {
   MinFrisketRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
 }
 
-void Frisket::MinFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+void Frisket::MinFrisketRect(const Frisket*restrict gfk, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw() {
   int sl, st, sr, sb;
   sl = sx;
   st = sy;
@@ -538,7 +542,7 @@ void Frisket::MinFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh,
   if(sb >= gfk->height) sb = gfk->height - 1;
   if(sr < sl || sb < st) return;
   for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-    Frixel* src, *dst;
+    Frixel*restrict src, *restrict dst;
     src = gfk->rows[sY] + sl;
     dst = rows[dY] + dx;
     size_t rem = sr - sl + 1;
@@ -548,11 +552,11 @@ void Frisket::MinFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh,
   }
 }
 
-void Frisket::MaxFrisket(const Frisket* gfk, int dx, int dy) throw() {
+void Frisket::MaxFrisket(const Frisket*restrict gfk, int dx, int dy) restrict throw() {
   MaxFrisketRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
 }
 
-void Frisket::MaxFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+void Frisket::MaxFrisketRect(const Frisket*restrict gfk, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw() {
   int sl, st, sr, sb;
   sl = sx;
   st = sy;
@@ -564,7 +568,7 @@ void Frisket::MaxFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh,
   if(sb >= gfk->height) sb = gfk->height - 1;
   if(sr < sl || sb < st) return;
   for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-    Frixel* src, *dst;
+    Frixel*restrict src, *restrict dst;
     src = gfk->rows[sY] + sl;
     dst = rows[dY] + dx;
     size_t rem = sr - sl + 1;
@@ -574,11 +578,11 @@ void Frisket::MaxFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int sh,
   }
 }
 
-void Drawable::Blit(const Drawable* gfk, int dx, int dy) throw() {
+void Drawable::Blit(const Drawable*restrict gfk, int dx, int dy) restrict throw() {
   BlitRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
 }
 
-void Drawable::BlitRect(const Drawable* gfk, int sx, int sy, int sw, int sh, int dx, int dy) throw() {
+void Drawable::BlitRect(const Drawable*restrict gfk, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw() {
   int sl, st, sr, sb;
   sl = sx;
   st = sy;
@@ -597,7 +601,7 @@ void Drawable::BlitRect(const Drawable* gfk, int sx, int sy, int sw, int sh, int
     if(gfk->simple_alpha) {
       Pixel mask = 0xFF << ash;
       for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-	Pixel* src, *dst;
+	Pixel*restrict src, *restrict dst;
 	src = gfk->rows[sY] + sl;
 	dst = rows[dY] + dx;
 	size_t rem = sr - sl + 1;
@@ -607,7 +611,7 @@ void Drawable::BlitRect(const Drawable* gfk, int sx, int sy, int sw, int sh, int
       }
     }
     else for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-      Pixel* src, *dst;
+      Pixel*restrict src, *restrict dst;
       uint32_t r, g, b, a, ra;
       src = gfk->rows[sY] + sl;
       dst = rows[dY] + dx;
@@ -638,7 +642,7 @@ void Drawable::BlitRect(const Drawable* gfk, int sx, int sy, int sw, int sh, int
       mask = 0xFF000000; break;
     }
     for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-      Pixel* src, *dst;
+      Pixel*restrict src, *restrict dst;
       src = gfk->rows[sY] + sl;
       dst = rows[dY] + dx;
       size_t rem = sr - sl + 1;
@@ -647,7 +651,7 @@ void Drawable::BlitRect(const Drawable* gfk, int sx, int sy, int sw, int sh, int
     }
   }
   else for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-    Pixel* src, *dst;
+    Pixel*restrict src, *restrict dst;
     src = gfk->rows[sY] + sl;
     dst = rows[dY] + dx;
     memcpy(dst, src, (sr - sl + 1) * sizeof(Pixel));
@@ -657,11 +661,11 @@ void Drawable::BlitRect(const Drawable* gfk, int sx, int sy, int sw, int sh, int
   }
 }
 
-void Drawable::BlitT(const Drawable* gfk, int dx, int dy, lua_Number a) throw() {
+void Drawable::BlitT(const Drawable*restrict gfk, int dx, int dy, lua_Number a) restrict throw() {
   BlitRectT(gfk, 0, 0, gfk->width, gfk->height, dx, dy, a);
 }
 
-void Drawable::BlitRectT(const Drawable* gfk, int sx, int sy, int sw, int sh, int dx, int dy, lua_Number a) throw() {
+void Drawable::BlitRectT(const Drawable*restrict gfk, int sx, int sy, int sw, int sh, int dx, int dy, lua_Number a) restrict throw() {
   uint32_t an = (uint32_t)floorf(a * 65536.f + 0.5f);
   if(an >= 65536) return BlitRect(gfk, sx, sy, sw, sh, dx, dy);
   else if(an == 0) return;
@@ -682,7 +686,7 @@ void Drawable::BlitRectT(const Drawable* gfk, int sx, int sy, int sw, int sh, in
   if(gfk->has_alpha) {
     if(gfk->simple_alpha) for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
       Pixel mask = 0xFF << ash;
-      Pixel* src, *dst;
+      Pixel*restrict src, *restrict dst;
       uint32_t r, g, b, ra;
       src = gfk->rows[sY] + sl;
       dst = rows[dY] + dx;
@@ -701,7 +705,7 @@ void Drawable::BlitRectT(const Drawable* gfk, int sx, int sy, int sw, int sh, in
 	     ++src; ++dst);
     }
     else for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-      Pixel* src, *dst;
+      Pixel*restrict src, *restrict dst;
       uint32_t r, g, b, a, ra;
       src = gfk->rows[sY] + sl;
       dst = rows[dY] + dx;
@@ -722,7 +726,7 @@ void Drawable::BlitRectT(const Drawable* gfk, int sx, int sy, int sw, int sh, in
     }
   }
   else for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-    Pixel* src, *dst;
+    Pixel*restrict src, *restrict dst;
     uint32_t r, g, b, ra;
     src = gfk->rows[sY] + sl;
     dst = rows[dY] + dx;
@@ -740,9 +744,10 @@ void Drawable::BlitRectT(const Drawable* gfk, int sx, int sy, int sw, int sh, in
     }
 }
 
-int Drawable::Lua_Blit(lua_State* L) throw() {
+int Drawable::Lua_Blit(lua_State* L) restrict throw() {
   if(has_alpha) return luaL_error(L, "Graphics with alpha channels cannot be modified with this function.");
-  Drawable* gfk = lua_toobject(L,1,Drawable);
+  Drawable*restrict gfk = lua_toobject(L,1,Drawable);
+  if(gfk == this) return luaL_error(L, "Source and destination Drawable must differ");
   if(gfk->layout != layout) {
     if(gfk->IsA("Graphic"))
       ((Graphic*)gfk)->ChangeLayout(layout);
@@ -761,8 +766,9 @@ int Drawable::Lua_Blit(lua_State* L) throw() {
   }
 }
 
-int Frisket::Lua_CopyFrisket(lua_State* L) throw() {
-  Frisket* gfk = lua_toobject(L,1,Frisket);
+int Frisket::Lua_CopyFrisket(lua_State* L) restrict throw() {
+  Frisket*restrict gfk = lua_toobject(L,1,Frisket);
+  if(gfk == this) return luaL_error(L, "Source and destination Frisket must differ");
   switch(lua_gettop(L)) {
   case 3: CopyFrisket(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
   case 7: CopyFrisketRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
@@ -771,8 +777,9 @@ int Frisket::Lua_CopyFrisket(lua_State* L) throw() {
   }
 }
 
-int Frisket::Lua_ModulateFrisket(lua_State* L) throw() {
-  Frisket* gfk = lua_toobject(L,1,Frisket);
+int Frisket::Lua_ModulateFrisket(lua_State* L) restrict throw() {
+  Frisket*restrict gfk = lua_toobject(L,1,Frisket);
+  if(gfk == this) return luaL_error(L, "Source and destination Frisket must differ");
   switch(lua_gettop(L)) {
   case 3: ModulateFrisket(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
   case 7: ModulateFrisketRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
@@ -781,8 +788,9 @@ int Frisket::Lua_ModulateFrisket(lua_State* L) throw() {
   }
 }
 
-int Frisket::Lua_AddFrisket(lua_State* L) throw() {
-  Frisket* gfk = lua_toobject(L,1,Frisket);
+int Frisket::Lua_AddFrisket(lua_State* L) restrict throw() {
+  Frisket*restrict gfk = lua_toobject(L,1,Frisket);
+  if(gfk == this) return luaL_error(L, "Source and destination Frisket must differ");
   switch(lua_gettop(L)) {
   case 3: AddFrisket(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
   case 7: AddFrisketRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
@@ -791,8 +799,9 @@ int Frisket::Lua_AddFrisket(lua_State* L) throw() {
   }
 }
 
-int Frisket::Lua_SubtractFrisket(lua_State* L) throw() {
-  Frisket* gfk = lua_toobject(L,1,Frisket);
+int Frisket::Lua_SubtractFrisket(lua_State* L) restrict throw() {
+  Frisket*restrict gfk = lua_toobject(L,1,Frisket);
+  if(gfk == this) return luaL_error(L, "Source and destination Frisket must differ");
   switch(lua_gettop(L)) {
   case 3: SubtractFrisket(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
   case 7: SubtractFrisketRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
@@ -801,8 +810,9 @@ int Frisket::Lua_SubtractFrisket(lua_State* L) throw() {
   }
 }
 
-int Frisket::Lua_MinFrisket(lua_State* L) throw() {
-  Frisket* gfk = lua_toobject(L,1,Frisket);
+int Frisket::Lua_MinFrisket(lua_State* L) restrict throw() {
+  Frisket*restrict gfk = lua_toobject(L,1,Frisket);
+  if(gfk == this) return luaL_error(L, "Source and destination Frisket must differ");
   switch(lua_gettop(L)) {
   case 3: MinFrisket(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
   case 7: MinFrisketRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
@@ -811,8 +821,9 @@ int Frisket::Lua_MinFrisket(lua_State* L) throw() {
   }
 }
 
-int Frisket::Lua_MaxFrisket(lua_State* L) throw() {
-  Frisket* gfk = lua_toobject(L,1,Frisket);
+int Frisket::Lua_MaxFrisket(lua_State* L) restrict throw() {
+  Frisket*restrict gfk = lua_toobject(L,1,Frisket);
+  if(gfk == this) return luaL_error(L, "Source and destination Frisket must differ");
   switch(lua_gettop(L)) {
   case 3: MaxFrisket(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
   case 7: MaxFrisketRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;

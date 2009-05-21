@@ -26,11 +26,11 @@ using namespace SubCritical;
 class FakeDrawable : public Drawable {
 public:
   PROTOCOL_PROTOTYPE();
-  FakeDrawable(Drawable* src, int x, int y, int w, int h);
+  FakeDrawable(Drawable*restrict src, int x, int y, int w, int h);
   virtual ~FakeDrawable();
 };
 
-FakeDrawable::FakeDrawable(Drawable* src, int x, int y, int w, int h) {
+FakeDrawable::FakeDrawable(Drawable*restrict src, int x, int y, int w, int h) {
   this->width = w;
   this->height = h;
   this->has_alpha = src->has_alpha;
@@ -50,7 +50,7 @@ PROTOCOL_IMP_PLAIN(FakeDrawable, Drawable);
 #define COOKIE ((void*)(Construct_FakeDrawable))
 
 SUBCRITICAL_CONSTRUCTOR(FakeDrawable)(lua_State* L) {
-  Drawable* src = lua_toobject(L, 1, Drawable);
+  Drawable*restrict src = lua_toobject(L, 1, Drawable);
   int x, y, w, h;
   x = luaL_optinteger(L, 2, 0);
   y = luaL_optinteger(L, 3, 0);
@@ -60,7 +60,7 @@ SUBCRITICAL_CONSTRUCTOR(FakeDrawable)(lua_State* L) {
   if(y < 0 || y >= src->height) return luaL_error(L, "y coordinate outside the source drawable");
   if(w <= 0 || x+w > src->width) return luaL_error(L, "bad width given source drawable");
   if(h <= 0 || y+h > src->height) return luaL_error(L, "bad height given source drawable");
-  FakeDrawable* ret = new FakeDrawable(src, x, y, w, h);
+  FakeDrawable*restrict ret = new FakeDrawable(src, x, y, w, h);
   if(!ret) return luaL_error(L, "bad puppy!");
   ret->Push(L);
   lua_pushlightuserdata(L, COOKIE);
