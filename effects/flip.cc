@@ -40,7 +40,7 @@ SUBCRITICAL_UTILITY(MirrorHorizontal)(lua_State* L) {
 
 SUBCRITICAL_UTILITY(MirrorVertical)(lua_State* L) {
   Graphic*restrict graphic = new Graphic(*lua_toobject(L, 1, Drawable));
-  Pixel** pt = graphic->rows, **pb = graphic->rows + graphic->height - 1, *sw;
+  Pixel*restrict* pt = graphic->rows, *restrict*pb = graphic->rows + graphic->height - 1, *sw;
   int rem = graphic->height / 2;
   UNROLL_MORE(rem,
 	      sw = *pt; *pt = *pb; *pb = sw;
@@ -61,7 +61,7 @@ SUBCRITICAL_UTILITY(Flip)(lua_State* L) {
 		*pr-- = *pl++;);
   }
   {
-    Pixel** pt = graphic->rows, **pb = graphic->rows + graphic->height - 1, *sw;
+    Pixel*restrict* pt = graphic->rows, *restrict*pb = graphic->rows + graphic->height - 1, *sw;
     int rem = graphic->height / 2;
     UNROLL_MORE(rem,
 		sw = *pt; *pt = *pb; *pb = sw;
