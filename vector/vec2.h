@@ -39,6 +39,12 @@ int Vec2::Magnitude(lua_State* L) {
   return 1;
 }
 
+int Vec2::Angle(lua_State* L) {
+  Scalar angle = atan2(y,x);
+  lua_pushnumber(L, angle);
+  return 1;
+}
+
 int Vec2::MagnitudeSquared(lua_State* L) {
   Scalar magnitude = x*x + y*y;
   lua_pushnumber(L, magnitude);

@@ -58,6 +58,7 @@ namespace SubCritical {
     int Normalize(lua_State* L);
     int Magnitude(lua_State* L);
     int MagnitudeSquared(lua_State* L);
+    int Angle(lua_State* L);
     Scalar x, y;
   };
   class LOCAL Vec3 : public Vector {
