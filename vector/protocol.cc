@@ -31,6 +31,7 @@ static const ObjectMethod V2M[] = {
   METHOD("normalize", &Vec2::Normalize),
   METHOD("Magnitude", &Vec2::Magnitude),
   METHOD("MagnitudeSquared", &Vec2::MagnitudeSquared),
+  METHOD("Angle", &Vec2::Angle),
   NOMOREMETHODS(),
 };
 static const ObjectMethod V3M[] = {
