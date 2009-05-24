@@ -7,6 +7,9 @@ class Vector
 class Vec2 : Vector concrete
 class Vec3 : Vector concrete
 class Vec4 : Vector concrete
+
+class VectorArray concrete
+
 class Matrix
 class Mat2x2 : Matrix concrete
 class Mat2x3 : Matrix concrete
@@ -19,4 +22,6 @@ class Mat4x3 : Matrix concrete
 class Mat4x4 : Matrix concrete
 
 utility CompileVectors
+utility CompileVectorArray
 utility PerspectiveCompileVectors
+utility PerspectiveCompileVectorArray

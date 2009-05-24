@@ -21,10 +21,13 @@
 
 #include "vector.h"
 
+#include <stdlib.h>
+#include <new>
+
 using namespace SubCritical;
 
-PROTOCOL_IMP_PLAIN(MatrixOrVector, Object);
-PROTOCOL_IMP_PLAIN(Vector, MatrixOrVector);
+PROTOCOL_IMP_PLAIN(MatrixOrVectorOrVectorArray, Object);
+PROTOCOL_IMP_PLAIN(Vector, MatrixOrVectorOrVectorArray);
 
 static const ObjectMethod V2M[] = {
   METHOD("Normalize", &Vec2::Normalize),
@@ -61,16 +64,36 @@ PROTOCOL_IMP(Vec2, Vector, V2M);
 PROTOCOL_IMP(Vec3, Vector, V3M);
 PROTOCOL_IMP(Vec4, Vector, V4M);
 
-PROTOCOL_IMP_PLAIN(Matrix, MatrixOrVector);
-PROTOCOL_IMP_PLAIN(Mat2x2, Matrix);
-PROTOCOL_IMP_PLAIN(Mat2x3, Matrix);
-PROTOCOL_IMP_PLAIN(Mat2x4, Matrix);
-PROTOCOL_IMP_PLAIN(Mat3x2, Matrix);
-PROTOCOL_IMP_PLAIN(Mat3x3, Matrix);
-PROTOCOL_IMP_PLAIN(Mat3x4, Matrix);
-PROTOCOL_IMP_PLAIN(Mat4x2, Matrix);
-PROTOCOL_IMP_PLAIN(Mat4x3, Matrix);
-PROTOCOL_IMP_PLAIN(Mat4x4, Matrix);
+PROTOCOL_IMP_PLAIN(VectorArray, MatrixOrVectorOrVectorArray);
+
+#define SMALLMETHODS(Mat) \
+  METHOD("MultiplyAndCompile", &Mat::MultiplyAndCompile),
+#define LARGEMETHODS(Mat) \
+  METHOD("PerspectiveMultiplyAndCompile", &Mat::PerspectiveMultiplyAndCompile),
+#define MAT_METHODS_FULL(Mat) \
+static const ObjectMethod Met_##Mat[] = { \
+SMALLMETHODS(Mat) \
+LARGEMETHODS(Mat) \
+  NOMOREMETHODS(), \
+}; \
+PROTOCOL_IMP(Mat, Matrix, Met_##Mat)
+#define MAT_METHODS_SMALL(Mat) \
+static const ObjectMethod Met_##Mat[] = { \
+SMALLMETHODS(Mat) \
+  NOMOREMETHODS(), \
+}; \
+PROTOCOL_IMP(Mat, Matrix, Met_##Mat)
+
+PROTOCOL_IMP_PLAIN(Matrix, MatrixOrVectorOrVectorArray);
+MAT_METHODS_SMALL(Mat2x2);
+MAT_METHODS_SMALL(Mat2x3);
+MAT_METHODS_SMALL(Mat2x4);
+MAT_METHODS_FULL(Mat3x2);
+MAT_METHODS_FULL(Mat3x3);
+MAT_METHODS_FULL(Mat3x4);
+MAT_METHODS_FULL(Mat4x2);
+MAT_METHODS_FULL(Mat4x3);
+MAT_METHODS_FULL(Mat4x4);
 
 Vector::Vector(int n) : n(n) {}
 Vec2::Vec2() : Vector(2) {}
@@ -79,6 +102,18 @@ Vec3::Vec3() : Vector(3) {}
 Vec3::Vec3(Scalar x, Scalar y, Scalar z) : Vector(3), x(x), y(y), z(z) {}
 Vec4::Vec4() : Vector(4) {}
 Vec4::Vec4(Scalar x, Scalar y, Scalar z, Scalar w) : Vector(4), x(x), y(y), z(z), w(w) {}
+
+VectorArray::VectorArray(uint32_t order, uint32_t count) : order(order),count(count) {
+  buffer = (Scalar*)calloc(order*sizeof(Scalar), count);
+  if(!buffer) throw std::bad_alloc();
+}
+VectorArray::~VectorArray() {
+  if(buffer) {
+    free(buffer);
+    buffer = NULL;
+  }
+}
+
 Matrix::Matrix(int r, int c) : r(r),c(c) {}
 
 SUBCRITICAL_CONSTRUCTOR(Vec2)(lua_State* L) {
