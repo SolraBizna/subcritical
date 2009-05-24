@@ -78,7 +78,7 @@ static const op_Lvns vec_newindex[3] = {
 };
 
 LOCAL Vector* fromtabletovector(lua_State* L, int n) {
-  Vector* ret = NULL;
+  Vector* ret;
   int order = lua_objlen(L, n);
   switch(order) {
   case 2:
@@ -104,6 +104,7 @@ LOCAL Vector* fromtabletovector(lua_State* L, int n) {
     break;
   default:
     luaL_typerror(L, n, "table with 2, 3, or 4 elements");
+    return NULL; /*NOTREACHED*/
   }
   return ret;
 }

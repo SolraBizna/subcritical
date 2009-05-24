@@ -32,6 +32,7 @@ static const ObjectMethod V2M[] = {
   METHOD("Magnitude", &Vec2::Magnitude),
   METHOD("MagnitudeSquared", &Vec2::MagnitudeSquared),
   METHOD("Angle", &Vec2::Angle),
+  METHOD("AngleXY", &Vec2::Angle),
   NOMOREMETHODS(),
 };
 static const ObjectMethod V3M[] = {
@@ -39,6 +40,10 @@ static const ObjectMethod V3M[] = {
   METHOD("normalize", &Vec3::Normalize),
   METHOD("Magnitude", &Vec3::Magnitude),
   METHOD("MagnitudeSquared", &Vec3::MagnitudeSquared),
+  METHOD("Angle", &Vec3::AngleXY),
+  METHOD("AngleXY", &Vec3::AngleXY),
+  METHOD("AngleXZ", &Vec3::AngleXZ),
+  METHOD("AngleYZ", &Vec3::AngleYZ),
   NOMOREMETHODS(),
 };
 static const ObjectMethod V4M[] = {
@@ -46,6 +51,10 @@ static const ObjectMethod V4M[] = {
   METHOD("normalize", &Vec4::Normalize),
   METHOD("Magnitude", &Vec4::Magnitude),
   METHOD("MagnitudeSquared", &Vec4::MagnitudeSquared),
+  METHOD("Angle", &Vec4::AngleXY),
+  METHOD("AngleXY", &Vec4::AngleXY),
+  METHOD("AngleXZ", &Vec4::AngleXZ),
+  METHOD("AngleYZ", &Vec4::AngleYZ),
   NOMOREMETHODS(),
 };
 PROTOCOL_IMP(Vec2, Vector, V2M);
