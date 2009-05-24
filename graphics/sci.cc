@@ -58,7 +58,7 @@ Graphic* SCILoader::Load(const char* name) throw() {
   width = Swap16_BE(width);
   height = Swap16_BE(height);
   Graphic* ret = new Graphic(width, height, little_endian ? FB_BGRx : FB_xRGB);
-  for(Pixel** p = ret->rows; p < ret->rows + height; ++p) {
+  for(Pixel*restrict* p = ret->rows; p < ret->rows + height; ++p) {
     if(fread(*p, width*sizeof(Pixel), 1, f) < 1) { fclose(f); delete ret; return NULL; }
   }
   ret->CheckAlpha();

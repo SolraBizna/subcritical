@@ -38,8 +38,8 @@ SUBCRITICAL_UTILITY(MakeFrisketFromAlpha)(lua_State* L) throw() {
   case FB_BGRx:
     ash = 0; break;
   }
-  Pixel** srcp;
-  Frixel** dstp;
+  Pixel*restrict* srcp;
+  Frixel*restrict* dstp;
   for(srcp = graphic->rows, dstp = ret->rows; srcp < graphic->rows + graphic->height; ++srcp, ++dstp) {
     Pixel* src = *srcp;
     Frixel* dst = *dstp;
@@ -79,8 +79,8 @@ SUBCRITICAL_UTILITY(MakeFrisketFromGrayscale)(lua_State* L) throw() {
     bsh = 24;
     break;
   }
-  Pixel** srcp;
-  Frixel** dstp;
+  Pixel*restrict* srcp;
+  Frixel*restrict* dstp;
   for(srcp = graphic->rows, dstp = ret->rows; srcp < graphic->rows + graphic->height; ++srcp, ++dstp) {
     Pixel* src = *srcp;
     Frixel* dst = *dstp;
@@ -121,8 +121,8 @@ SUBCRITICAL_UTILITY(MakeFrisketFromGrayscaleQuickly)(lua_State* L) throw() {
     bsh = 24;
     break;
   }
-  Pixel** srcp;
-  Frixel** dstp;
+  Pixel*restrict* srcp;
+  Frixel*restrict* dstp;
   for(srcp = graphic->rows, dstp = ret->rows; srcp < graphic->rows + graphic->height; ++srcp, ++dstp) {
     Pixel* src = *srcp;
     Frixel* dst = *dstp;
@@ -155,8 +155,8 @@ SUBCRITICAL_UTILITY(MakeFrisketFromRed)(lua_State* L) throw() {
     rsh = 8;
     break;
   }
-  Pixel** srcp;
-  Frixel** dstp;
+  Pixel*restrict* srcp;
+  Frixel*restrict* dstp;
   for(srcp = graphic->rows, dstp = ret->rows; srcp < graphic->rows + graphic->height; ++srcp, ++dstp) {
     Pixel* src = *srcp;
     Frixel* dst = *dstp;
@@ -184,8 +184,8 @@ SUBCRITICAL_UTILITY(MakeFrisketFromGreen)(lua_State* L) throw() {
     gsh = 16;
     break;
   }
-  Pixel** srcp;
-  Frixel** dstp;
+  Pixel*restrict* srcp;
+  Frixel*restrict* dstp;
   for(srcp = graphic->rows, dstp = ret->rows; srcp < graphic->rows + graphic->height; ++srcp, ++dstp) {
     Pixel* src = *srcp;
     Frixel* dst = *dstp;
@@ -217,8 +217,8 @@ SUBCRITICAL_UTILITY(MakeFrisketFromBlue)(lua_State* L) throw() {
     bsh = 24;
     break;
   }
-  Pixel** srcp;
-  Frixel** dstp;
+  Pixel*restrict* srcp;
+  Frixel*restrict* dstp;
   for(srcp = graphic->rows, dstp = ret->rows; srcp < graphic->rows + graphic->height; ++srcp, ++dstp) {
     Pixel* src = *srcp;
     Frixel* dst = *dstp;
@@ -246,8 +246,8 @@ SUBCRITICAL_UTILITY(MakeFrisketDirectly)(lua_State* L) throw() {
     gsh = 16;
     break;
   }
-  Pixel** srcp;
-  Frixel** dstp;
+  Pixel*restrict* srcp;
+  Frixel*restrict* dstp;
   for(srcp = graphic->rows, dstp = ret->rows; srcp < graphic->rows + graphic->height; ++srcp, ++dstp) {
     Pixel* src = *srcp;
     Frixel* dst = *dstp;
