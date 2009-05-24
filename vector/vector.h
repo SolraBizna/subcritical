@@ -69,6 +69,9 @@ namespace SubCritical {
     int Normalize(lua_State* L);
     int Magnitude(lua_State* L);
     int MagnitudeSquared(lua_State* L);
+    int AngleXY(lua_State* L);
+    int AngleXZ(lua_State* L);
+    int AngleYZ(lua_State* L);
     Scalar x, y, z;
   };
   class LOCAL Vec4 : public Vector {
@@ -79,6 +82,9 @@ namespace SubCritical {
     int Normalize(lua_State* L);
     int Magnitude(lua_State* L);
     int MagnitudeSquared(lua_State* L);
+    int AngleXY(lua_State* L);
+    int AngleXZ(lua_State* L);
+    int AngleYZ(lua_State* L);
     Scalar x, y, z, w;
   };
   class LOCAL Matrix : public MatrixOrVector {

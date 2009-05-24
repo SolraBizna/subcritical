@@ -14,7 +14,7 @@
 <h3 class="code"><a name="Vector" />Vector</h3>
 <p>There are three <span class="code">Vector</span> types. They are largely interchangeable; any <span class="code">Vector</span> may, unless otherwise specified, participate in any binary operation with any other <span class="code">Vector</span>, and may multiply any <span class="code">Matrix</span>.</p>
 <p>A <span class="code">Vector</span> type takes the form <span class="code">Vec<i>N</i></span>, with 2 &lt;= <i class="code">N</i> &lt;= 4. <i class="code">VecN</i> is an <i class="code">N</i>-element vector.</p>
-<p>Actually, <em>all</em> vectors are 4-element. A 2-element vector is actually pretending to be a 4-element vector like {<i class="code">x</i>,<i class="code">y</i>,0,1}, and a 3-element vector a 4-element vector like {<i class="code">x</i>,<i class="code">y</i>,<i class="code">z</i>,1}. Among other things, this means that if you only use <span class="code">Vec2</span> and <span class="code">Mat2x2</span>, no extra work is done. And, you can use <span class="code">Vec3</span> and <span class="code">Mat3x4</span> to implement all the useful 3D affine and linear transforms you'd expect coming from OpenGL or Direct3D.</p>
+<p>Actually, <em>all</em> vectors are 4-element. A 2-element vector is actually pretending to be a 4-element vector like {<i class="code">x</i>,<i class="code">y</i>,0,1}, and a 3-element vector a 4-element vector like {<i class="code">x</i>,<i class="code">y</i>,<i class="code">z</i>,1}. Among other things, this means that if you only use <span class="code">Vec2</span> and <span class="code">Mat2x2</span>, no extra work is done. And, you can use <span class="code">Vec3</span> and <span class="code">Mat3x4</span> to implement all the useful 3D affine and linear transforms you'd expect coming from OpenGL or Direct3D. (For that matter, you can use Vec2 and Mat2x4 and the third column of the matrix never even gets touched.)</p>
 <dl>
 <dt class="code"><i>vec</i> = SubCritical.Construct("Vec<i>N</i>")
 <i>vec</i> = SubCritical.Construct("Vec2", x, y)
@@ -45,9 +45,13 @@ local vector = SC.Construct(unpack(serial_table))</pre></dd>
 <dd>You can access individual elements of a <span class="code">Vector</span> with the above notations. You can also assign to them, as long as you do not assign elements that do not exist (e.g. doing "<span class="code">vec.z = 1</span>" on a <span class="code">Vec2</span>).</dd>
 <dt class="code"><i>magnitude</i> = <i>vector</i>:Magnitude()
 <i>magnitude_squared</i> = <i>vector</i>:MagnitudeSquared()</dt>
-<dd>Returns the <i class="code">magnitude</i> of the old <span class="code">Vector</span>. (The squared magnitude is simpler to calculate, and is useful in certain other calculations.)</dd>
-<dt class="code"><i>angle</i> = <i>vec2</i>:Angle()</dt>
-<dd>Returns the <i class="code">angle</i> of the old <span class="code">Vector</span>. (Note that this is only defined for two-dimensional Vectors.)</dd>
+<dd>Returns the <i class="code">magnitude</i> of the <span class="code">Vector</span>. (The squared magnitude is simpler to calculate, and is useful in certain other calculations.)</dd>
+<dt class="code"><i>angle</i> = <i>vec</i>:Angle() -- equivalent to AngleXY
+<i>angle</i> = <i>vec</i>:AngleXY() -- 2D angle
+-- The below functions are only defined on Vec3 and larger
+<i>angle</i> = <i>vec</i>:AngleXZ() -- 2D angle with Z mapped to Y
+<i>angle</i> = <i>vec</i>:AngleYZ() -- 2D angle with X and Y mapped to Y and Z</dt>
+<dd>Returns the <i class="code">angle</i> the <span class="code">Vector</span> "points" along.</dd>
 <dt class="code"><i>new_vector</i> = <i>old_vector</i>:Normalize()</dt>
 <dd>Returns a new <span class="code">Vector</span>, in the same direction as the old one, but with unit magnitude. (If the magnitude of the old vector was zero, the new vector will be zero rather than NAN.)</dd>
 </dl>
