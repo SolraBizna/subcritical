@@ -227,7 +227,7 @@ void Drawable::SetupDrawable(bool invert_y) throw() {
   int pitch = force_align(width);
   buffer = (Pixel*)calloc(1, pitch * height * sizeof(Pixel) + height * sizeof(Pixel*));
   assert(buffer);
-  rows = (Pixel**)(buffer + pitch * height);
+  rows = (Pixel*restrict*)(buffer + pitch * height);
   if(invert_y) for(Pixel*restrict* p = rows + height - 1; p >= rows; --p) {
     *p = buffer + pitch * (height - (p - rows) - 1);
   }
@@ -245,7 +245,7 @@ void Drawable::SetupDrawable(bool invert_y) throw() {
 void Drawable::SetupDrawable(void* buffer, int32_t pitch) throw() {
   assert(force_align(pitch) == pitch);
   this->buffer = (Pixel*)buffer;
-  rows = (Pixel*restrict*)calloc(sizeof(Pixel*), height);
+  rows = (Pixel**)calloc(sizeof(Pixel*), height);
   assert(rows);
   if(pitch < 0) for(Pixel*restrict* p = rows + height - 1; p >= rows; --p) {
     *p = this->buffer + -pitch * (height - (p - rows) - 1);
