@@ -11,6 +11,13 @@
 <p>The <tt>vector</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
 <p>This package contains classes implementing the subset of vector and matrix operations that are useful in 2D and 3D graphics.</p>
 <h2>Classes</h2>
+<h3 class="code"><a name="VectorArray" />VectorArray</h3>
+<p>This is simply a memory-efficient way to encapsulate many vectors. They can all be multiplied by matrices at the same time in parallel, as well. This class is only useful if you're writing low-level graphics routines instead of using someone else's.</p>
+<dl>
+<dt class="code"><i>array</i> = SubCritical.Construct("VectorArray", <i>table</i>)</dt>
+<dd>Construct a <span class="code">VectorArray</span> from <i class="code">table</i>. <i class="code">table</i> is an array of <a class="code" href="#Vector">Vectors</a>, all of the same size.</dd>
+</dt>
+</dl>
 <h3 class="code"><a name="Vector" />Vector</h3>
 <p>There are three <span class="code">Vector</span> types. They are largely interchangeable; any <span class="code">Vector</span> may, unless otherwise specified, participate in any binary operation with any other <span class="code">Vector</span>, and may multiply any <span class="code">Matrix</span>.</p>
 <p>A <span class="code">Vector</span> type takes the form <span class="code">Vec<i>N</i></span>, with 2 &lt;= <i class="code">N</i> &lt;= 4. <i class="code">VecN</i> is an <i class="code">N</i>-element vector.</p>
@@ -75,16 +82,26 @@ local matrix = SC.Construct(unpack(serial_table))</pre></dd>
 <dd>Create a <i class="code">new_matrix</i> containing the product of <i class="code">old_matrix_A</i> and <i class="code">old_matrix_B</i>. No matter what type of matrix would mathematically have resulted from this, the <i class="code">new_matrix</i> will always be as large in each dimension as the largest of the two old matrices. (3x4 * 4x4 = 4x4, 3x4 * 2x2 = 3x4, etc.)</dd>
 <dd>As stated above, matrices are treated as though they were top-left-aligned in 4x4 matrices with the remaining elements hardwired to be the identity matrix. Between that and the above note on matrix dimensions, don't expect to multiply a 3x2 matrix with a 2x3 matrix and get a 3x3 matrix.</dd>
 <dd>If you have two matrices defining an affine or linear transformation, you end up with a third matrix that is equivalent to applying both transformations in order.</dd>
-<dt class="code"><i>new_vector</i> = <i>matrix</i> * <i>old_vector</i></dt>
+<dt class="code"><i>new_vector</i> = <i>matrix</i> * <i>old_vector</i>
+<i>new_vector_array</i> = <i>matrix</i> * <i>old_vector_array</i></dt>
 <dd>Create a <i class="code">new_vector</i> containing the product of <i class="code">matrix</i> and <i class="code">old_vector</i> (as a row vector). The resulting vector will always have the same number of elements as the <i class="code">matrix</i> has rows. (This is useful because, for instance, all linear transformations from a 2D space into a 3D one fit into a <i class="code">Mat3x2</i>, and multiplying said matrix by a <i class="code">Vec2</i> will always result in a <i class="code">Vec3</i>.)</dd>
 <dd>Note that you must multiply the <em class="code">Matrix</em> by the <em class="code">Vector</em> and not the other way around.</dd>
+<dd>This can also be done to <a href="#VectorArray" class="code">VectorArrays</a>.</dd>
+<dt class="code"><i>coords</i> = <i>matrix</i>:MultiplyAndCompile(<i>array</i>, [<i>dx</i>, <i>dy</i>])
+<i>coords</i> = <i>matrix</i>:PerspectiveMultiplyAndCompile(<i>array</i>, [<i>dx</i>, <i>dy</i>])</dt>
+<dd>These are, respectively, equivalent (but somewhat superior in speed and memory efficiency) to:</dd>
+<pre><i>coords</i> = SCUtil.<a href="#CompileVectorArray">CompileVectorArray</a>(<i>matrix</i> * <i>array</i>, <i>dx</i>, <i>dy</i>)
+<i>coords</i> = SCUtil.<a href="#PerspectiveCompileVectorArray">PerspectiveCompileVectorArray</a>(<i>matrix</i> * <i>array</i>, <i>dx</i>, <i>dy</i>)</pre>
+<dd>Note that they must be <a href="#VectorArray" class="code">VectorArrays</a> and, in particular, can <em>not</em> be <span class="code">tables</span> of <a href="#Vector" class="code">Vectors</a>.</dd>
 </dl>
 <h2>Utility functions</h2>
 <dl>
-<dt class="code"><a name="CompileVectors" /><i>coords</i> = SCUtil.CompileVectors(<i>table</i>, [<i>dx</i>, <i>dy</i>])</dt>
-<dd><i class="code">table</i> is a table full of <a href="#Vector" class="code">Vector</a>s. <i class="code">coords</i> will be a <a href="graphics.html#CoordArray" class="code">CoordArray</a> corresponding to those points, optionally offsetted by the provided <i class="code">dx</i> and <i class="code">dy</i> terms.</dd>
-<dt class="code"><a name="PerspectiveCompileVectors" /><i>coords</i> = SCUtil.PerspectiveCompileVectors(<i>table</i>, [<i>dx</i>, <i>dy</i>])</dt>
-<dd><i class="code">table</i> is a table full of <a href="#Vector" class="code">Vector</a>s of 3 or more elements. <i class="code">coords</i> will be a <a href="graphics.html#CoordArray" class="code">CoordArray</a> corresponding to those points, divided by their Z coordinates and then optionally offsetted by the provided <i class="code">dx</i> and <i class="code">dy</i> terms.</dd>
+<dt class="code"><a name="CompileVectors" /><i>coords</i> = SCUtil.CompileVectors(<i>table</i>, [<i>dx</i>, <i>dy</i>])
+<a name="CompileVectorArray" /><i>coords</i> = SCUtil.CompileVectorArray(<i>array</i>, [<i>dx</i>, <i>dy</i>])</dt>
+<dd><i class="code">table</i> is a table full of <a href="#Vector" class="code">Vector</a>s, or <i class="code">array</i> is a <a class="code" href="#VectorArray">VectorArray</a>. <i class="code">coords</i> will be a <a href="graphics.html#CoordArray" class="code">CoordArray</a> corresponding to those points, optionally offsetted by the provided <i class="code">dx</i> and <i class="code">dy</i> terms.</dd>
+<dt class="code"><a name="PerspectiveCompileVectors" /><i>coords</i> = SCUtil.PerspectiveCompileVectors(<i>table</i>, [<i>dx</i>, <i>dy</i>])
+<a name="PerspectiveCompileVectors" /><i>coords</i> = SCUtil.PerspectiveCompileVectorArray(<i>array</i>, [<i>dx</i>, <i>dy</i>])</dt>
+<dd><i class="code">table</i> is a table full of <a href="#Vector" class="code">Vector</a>s of 3 or more elements, or <i class="code">array</i> is a <a class="code" href="#VectorArray">VectorArray</a> of same. <i class="code">coords</i> will be a <a href="graphics.html#CoordArray" class="code">CoordArray</a> corresponding to those points, divided by their Z coordinates and then optionally offsetted by the provided <i class="code">dx</i> and <i class="code">dy</i> terms.</dd>
 </dl>
 <p><a href="index.html">Back to index</a></p>
 </body>

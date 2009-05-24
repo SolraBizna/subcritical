@@ -37,11 +37,11 @@
 
 namespace SubCritical {
   typedef lua_Number Scalar;
-  class LOCAL MatrixOrVector : public Object {
+  class LOCAL MatrixOrVectorOrVectorArray : public Object {
   public:
     PROTOCOL_PROTOTYPE();
   };
-  class LOCAL Vector : public MatrixOrVector {
+  class LOCAL Vector : public MatrixOrVectorOrVectorArray {
   public:
     PROTOCOL_PROTOTYPE();
     Vector(int n);
@@ -87,7 +87,15 @@ namespace SubCritical {
     int AngleYZ(lua_State* L);
     Scalar x, y, z, w;
   };
-  class LOCAL Matrix : public MatrixOrVector {
+  class LOCAL VectorArray : public Object {
+  public:
+    PROTOCOL_PROTOTYPE();
+    VectorArray(uint32_t order, uint32_t count);
+    ~VectorArray();
+    uint32_t order, count;
+    Scalar* buffer;
+  };
+  class LOCAL Matrix : public MatrixOrVectorOrVectorArray {
   public:
     PROTOCOL_PROTOTYPE();
     Matrix(int r, int c);
@@ -98,6 +106,7 @@ namespace SubCritical {
     PROTOCOL_PROTOTYPE();
     Mat2x2();
     Mat2x2(Scalar[2*2]);
+    int MultiplyAndCompile(lua_State* L);
     Scalar xx, yx,
            xy, yy;
   };
@@ -106,6 +115,7 @@ namespace SubCritical {
     PROTOCOL_PROTOTYPE();
     Mat2x3();
     Mat2x3(Scalar[2*3]);
+    int MultiplyAndCompile(lua_State* L);
     Scalar xx, yx,
            xy, yy,
            xz, yz;
@@ -115,6 +125,7 @@ namespace SubCritical {
     PROTOCOL_PROTOTYPE();
     Mat2x4();
     Mat2x4(Scalar[2*4]);
+    int MultiplyAndCompile(lua_State* L);
     Scalar xx, yx,
            xy, yy,
            xz, yz,
@@ -125,6 +136,8 @@ namespace SubCritical {
     PROTOCOL_PROTOTYPE();
     Mat3x2();
     Mat3x2(Scalar[3*2]);
+    int MultiplyAndCompile(lua_State* L);
+    int PerspectiveMultiplyAndCompile(lua_State* L);
     Scalar xx, yx, zx,
            xy, yy, zy;
   };
@@ -133,6 +146,8 @@ namespace SubCritical {
     PROTOCOL_PROTOTYPE();
     Mat3x3();
     Mat3x3(Scalar[3*3]);
+    int MultiplyAndCompile(lua_State* L);
+    int PerspectiveMultiplyAndCompile(lua_State* L);
     Scalar xx, yx, zx,
            xy, yy, zy,
            xz, yz, zz;
@@ -142,6 +157,8 @@ namespace SubCritical {
     PROTOCOL_PROTOTYPE();
     Mat3x4();
     Mat3x4(Scalar[3*4]);
+    int MultiplyAndCompile(lua_State* L);
+    int PerspectiveMultiplyAndCompile(lua_State* L);
     Scalar xx, yx, zx,
            xy, yy, zy,
            xz, yz, zz,
@@ -152,6 +169,8 @@ namespace SubCritical {
     PROTOCOL_PROTOTYPE();
     Mat4x2();
     Mat4x2(Scalar[4*2]);
+    int MultiplyAndCompile(lua_State* L);
+    int PerspectiveMultiplyAndCompile(lua_State* L);
     Scalar xx, yx, zx, wx,
            xy, yy, zy, wy;
   };
@@ -160,6 +179,8 @@ namespace SubCritical {
     PROTOCOL_PROTOTYPE();
     Mat4x3();
     Mat4x3(Scalar[4*3]);
+    int MultiplyAndCompile(lua_State* L);
+    int PerspectiveMultiplyAndCompile(lua_State* L);
     Scalar xx, yx, zx, wx,
            xy, yy, zy, wy,
            xz, yz, zz, wz;
@@ -169,6 +190,8 @@ namespace SubCritical {
     PROTOCOL_PROTOTYPE();
     Mat4x4();
     Mat4x4(Scalar[4*4]);
+    int MultiplyAndCompile(lua_State* L);
+    int PerspectiveMultiplyAndCompile(lua_State* L);
     Scalar xx, yx, zx, wx,
            xy, yy, zy, wy,
            xz, yz, zz, wz,

@@ -73,3 +73,90 @@ static int C4(mat_unpack_,A,x,B)(lua_State* L, const LEFT& a) {
 #include "splat_c.h"
 #undef SPLAT_C
 
+static VectorArray*restrict C4(mat_mul_,A,B,_VA)(const LEFT&restrict a, const VectorArray*restrict b) {
+  VectorArray*restrict ret = new VectorArray(b->order, b->count);
+  switch(b->order) {
+  case 2:
+    for(uint32_t n = 0; n < b->count*2; n += 2) {
+      C4(mat_mul_,A,B,_D2)(a, b->buffer+n, ret->buffer+n);
+    }
+    break;
+  case 3:
+    for(uint32_t n = 0; n < b->count*3; n += 3) {
+      C4(mat_mul_,A,B,_D3)(a, b->buffer+n, ret->buffer+n);
+    }
+    break;
+  case 4:
+    for(uint32_t n = 0; n < b->count*4; n += 4) {
+      C4(mat_mul_,A,B,_D4)(a, b->buffer+n, ret->buffer+n);
+    }
+    break;
+  default:
+    fprintf(stderr, "This is so weird it isn't even worth attempting to recover from.\n");
+    throw 3.1415926535897932384626;
+  }
+  return ret;
+}
+
+LOCAL int C4(Mat,A,x,B)::MultiplyAndCompile(lua_State* L) {
+  VectorArray* b = lua_toobject(L, 1, VectorArray);
+  Fixed dx, dy;
+  dx = F_TO_Q(luaL_optnumber(L, 2, 0));
+  dy = F_TO_Q(luaL_optnumber(L, 3, 0));
+  CoordArray* ret = new CoordArray(b->count);
+  lua_settop(L, 1);
+  ret->Push(L);
+  Scalar buffer[4];
+  Fixed* out = ret->coords;
+  Scalar* in = b->buffer;
+  for(uint32_t n = 0; n < b->count; ++n) {
+    switch(b->order) {
+    case 2: C4(mat_mul_,A,B,_D2)(*this, in, buffer); break;
+    case 3: C4(mat_mul_,A,B,_D3)(*this, in, buffer); break;
+    case 4: C4(mat_mul_,A,B,_D4)(*this, in, buffer); break;
+    default:
+      fprintf(stderr, "This is so weird it isn't even worth attempting to recover from.\n");
+      throw 3.1415926535897932384626;
+    }
+    *out++ = F_TO_Q(buffer[0]) + dx;
+    *out++ = F_TO_Q(buffer[1]) + dy;
+    in += b->order;
+  }
+  return 1;
+}
+
+#if A >= 3
+LOCAL int C4(Mat,A,x,B)::PerspectiveMultiplyAndCompile(lua_State* L) {
+  VectorArray* b = lua_toobject(L, 1, VectorArray);
+  Fixed dx, dy;
+  dx = F_TO_Q(luaL_optnumber(L, 2, 0));
+  dy = F_TO_Q(luaL_optnumber(L, 3, 0));
+  CoordArray* ret = new CoordArray(b->count);
+  lua_settop(L, 1);
+  ret->Push(L);
+  Scalar buffer[4];
+  Fixed* out = ret->coords;
+  Scalar* in = b->buffer;
+  for(uint32_t n = 0; n < b->count; ++n) {
+    switch(b->order) {
+    case 2: C4(mat_mul_,A,B,_D2)(*this, in, buffer); break;
+    case 3: C4(mat_mul_,A,B,_D3)(*this, in, buffer); break;
+    case 4: C4(mat_mul_,A,B,_D4)(*this, in, buffer); break;
+    default:
+      fprintf(stderr, "This is so weird it isn't even worth attempting to recover from.\n");
+      throw 3.1415926535897932384626;
+    }
+    Scalar rz;
+    if(buffer[2] == 0 || (rz = 1 / buffer[2]) == 0) {
+      *out++ = (buffer[0] > 0 ? 16777216 : -16777216) + dx;
+      *out++ = (buffer[1] > 0 ? 16777216 : -16777216) + dy;
+    }
+    else {
+      *out++ = F_TO_Q(buffer[0] * rz) + dx;
+      *out++ = F_TO_Q(buffer[1] * rz) + dy;
+    }
+    in += b->order;
+  }
+  return 1;
+}
+#endif
