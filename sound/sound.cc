@@ -203,6 +203,7 @@ public:
       switch(target_type) {
       default: break; // NOTREACHED
       case SoundOpcode::PlayStream:
+	memset(aux, 0, frames_left*sizeof(Frame));
 	((SoundStream*)target)->Mix(aux, frames_left);
 	for(Frame* p = aux;
 	    frames_left > 0; --frames_left, --delay, --frames, ++p, ++buffer) {
