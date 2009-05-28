@@ -31,9 +31,9 @@ rng = SC.Construct("RNG", bytes(my_string))</pre></dd>
 <dt class="code"><i>number</i> = <i>rng</i>:Random()</dt>
 <dd>Returns a random number such that 0 <= <i class="code">number</i> < 1.</dd>
 <dt class="code"><i>number</i> = <i>rng</i>:Random(<i>max</i>)</dt>
-<dd>Returns a random integer such that 1 <= <i class="code">number</i> <= <i class="code">max</i>. If <i class="code">max</i> <= 1, this will not behave in a happy way.</dd>
+<dd>Returns a random integer such that 1 <= <i class="code">number</i> <= <i class="code">max</i>. If <i class="code">max</i> <= 1, this will return 1.</dd>
 <dt class="code"><i>number</i> = <i>rng</i>:Random(<i>min</i>, <i>max</i>)</dt>
-<dd>Returns a random integer such that <i class="code">min</i> <= <i class="code">number</i> <= <i class="code">max</i>. If either <i class="code">min</i> or <i class="code">max</i> < 0, or if <i class="code">min</i>-<i class="code">max</i> < 1, this will not behave in a happy way.<br>(Instead of <span class="code"><i>rng</i>:Random(-10,10)</span>, try <span class="code"><i>rng</i>:Random(0,20)-10</span>)</dd>
+<dd>Returns a random integer such that <i class="code">min</i> <= <i class="code">number</i> <= <i class="code">max</i>. If either <i class="code">min</i> or <i class="code">max</i> < 0, or if <i class="code">min</i>-<i class="code">max</i> < 1, this will return the smaller of its two parameters.</dd>
 </dl>
 <h3 class="code"><a name="SFMT19937">SFMT19937</a> : <a href="#RNG">RNG</a></h3>
 <p><tt>SFMT19937</tt> is a interface to the reference implementation of Mutsuo Saito's and Makoto Matsumoto's <a href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/index.html">SIMD-oriented Fast Mersenne Prime Twister</a> with a period of 2<sup>19937</sup>-1. (This is a VERY big number, so this is likely to be sufficient for any SubCritical games.) It has good statistical properties, and good performance. The adventurous may try their hand at compiling the included AltiVec- or SSE2-enabled codepaths. (The machine this package was developed on is capable of neither.)</p>

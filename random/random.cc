@@ -45,18 +45,22 @@ int RNG::Lua_Random(lua_State* L) throw() {
     break;
   case 1:
     {
-      long long n = (uint32_t)luaL_checkinteger(L, 1);
-      if(n <= 0) return luaL_error(L, "silly random number range");
-      else if(n == 1) lua_pushnumber(L, 1);
-      else lua_pushnumber(L, Random32() % n + 1);
+      double n = (double)luaL_checkinteger(L, 1);
+      if(n <= 1) lua_pushnumber(L, 1);
+      else lua_pushnumber(L, Random32() % (uint32_t)n + 1);
     }
     break;
   case 2:
     {
-      long long bot = luaL_checkinteger(L, 1), top = luaL_checkinteger(L, 2);
-      if(top-bot < 0) return luaL_error(L, "silly random number range");
-      else if(top-bot == 0) lua_pushnumber(L, bot);
-      else lua_pushnumber(L, Random32() % (top-bot+1) + bot);
+      double bot = (double)luaL_checkinteger(L, 1), top = (double)luaL_checkinteger(L, 2);
+      if(top < bot) {
+	double x;
+	x = bot; bot = top; top = x;
+      }
+      top = top + 1;
+      double range=top-bot;
+      if(range <= 1) lua_pushnumber(L, bot);
+      else lua_pushnumber(L, fmod((double)Random32(), range) + (double)bot);
       break;
     }
   default:
