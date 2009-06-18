@@ -275,6 +275,12 @@ LUA_EXPORT int Init_core(lua_State* L) {
   return 0;
 }
 
+#if HAVE_WINDOWS
+#define SLASH '\\'
+#else
+#define SLASH '/'
+#endif
+
 Path::Path(const char* path, bool copy) : shouldfree(copy) {
   if(copy) {
     size_t l = strlen(path) + 1;
@@ -282,6 +288,9 @@ Path::Path(const char* path, bool copy) : shouldfree(copy) {
     memcpy(this->path, path, l);
   }
   else this->path = const_cast<char*>(path);
+  filep = strrchr(this->path, SLASH);
+  if(filep && *filep) ++filep;
+  else filep = this->path;
 }
 
 Path::~Path() {
@@ -293,6 +302,11 @@ int Path::Lua_GetPath(lua_State* L) const throw() {
   return 1;
 }
 
+int Path::Lua_GetFilename(lua_State* L) const throw() {
+  lua_pushstring(L, filep);
+  return 1;
+}
+
 SUBCRITICAL_CONSTRUCTOR(Path)(lua_State* L) {
   (new Path(luaL_checkstring(L, 1)))->Push(L);
   return 1;
@@ -300,6 +314,7 @@ SUBCRITICAL_CONSTRUCTOR(Path)(lua_State* L) {
 
 static const struct ObjectMethod PathMethods[] = {
   METHOD("GetPath", &Path::Lua_GetPath),
+  METHOD("GetFilename", &Path::Lua_GetFilename),
   NOMOREMETHODS(),
 };
 PROTOCOL_IMP(Path, Object, PathMethods);

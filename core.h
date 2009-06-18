@@ -126,10 +126,12 @@ const ObjectProtocol* class::GetProtocol() const throw() { \
     Path(const char* path, bool copy = true);
     inline const char* GetPath() const throw() { return path; }
     int Lua_GetPath(lua_State* L) const throw();
+    inline const char* GetFilename() const throw() { return filep; }
+    int Lua_GetFilename(lua_State* L) const throw();
     virtual ~Path();
     PROTOCOL_PROTOTYPE();
   private:
-    char* path;
+    char* path, *filep;
     bool shouldfree;
   };
   // convenience function

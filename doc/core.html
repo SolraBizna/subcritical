@@ -26,6 +26,8 @@
 <dd>Please use <tt><a href="subcritical.html">SubCritical</a>.<a href="subcritical.html#ConstructPath">ConstructPath</a></tt> instead.</dd>
 <dt class="code"><a name="Path:GetPath" /><i>raw_path</i> = <i>path</i>:GetPath()</dt>
 <dd>Returns the "raw" platform-specific path. You normally do not need this function, since io.open is encapsulated by SubCritical.</dd>
+<dt class="code"><a name="Path:GetFilename" /><i>filename</i> = <i>path</i>:GetFilename()</dt>
+<dd>Returns only the filename portion of this path. This is more useful than the above, especially when dealing with a path you didn't hardcode (such as one from a directory listing).</dd>
 </dl>
 <p><a href="index.html">Back to index</a></p>
 </body>
