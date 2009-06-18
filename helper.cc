@@ -93,6 +93,43 @@ static int f_listfiles(lua_State* L) {
   return 1;
 }
 
+static int f_listfiles_plusdirs(lua_State* L) {
+  struct dirent* ent;
+  const char* ext = luaL_checkstring(L, 2);
+  DIR* dir = opendir(luaL_checkstring(L, 1));
+  size_t extlen = strlen(ext);
+  int i, j;
+  if(!dir) return 0;
+  lua_newtable(L);
+  lua_newtable(L);
+  i = 1; j = 1;
+  while((ent = readdir(dir))) {
+    struct stat buf;
+    if(ent->d_name[1] == '.') continue;
+    lua_pushvalue(L, 1);
+    lua_pushstring(L, ent->d_name);
+    lua_concat(L, 2);
+    const char* path = lua_tostring(L, -1);
+    if(!stat(path, &buf)) {
+      lua_pop(L, 1);
+      if(S_ISDIR(buf.st_mode)) {
+	lua_pushstring(L, ent->d_name);
+	lua_rawseti(L, -2, j++);
+      }
+      else {
+	// it may not be a regular file, but let's treat it like one anyway
+	if(strlen(ent->d_name) < extlen) continue; // lol
+	if(strcasecmp(ent->d_name + strlen(ent->d_name) - extlen, ext)) continue;
+	lua_pushstring(L, ent->d_name);
+	lua_rawseti(L, -3, i++);
+      }
+    }
+    else lua_pop(L, 1);
+  }
+  closedir(dir);
+  return 2;
+}
+
 #if HAVE_WINDOWS
 static const char* dlerror() {
   int error = GetLastError();
@@ -347,6 +384,7 @@ static int f_parsecmdline(lua_State* L) {
 
 static const luaL_Reg regs[] = {
   {"listfiles", f_listfiles},
+  {"listfiles_plusdirs", f_listfiles_plusdirs},
   {"dlopen", f_dlopen},
   {"dlsym", f_dlsym},
   {"chdir", f_chdir},
