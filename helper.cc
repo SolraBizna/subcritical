@@ -82,7 +82,7 @@ static int f_listfiles(lua_State* L) {
   if(!dir) return 1;
   i = lua_objlen(L, -1) + 1;
   while((ent = readdir(dir))) {
-    if(strlen(ent->d_name) < extlen) continue; // lol
+    if(strlen(ent->d_name) < extlen || ent->d_name[0] == '.') continue; // lol
     if(strcasecmp(ent->d_name + strlen(ent->d_name) - extlen, ext)) continue;
     lua_pushvalue(L, 1);
     lua_pushstring(L, ent->d_name);
@@ -105,7 +105,7 @@ static int f_listfiles_plusdirs(lua_State* L) {
   i = 1; j = 1;
   while((ent = readdir(dir))) {
     struct stat buf;
-    if(ent->d_name[1] == '.') continue;
+    if(ent->d_name[0] == '.') continue;
     lua_pushvalue(L, 1);
     lua_pushstring(L, ent->d_name);
     lua_concat(L, 2);
