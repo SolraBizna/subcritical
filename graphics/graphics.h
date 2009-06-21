@@ -102,6 +102,7 @@ namespace SubCritical {
     void BlitFrisket(const Frisket*, int dx, int dy) throw();
     int Lua_BlitFrisket(lua_State* L) throw();
     void SetPrimitiveColor(lua_Number r, lua_Number g, lua_Number b, lua_Number a) throw();
+    void SetPrimitiveColorPremul(lua_Number r, lua_Number g, lua_Number b, lua_Number a) throw();
     void DrawPoints(int size, const Fixed* coords, size_t pointcount) throw();
     void DrawLines(lua_Number width, lua_Number height, const Fixed* coords, const Index* indices, size_t indexcount) throw();
     void DrawLineStrip(lua_Number width, lua_Number height, const Fixed* coords, const Index* indices, size_t indexcount) throw();
@@ -110,6 +111,7 @@ namespace SubCritical {
     void DrawTriangleStrip(const Fixed* coords, const Index* indices, size_t indexcount) throw();
     void DrawTriangleFan(const Fixed* coords, const Index* indices, size_t indexcount) throw();
     int Lua_SetPrimitiveColor(lua_State* L) throw();
+    int Lua_SetPrimitiveColorPremul(lua_State* L) throw();
     int Lua_DrawPoints(lua_State* L) throw();
     int Lua_DrawLines(lua_State* L) throw();
     int Lua_DrawLineStrip(lua_State* L) throw();
@@ -143,7 +145,7 @@ namespace SubCritical {
     int clip_left, clip_top, clip_right, clip_bottom;
     bool primitive_alpha;
     Pixel op_p;
-    uint16_t tr_r, tr_g, tr_b, tr_a;
+    uint16_t tr_r, tr_g, tr_b; uint32_t tr_a;
     uint16_t trf_r, trf_g, trf_b, trf_a;
     uint8_t rsh, gsh, bsh, ash;
     //LOCAL void DrawSpan(int y, Fixed l, Fixed r);

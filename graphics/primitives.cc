@@ -171,15 +171,45 @@ void Drawable::SetPrimitiveColor(lua_Number r, lua_Number g, lua_Number b, lua_N
   }
   else {
     primitive_alpha = true;
-    tr_r = linear_F_to_linear_16p((float)r, (float)a);
-    tr_g = linear_F_to_linear_16p((float)g, (float)a);
-    tr_b = linear_F_to_linear_16p((float)b, (float)a);
+    tr_r = linear_F_to_linear_16p((float)r,(float)a);
+    tr_g = linear_F_to_linear_16p((float)g,(float)a);
+    tr_b = linear_F_to_linear_16p((float)b,(float)a);
     trf_r = linear_F_to_linear_16((float)r);
     trf_g = linear_F_to_linear_16((float)g);
     trf_b = linear_F_to_linear_16((float)b);
     trf_a = linear_F_to_linear_16a((float)a);
-    if(trf_a == 0) tr_a = 0;
-    else tr_a = 65536 - trf_a;
+    tr_a = 65536 - trf_a;
+  }
+}
+
+void Drawable::SetPrimitiveColorPremul(lua_Number r, lua_Number g, lua_Number b, lua_Number a) throw() {
+  if(a >= 1.0) {
+    int op_r, op_g, op_b;
+    primitive_alpha = false;
+    op_r = linear_F_to_nonlinear_8((float)r);
+    op_g = linear_F_to_nonlinear_8((float)g);
+    op_b = linear_F_to_nonlinear_8((float)b);
+    trf_r = linear_F_to_linear_16((float)r);
+    trf_g = linear_F_to_linear_16((float)g);
+    trf_b = linear_F_to_linear_16((float)b);
+    op_p = (op_r << rsh) | (op_g << gsh) | (op_b << bsh);
+  }
+  else {
+    primitive_alpha = true;
+    tr_r = linear_F_to_linear_16((float)r);
+    tr_g = linear_F_to_linear_16((float)g);
+    tr_b = linear_F_to_linear_16((float)b);
+    trf_r = linear_F_to_linear_16((float)r);
+    trf_g = linear_F_to_linear_16((float)g);
+    trf_b = linear_F_to_linear_16((float)b);
+    if(a >= 0.0) {
+      trf_a = linear_F_to_linear_16a((float)a);
+      tr_a = 65536 - trf_a;
+    }
+    else {
+      trf_a = 0;
+      tr_a = 65536;
+    }
   }
 }
 
@@ -191,6 +221,17 @@ int Drawable::Lua_SetPrimitiveColor(lua_State* L) throw() {
   b = luaL_checknumber(L, 3);
   a = luaL_optnumber(L, 4, 1.0);
   SetPrimitiveColor(r, g, b, a);
+  return 0;
+}
+
+int Drawable::Lua_SetPrimitiveColorPremul(lua_State* L) throw() {
+  if(has_alpha) return luaL_error(L, "Graphics with alpha channels cannot be modified with this function.");
+  lua_Number r, g, b, a;
+  r = luaL_checknumber(L, 1);
+  g = luaL_checknumber(L, 2);
+  b = luaL_checknumber(L, 3);
+  a = luaL_optnumber(L, 4, 1.0);
+  SetPrimitiveColorPremul(r, g, b, a);
   return 0;
 }
 
