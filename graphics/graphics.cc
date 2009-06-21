@@ -837,6 +837,7 @@ static const struct ObjectMethod DMethods[] = {
   METHOD("GetClipRect", &Drawable::Lua_GetClipRect),
   METHOD("SetClipRect", &Drawable::Lua_SetClipRect),
   METHOD("SetPrimitiveColor", &Drawable::Lua_SetPrimitiveColor),
+  METHOD("SetPrimitiveColorPremul", &Drawable::Lua_SetPrimitiveColorPremul),
   METHOD("DrawBox", &Drawable::Lua_DrawBox),
   METHOD("DrawRect", &Drawable::Lua_DrawRect),
   METHOD("DrawPoints", &Drawable::Lua_DrawPoints),
