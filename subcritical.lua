@@ -532,6 +532,35 @@ function subcritical.ConstructPath(path, level)
       return construct_specific("Path", path)
    end
 end
+function SubCritical.ListFiles(extension, dirpath)
+   dirpath = dirpath or SubCritical.Path(".", 3)
+   local rawpath = dirpath:GetPath() .. dirsep
+   local ret = {}
+   local files = helper.listfiles(rawpath, extension)
+   table.sort(files)
+   for n=1,#files do
+      ret[n] = SubCritical.Construct("Path", rawpath..files[n])
+   end
+   return ret
+end
+function SubCritical.ListFilesRecursive(extension, dirpath)
+   dirpath = dirpath or SubCritical.Path(".", 3)
+   local rawpath = dirpath:GetPath() .. dirsep
+   local ret = {}
+   local function read_dir(path)
+      local files,dirs = helper.listfiles_plusdirs(path, extension)
+      table.sort(files)
+      table.sort(dirs)
+      for n=1,#dirs do
+	 read_dir(path..dirs[n]..dirsep)
+      end
+      for n=1,#files do
+	 ret[#ret+1] = SubCritical.Construct("Path", path..files[n])
+      end
+   end
+   read_dir(rawpath)
+   return ret
+end
 -- more aliases
 subcritical.Path = subcritical.ConstructPath
 scpath,SCPath,P = subcritical.Path,subcritical.Path,subcritical.Path
