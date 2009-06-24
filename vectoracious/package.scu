@@ -1,0 +1,238 @@
+--[[
+  This source file is part of the SubCritical distribution.
+  Copyright (C) 2008 Solra Bizna.
+
+  SubCritical is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Lesser General Public License as
+  published by the Free Software Foundation, either version 2 of the
+  License, or (at your option) any later version.
+
+  SubCritical is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Lesser General Public License for more details.
+
+  You should have received a copy of both the GNU General Public
+  License and the GNU Lesser General Public License along with
+  SubCritical.  If not, see <http://www.gnu.org/licenses/>.
+
+  Please see doc/license.html for clarifications.
+]]
+
+local pi,pi2 = math.pi,math.pi*2
+
+vgl = {}
+vectoracious = vgl
+
+function vgl.instantiate(instance)
+   local ret = {}
+   for k,v in pairs(instance) do ret[k] = v end
+   return ret
+end
+
+local vgl_instance = {}
+function vgl.init(params)
+   local ret = vgl.instantiate(vgl_instance)
+   local aax = params.aax or params.aa or 1
+   local aay = params.aay or params.aa or 1
+   local aa = (aax ~= 1) or (aay ~= 1)
+   ret.aax,ret.aay,ret.aa = aax,aay,aa
+   local target = params.target
+   local canvas
+   if not target then
+      if params.width and params.height then
+	 target = SC.Construct("Graphic", params.width, params.height)
+      else
+	 error("Vectoracious inited with neither a target Drawable nor a width/height with which we could create one.")
+      end
+   else
+      if screen and screen ~= params.target then
+	 params.target:OptimizeFor(screen) -- ;)
+      end
+      local tw,th = params.target:GetSize()
+      if params.width and params.width > tw then
+	 error("Vectoracious inited with a too-large output width for the drawable provided.")
+      elseif params.height and params.height > th then
+	 error("Vectoracious inited with a too-large output height for the drawable provided.")
+      end
+      local ow,oh = tw,th
+      local ox,oy = 0,0
+      if params.width then ow = params.width end
+      if params.ox then
+	 ox = params.ox
+	 if ox + ow > tw then
+	    error("Vectoracious inited with a too-large output X offset for the drawable provided.")
+	 end
+      elseif params.width then
+	 ox = math.floor(tw - ow) / 2
+      end
+      if params.height then oh = params.height end
+      if params.oy then
+	 oy = params.oy
+	 if oy + oh > th then
+	    error("Vectoracious inited with a too-large output Y offset for the drawable provided.")
+	 end
+      elseif params.height then
+	 oy = math.floor(th - oh) / 2
+      end
+      if ox ~= 0 or oy ~= 0 or ow ~= tw or oh ~= th then
+	 target = assert(SC.Construct("FakeDrawable", params.target, ox, oy, ow, oh))
+	 if params.target.Update then
+	    local target = params.target
+	    ret._update = function() target:Update(ox, oy, ow, oh) end
+	 end
+      else
+	 target = params.target
+	 ret._update = function() target:Update() end
+      end
+   end
+   assert(target)
+   local tw,th = target:GetSize()
+   ret.target,ret.tw,ret.th = target,tw,th
+   if aa then
+      canvas = assert(SC.Construct("Graphic", tw*aax, th*aay))
+      canvas:OptimizeFor(target)
+   else
+      canvas = target
+   end
+   local cw,ch = canvas:GetSize()
+   ret.canvas,ret.cw,ret.ch = canvas,cw,ch
+   local hcw,hch = cw/2,ch/2
+   ret.hcw,ret.hch = hcw,hch
+   ret.i_matrix = SC.Construct("Mat2x4", ret.hcw, 0, 0, ret.hch, 0, 0, 0, 0)
+   ret.matrix = ret.i_matrix
+   return ret
+end
+
+function vgl.tsr2d(xt, yt, xs, ys, a)
+   local c,s = math.cos(a),math.sin(a)
+   return SC.Construct("Mat2x4", c, s, -s, c, 0, 0, x, y)
+end
+
+function vgl.translate(x,y,z)
+   if type(x) == "userdata" and x:IsA("Vector") then x,y,z = x() end
+   if z then
+      return SC.Construct("Mat3x4", 1, 0, 0, 0, 1, 0, 0, 0, 1, x, y, z)
+   else
+      return SC.Construct("Mat2x4", 1, 0, 0, 1, 0, 0, x, y)
+   end
+end
+
+function vgl.scale(x,y,z)
+   if type(x) == "userdata" and x:IsA("Vector") then x,y,z = x() end
+   if z then
+      return SC.Construct("Mat3x3", x, 0, 0, 0, y, 0, 0, 0, z)
+   else
+      return SC.Construct("Mat2x2", x, 0, 0, y)
+   end
+end
+
+function vgl.rotate2d(a)
+   local c,s = math.cos(a), math.sin(a)
+   return SC.Construct("Mat2x2", c, s, -s, c)
+end
+
+function vgl.rotate(a,x,y,z)
+   if type(x) == "userdata" and x:IsA("Vector") then x,y,z = x() end
+   x,y,z = SC.Construct("Vec3",x,y,z):Normalize()()
+   local c,s = math.cos(a), math.sin(a)
+   local cm = 1-c
+   local xs,ys,zs = x*s, y*s, z*s
+   local xy,xz,yz = x*y, x*z, y*z
+   return SC.Construct("Mat3x3",
+		       x*x*cm+c, xy*cm+zs, xz*cm-ys,
+		       xy*cm-zs, y*y*cm+c, yz*cm+xs,
+		       xz*cm+ys, yz*cm-xs, z*z*cm+c)
+end
+
+function vgl.lerp(a,b,i)
+   return a+(b-a)*i
+end
+
+function vgl.lerp_angle(a,b,i)
+   local d = math.abs(b-a)
+   if math.abs((b+pi2)-a) < d then
+      return vgl.lerp(a,b+pi2,i)
+   elseif math.abs(b-(a+pi2)) < d then
+      return vgl.lerp(a+pi2,b,i)
+   else
+      return vgl.lerp(a,b,i)
+   end
+end
+
+function vgl.diff_angle(a,b)
+   local d = math.abs(b-a)
+   if math.abs((b+pi2)-a) < d then
+      return (b+pi2)-a
+   elseif math.abs(b-(a+pi2)) < d then
+      return b-(a+pi2)
+   else
+      return b-a
+   end
+end
+
+function vgl.norm_angle(angle)
+   while(angle < -pi) do angle = angle + pi2 end
+   while(angle >= pi) do angle = angle - pi2 end
+   return angle
+end
+
+local warned = {}
+function vgl_instance:render_graph(graph, order)
+   local rendered = {}
+   for i=1,#order do
+      local k = order[i]
+      local v = graph[k]
+      if v then
+	 rendered[v] = true
+	 if v.view then
+	    v.view:render(self, v)
+	 elseif v.render then
+	    v:render(self)
+	 elseif not warned[v] then
+	    print("VGL Warning: object "..tostring(v).." has neither a view nor a render method")
+	    warned[v] = true
+	 end
+      end
+   end
+end
+
+function vgl_instance:update()
+   if self.canvas ~= self.target then
+      if self.aa then
+	 SCUtil.BoxDown(self.canvas, self.target, self.aax, self.aay)
+      else
+	 self.target:Blit(self.canvas, 0, 0)
+      end
+   end
+end
+
+function vgl_instance:render(last_scenegraph, scenegraph, irp)
+   if irp <= 0 then
+      -- this is incredibly rare
+      self:render_graph(last_scenegraph, last_scenegraph.order)
+   elseif irp >= 1 then
+      -- this is almost as incredibly rare
+      self:render_graph(scenegraph, scenegraph.order)
+   else
+      local nugraph = {}
+      local order = scenegraph.order
+      for n=1,#order do
+	 local k = order[n]
+	 local vr = scenegraph[k]
+	 local vl = last_scenegraph[k]
+	 if vr and vl then
+	    if vr.view and vr.view.interpolate then
+	       nugraph[k] = vr.view:interpolate(self, vl, vr, irp)
+	    elseif vr.interpolate then
+	       nugraph[k] = vr.interpolate(self, vl, vr, irp)
+	    else
+	       nugraph[k] = vl
+	    end
+	 end
+      end
+      self:render_graph(nugraph, order)
+   end
+end
+
+dofile(P"obj.lua")
