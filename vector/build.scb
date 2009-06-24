@@ -1,2 +1,2 @@
-targets = {vector = {"work.cc","protocol.cc",deps={"graphics","core"}}}
+targets = {vector = {"work.cc","protocol.cc","effect.cc",deps={"graphics","core"}}}
 install = {packages={"vector"}}

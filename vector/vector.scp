@@ -25,3 +25,5 @@ utility CompileVectors
 utility CompileVectorArray
 utility PerspectiveCompileVectors
 utility PerspectiveCompileVectorArray
+
+utility ApplyColorMatrix
