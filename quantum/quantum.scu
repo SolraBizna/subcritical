@@ -1,0 +1,105 @@
+quantum = {}
+
+function quantum.run(params)
+   -- tickrate: the number of ticks per second
+   local tickrate = assert(params.tickrate, "tickrate parameter is not optional")
+   -- rtickrate: the number of seconds per tick
+   local rtickrate = 1 / tickrate
+   -- framecap: the highest allowed frames/second (optional)
+   local framecap = params.framecap
+   -- rframecap: the lowest allowed seconds/frame (optional)
+   local rframecap
+   if framecap then rframecap = 1/framecap end
+   -- last: the last time at which we rendered a frame (for framecap)
+   local last = SCUtil.GetTime()
+   -- cur_tick: the last time for which we processed a tick
+   local cur_tick = last
+   -- maxbacklog: the maximum number of ticks per frame
+   local maxbacklog = params.maxbacklog or tickrate
+   -- catchup: whether we should not "drop" time, but instead play catch-up
+   local catchup = params.catchup
+   -- process: the processing callback
+   local process = assert(params.process, "process_tick is not optional")
+   -- graph: the graphing callback (optional)
+   local graph = params.graph
+   -- render: the rendering callback
+   local render = assert(params.render, "render is not optional")
+   local process_and_graph
+   if graph then
+      function process_and_graph()
+	 return process() and graph()
+      end
+   else
+      process_and_graph = process
+   end
+   local handle_event=params.handle_event
+   local handle_events=params.handle_events
+   -- last_state: the last renderstate
+   local last_state = process_and_graph()
+   if not last_state then return end
+   -- next_state: the "next" renderstate
+   local next_state = process_and_graph()
+   if not next_state then return end
+   repeat
+      if handle_events then if handle_events(params) then return end
+      elseif screen then
+	 repeat
+	    local evt = screen:GetEvent{wait=false}
+	    if evt then
+	       if handle_event then
+		  if handle_event(params, evt) then return end
+	       else
+		  if evt.type == "quit" or
+		     (evt.type == "keydown" and evt.key == "escape") then
+		     return
+		  end
+	       end
+	    else break end
+	 until false
+      else
+	 error("No handle_events callback, and no global screen; we need one or the other")
+      end
+      local run_ticks = (SCUtil.GetTime() - cur_tick) * tickrate
+      local capped
+      if run_ticks > maxbacklog then
+	 run_ticks = maxbacklog
+	 capped = true
+      end
+      if run_ticks >= 2 then
+	 while run_ticks >= 3 do
+	    if not process() then return end
+	    run_ticks = run_ticks - 1
+	    cur_tick = cur_tick + rtickrate
+	 end
+	 next_state = process_and_graph()
+	 if not next_state then return end
+	 run_ticks = run_ticks - 1
+	 cur_tick = cur_tick + rtickrate
+	 last_state = nil
+      end
+      -- not a typo; I mean >, not >=
+      if run_ticks > 1 or not last_state then
+	 last_state = next_state
+	 next_state = process_and_graph()
+	 if not next_state then return end
+	 run_ticks = run_ticks - 1
+	 cur_tick = cur_tick + rtickrate
+      end
+      if capped and not catchup then cur_tick = SCUtil.GetTime() end
+      if render(last_state, next_state, run_ticks) then return end
+      if framecap then
+	 last = last + rframecap
+	 local now = SCUtil.GetTime()
+	 if now > last then
+	    while last + rframecap < now do
+	       last = last + rframecap
+	    end
+	 else
+	    while now < last do
+	       SCUtil.Sleep(last - now)
+	       now = SCUtil.GetTime()
+	    end
+	 end
+      end
+   until false
+end
