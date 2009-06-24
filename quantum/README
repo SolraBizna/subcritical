@@ -1,0 +1,40 @@
+This is a simple package for doing fixed-tickrate-variable-framerate game logic.
+
+Install by placing quantum.scu somewhere SubCritical can find it:
+
+$ mkdir -p /usr/subcritical/lib/
+$ cp quantum.scu /usr/subcritical/lib/
+
+Invocation:
+
+require "quantum"
+quantum.run(parameters)
+
+parameters is a table containing the following keys:
+
+tickrate: The number of logic ticks per second.
+process: A function that is called once per tick. If graph is not specified, it
+	 must return the same thing as graph does. If it returns a non-true
+	 value, it signals quantum to return from "run".
+graph: (optional) A function that is called once per rendered tick. It must
+       return a table containing all the state your game needs to render one
+       whole frame. Returning a non-true value here also signals quantum to
+       return from "run".
+render: A function that is called once per rendered frame. Its prototype is
+	described below.
+framecap: (optional) The maximum number of frames to render per second.
+maxbacklog: (optional) The maximum number of logic ticks to render between
+	    frames.
+catchup: (optional) If true, any time period where we can't process a full
+	 second of logic per second of real time will be made up for by a
+	 time period where we process more than one second of logic in one
+	 second of real time.
+
+Your render function must look like this:
+
+function render(graph1, graph2, irp_factor) -- 0 <= irp_factor <= 1
+
+When irp_factor is 0, you should render graph1. When it is 1, you should render
+graph2. When it's in between, you should "tween" a frame partway between graph1
+and graph2 and render that. Usually, you'll want to use vectoracious (or
+something similar) to help you here.
