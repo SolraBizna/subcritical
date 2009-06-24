@@ -1,0 +1,115 @@
+This is a fairly complicated package that intends to simplify the rendering
+portion of fixed-tickrate-variable-framerate game logic. It is best used in
+combination with quantum.
+
+Install by placing the entire vectoracious directory somewhere SubCritical
+can find it:
+
+$ mkdir -p /usr/subcritical/lib/
+$ cp vectoracious /usr/subcritical/lib/
+
+Initialize the library:
+
+require "vectoracious"
+
+Create a Vectoracious context:
+
+vglc = vgl.init(params)
+
+params is a table containing keys to configure the particular instance of
+Vectoracious. All of a given context's state is in the returned table; you can
+harmlessly have more than one Vectoracious context in a game.
+
+params must contain either a "target" key containing to a Drawable that does
+not have an alpha channel, or "width" and "height" keys giving the dimensions
+of a Drawable that Vectoracious should construct (which you can then access
+through the "target" key of the returned context).
+
+If "target" is provided, you may optionally also provide "ox", "oy", "width",
+and "height" keys to specify a subset of "target" into which to render. No
+performance loss is incurred.
+
+Optionally, params may contain an "aa" key (or separate "aax" and "aay" keys)
+and Vectoracious will oversample all rendering by the given factor. For many
+reasons, it's not a great idea to use "aa" factors other than 1x1 (none) and
+2x2.
+
+The returned context will contain a "canvas" key, either pointing to the
+provided Drawable or at the Drawable Vectoracious created for rendering
+purposes (such as if antialiasing were enabled). Any rendering you do that is
+intended for Vectoracious's "area" of your target Drawable should be done to
+this "canvas" instead.
+
+It also contains an "i_matrix" key containing the matrix for the transform from
+eye space to window space, and a "matrix" key all rendering functions are
+intended to respect that (by default) points to the same matrix. This is a
+simplification of the matrix operations presented by various 3D graphics
+libraries.
+
+Once you have this context, you can use it to perform rendering operations. The
+simple way to do this is something like the following:
+
+my_model = vgl.load_obj2d(P"path/to/model.obj")
+my_graph = {me={pos=SC.Construct("Vec2",0,0),face=math.pi/2,scale=1/4}}
+my_order = {"me"}
+-- Clear the screen with Chroma Key Blue
+vglc.canvas:SetPrimitiveColor(0,0,1)
+vglc.canvas:DrawRect(0, 0, vglc.cw, vglc.ch)
+-- Render our object
+vglc:render_graph(my_graph, my_order)
+-- Do any extra work needed to put the pixels we just rendered into our target
+vglc:update()
+
+But, in practice, you'll usually use quantum, and something like:
+
+function quantumparams.graph()
+  return {order={"me"},{pos=playerposition,face=playerface,scale=1/4}}
+end
+function quantumparams.render(graph1, graph2, irp_factor)
+  vglc.canvas:SetPrimitiveColor(0,0,1)
+  vglc.canvas:DrawRect(0, 0, vglc.cw, vglc.ch)
+  vglc:render(graph1, graph2, irp_factor)
+  vglc:update()
+end
+
+Vectoracious also provides a number of utility functions:
+
+-- Returns a 2x4 matrix describing the linear transformation:
+--   output = translate(x,y) * scale(x,y) * rotate[2d](angle)
+matrix = vgl.tsr2d(translate_x, translate_y, scale_x, scale_y, angle)
+-- Returns a 2x4 (or 3x4) matrix describing the linear transformation:
+--   output = translate(input)
+matrix = vgl.translate(some_vector)
+matrix = vgl.translate(x, y)
+matrix = vgl.translate(x, y, z)
+-- Returns a 2x2 (or 3x3) matrix describing the linear transformation:
+--   output = scale(input)
+matrix = vgl.scale(some_vector)
+matrix = vgl.scale(x, y)
+matrix = vgl.scale(x, y, z)
+-- Returns a 2x2 matrix describing the linear transformation:
+--   output = rotate[2d](angle)
+matrix = vgl.rotate(angle)
+-- Returns a 3x3 matrix describing the linear transformation:
+--   output = rotate[3d](angle, vector)
+-- The vector is normalized, with or without your cooperation.
+matrix = vgl.rotate(angle, vector)
+matrix = vgl.rotate(angle, x, y, z)
+-- MISSING FUNCTION: Quat2Mat
+-- Return the linear interpolation of the two parameters by the given factor.
+-- (This will also work on vectors, and any other overloaded type implementing
+-- +, -, and *.)
+new = vgl.lerp(old1, old2, irp_factor)
+-- Return the shortest-arc linear interpolation of the two angle parameters by
+-- the given factor.
+new_theta = vgl.lerp_angle(old_theta1, old_theta2, irp_factor)
+-- MISSING FUNCTION: The above, for quaternions?
+-- Return the shortest-arc difference between two angles.
+difference = vgl.diff_angle(theta1, theta2)
+-- MISSING FUNCTION: The angular distance between two quaternions?
+-- Normalize the given angle to: -pi <= angle < pi
+-- The above functions to work with angles won't work well on an angle outside
+-- this range.
+new_theta = vgl.norm_angle(old_theta)
+
+TODO: document obj2d, write obj3d...
