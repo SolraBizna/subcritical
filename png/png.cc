@@ -166,7 +166,7 @@ Graphic* PNGLoader::Load(const char* name) throw() {
   int depth, color_type, ilace_method, compression_method, filter_method;
   png_get_IHDR(libpng, info, &width, &height, &depth, &color_type, &ilace_method, &compression_method, &filter_method);
   // For a 16-bpc image, strip off 8 bits.
-  if(depth > 16) png_set_strip_16(libpng);
+  if(depth >= 16) png_set_strip_16(libpng);
   // For a grayscale image, expand G to GGG.
   if(!(color_type & PNG_COLOR_MASK_COLOR)) png_set_gray_to_rgb(libpng);
   // For a palettized image, expand P to RGB.
