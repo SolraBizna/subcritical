@@ -33,6 +33,7 @@ static int C4(doit,IN4,OUT4,IN_A)(lua_State* L, const Drawable* in, Matrix* _mat
     size_t rem = in->width;
 #if in4 && in_A
     Scalar ri, gi, bi, ai;
+    int sai;
 #else
     Scalar ri, gi, bi;
 #endif
@@ -47,7 +48,8 @@ static int C4(doit,IN4,OUT4,IN_A)(lua_State* L, const Drawable* in, Matrix* _mat
       bi = (Scalar)SrgbToLinear[((*inp>>bsh)&255)];
 #if in4
 #if in_A
-      ai = (Scalar)SrgbToLinear[((*inp>>rsh)&255)];
+      sai = ((*inp>>ash)&255);
+      ai = (sai << 8) | sai;
 #else
 #define ai 1.0
 #endif
@@ -67,7 +69,7 @@ static int C4(doit,IN4,OUT4,IN_A)(lua_State* L, const Drawable* in, Matrix* _mat
 #endif
       ++inp;
 #if out4
-      *outp++ = (LinearToSrgb[ro]<<rsh)|(LinearToSrgb[go]<<gsh)|(LinearToSrgb[bo]<<bsh)|(LinearToSrgb[ao]<<ash);
+      *outp++ = (LinearToSrgb[ro]<<rsh)|(LinearToSrgb[go]<<gsh)|(LinearToSrgb[bo]<<bsh)|((ao>>8)<<ash);
 #else
       *outp++ = (LinearToSrgb[ro]<<rsh)|(LinearToSrgb[go]<<gsh)|(LinearToSrgb[bo]<<bsh);
 #endif
