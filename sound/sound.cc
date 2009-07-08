@@ -310,7 +310,10 @@ public:
       MixOut(buffer, aux, frames);
     }
   }
-  SoundChannel(size_t qlen, uint32_t out_rate) throw(std::bad_alloc) : q((SoundCommand*)malloc(sizeof(SoundCommand)*qlen)),qlen(qlen),front(0),back(0),qmask(qlen-1),pan((PanMatrix){4096,0,0,4096}),delay(-1),delay_error(0),out_rate(out_rate),target(NULL),target_type(SoundOpcode::Nop),flags((uint8_t[]){false,false,false,false}) {
+  SoundChannel(size_t qlen, uint32_t out_rate) throw(std::bad_alloc) : q((SoundCommand*)malloc(sizeof(SoundCommand)*qlen)),qlen(qlen),front(0),back(0),qmask(qlen-1),delay(-1),delay_error(0),out_rate(out_rate),target(NULL),target_type(SoundOpcode::Nop) {
+    for(int n = 0; n < NUM_CHANNEL_FLAGS; ++n) flags[n] = false;
+    pan[0] = pan[3] = 4096;
+    pan[1] = pan[2] = 0;
   }
   ~SoundChannel() { free((void*)q); }
   SoundCommand* q;
