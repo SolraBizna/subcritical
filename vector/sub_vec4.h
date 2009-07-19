@@ -62,6 +62,15 @@ static Vec4*restrict C3(vec_sub_4,an,bn)(const A&restrict a, const B&restrict b)
   return ret;
 }
 
+static Vec4*restrict C3(vec_mul_4,an,bn)(const A&restrict a, const B&restrict b) {
+  Vec4*restrict ret = new Vec4();
+  ret->x = a.x * b.x;
+  ret->y = a.y * b.y;
+  ret->z = az * bz;
+  ret->w = aw * bw;
+  return ret;
+}
+
 static Scalar C3(vec_concat_4,an,bn)(const A&restrict a, const B&restrict b) {
   return a.x*b.x + a.y*b.y + az*bz + aw*bw;
 }

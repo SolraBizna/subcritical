@@ -57,6 +57,12 @@ static const op_vvs vec_mul[3] = {
   (op_vvs)vec_mul_2,(op_vvs)vec_mul_3,(op_vvs)vec_mul_4,
 };
 
+static const op_vvv vec_mulvv[3][3] = {
+  {(op_vvv)vec_mul_222,(op_vvv)vec_mul_222,(op_vvv)vec_mul_424},
+  {(op_vvv)vec_mul_222,(op_vvv)vec_mul_333,(op_vvv)vec_mul_434},
+  {(op_vvv)vec_mul_442,(op_vvv)vec_mul_443,(op_vvv)vec_mul_444},
+};
+
 static const op_Lv vec_unpack[3] = {
   (op_Lv)vec_unpack_2,(op_Lv)vec_unpack_3,(op_Lv)vec_unpack_4,
 };
@@ -160,9 +166,26 @@ static int f_vector_concat(lua_State* L) {
 
 static int f_vector_mul(lua_State* L) {
   Vector*restrict a = lua_toobject(L, 1, Vector);
-  Scalar b = luaL_checknumber(L, 2);
-  Vector*restrict c = (vec_mul[a->n-2])(*a, b);
-  c->Push(L);
+  if(lua_isnumber(L, 2)) {
+    Scalar b = luaL_checknumber(L, 2);
+    Vector*restrict c = (vec_mul[a->n-2])(*a, b);
+    c->Push(L);
+  }
+  else {
+    if(lua_istable(L, 2)) {
+      Vector*restrict b = fromtabletovector(L, 2);
+      Vector*restrict c = (vec_mulvv[a->n-2][b->n-2])(*a, *b);
+      delete b;
+      c->Push(L);
+      return 1;
+    }
+    else {
+      Vector*restrict b = lua_toobject(L, 2, Vector);
+      Vector*restrict c = (vec_mulvv[a->n-2][b->n-2])(*a, *b);
+      c->Push(L);
+      return 1;
+    }
+  }
   return 1;
 }
 

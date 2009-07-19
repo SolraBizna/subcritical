@@ -71,6 +71,14 @@ static Vec3*restrict vec_mul_3(const Vec3& a, Scalar b) {
   return ret;
 }
 
+static Vec3*restrict vec_mul_333(const Vec3&restrict a, const Vec3&restrict b) {
+  Vec3*restrict ret = new Vec3();
+  ret->x = a.x * b.x;
+  ret->y = a.y * b.y;
+  ret->z = a.z * b.z;
+  return ret;
+}
+
 static Vec3*restrict vec_unm_3(const Vec3&restrict a) {
   Vec3*restrict ret = new Vec3();
   ret->x = -a.x;
