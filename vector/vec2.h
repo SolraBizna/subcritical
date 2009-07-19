@@ -79,6 +79,13 @@ static Vec2*restrict vec_sub_222(const Vec2&restrict a, const Vec2&restrict b) {
   return ret;
 }
 
+static Vec2*restrict vec_mul_222(const Vec2&restrict a, const Vec2&restrict b) {
+  Vec2*restrict ret = new Vec2();
+  ret->x = a.x * b.x;
+  ret->y = a.y * b.y;
+  return ret;
+}
+
 static Scalar vec_concat_222(const Vec2&restrict a, const Vec2&restrict b) {
   return a.x*b.x + a.y*b.y;
 }
