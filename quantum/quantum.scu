@@ -91,21 +91,21 @@ function quantum.run(params)
       if run_ticks >= 2 then
 	 while run_ticks >= 3 do
 	    if not process() then return end
+	    run_ticks = run_ticks - 1
+	    cur_tick = cur_tick + rtickrate
 	    if multispeed then
 	       tickrate = params.tickrate
 	       rtickrate = 1 / params.tickrate
 	    end
-	    run_ticks = run_ticks - 1
-	    cur_tick = cur_tick + rtickrate
 	 end
 	 next_state = process_and_graph()
 	 if not next_state then return end
+	 run_ticks = run_ticks - 1
+	 cur_tick = cur_tick + rtickrate
 	 if multispeed then
 	    tickrate = params.tickrate
 	    rtickrate = 1 / params.tickrate
 	 end
-	 run_ticks = run_ticks - 1
-	 cur_tick = cur_tick + rtickrate
 	 last_state = nil
       end
       -- not a typo; I mean >, not >=
@@ -113,12 +113,12 @@ function quantum.run(params)
 	 last_state = next_state
 	 next_state = process_and_graph()
 	 if not next_state then return end
+	 run_ticks = run_ticks - 1
+	 cur_tick = cur_tick + rtickrate
 	 if multispeed then
 	    tickrate = params.tickrate
 	    rtickrate = 1 / params.tickrate
 	 end
-	 run_ticks = run_ticks - 1
-	 cur_tick = cur_tick + rtickrate
       end
       if capped and not catchup then cur_tick = SCUtil.GetTime() end
       if render(last_state, next_state, run_ticks) then return end
