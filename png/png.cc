@@ -91,6 +91,9 @@ static void myflush(png_structp libpng) {
   // no-op
 }
 
+static char pngkey[] = "Source";
+static char pngvalue[] = "SubCritical game";
+
 bool PNGDumper::Dump(Graphic* graphic, DumpOut& out, const char*& err) throw() {
   png_structp libpng = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
   if(!libpng)
@@ -114,8 +117,8 @@ bool PNGDumper::Dump(Graphic* graphic, DumpOut& out, const char*& err) throw() {
     png_set_sRGB_gAMA_and_cHRM(libpng, info, PNG_sRGB_INTENT_PERCEPTUAL);
     png_text comment;
     comment.compression = PNG_TEXT_COMPRESSION_NONE;
-    comment.key = "Source";
-    comment.text = "SubCritical game";
+    comment.key = pngkey;
+    comment.text = pngvalue;
     comment.text_length = strlen(comment.text);
     png_set_text(libpng, info, &comment, 1);
     png_set_filter(libpng, 0, filters);
