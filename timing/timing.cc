@@ -95,7 +95,7 @@ SUBCRITICAL_UTILITY(Sleep)(lua_State* L) {
   ts.tv_sec = (time_t)floor(length);
   ts.tv_nsec = (long)floor((length - ts.tv_sec) * NANOSECOND_SCALE);
   do {
-    if(nanosleep(&ts, &tr) && errno == EINTR || errno == EAGAIN) {
+    if(nanosleep(&ts, &tr) && (errno == EINTR || errno == EAGAIN)) {
       ts.tv_sec = tr.tv_sec;
       ts.tv_nsec = tr.tv_nsec;
       continue;
