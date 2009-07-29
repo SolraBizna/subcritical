@@ -106,10 +106,13 @@ static int NIY(lua_State* L) {
 typedef int(*FastScriptMethodPointer)(Object*, lua_State* L);
 
 static int CallScriptMethod(lua_State* L) {
-  FastScriptMethodPointer* p = (FastScriptMethodPointer*)luaL_checkudata(L, 1, "FastScriptMethodPointer");
+  // this alone doubled the execution overhead, and is only necessary if
+  // there's trickery going on
+  // FastScriptMethodPointer* p = (FastScriptMethodPointer*)luaL_checkudata(L, 1, "FastScriptMethodPointer");
+  FastScriptMethodPointer* p = (FastScriptMethodPointer*)lua_topointer(L, 1);
   if(!lua_isuserdata(L, 2)) return luaL_error(L, "This is a method. Use : to call it.");
   Object** ud = (Object**)lua_topointer(L, 2);
-  lua_remove(L, 1);
+  lua_remove(L, 2);
   lua_remove(L, 1);
   return (*p)(*ud, L);
 }
@@ -138,10 +141,11 @@ static void PushScriptMethod(lua_State* L, ScriptMethodPointer old_ptr, Object* 
 }
 #else
 static int CallScriptMethod(lua_State* L) {
-  ScriptMethodPointer* p = (ScriptMethodPointer*)luaL_checkudata(L, 1, "ScriptMethodPointer");
+  // ScriptMethodPointer* p = (ScriptMethodPointer*)luaL_checkudata(L, 1, "ScriptMethodPointer");
+  ScriptMethodPointer* p = (ScriptMethodPointer*)lua_topointer(L, 1);
   if(!lua_isuserdata(L, 2)) return luaL_error(L, "This is a method. Use : to call it.");
   Object** ud = (Object**)lua_topointer(L, 2);
-  lua_remove(L, 1);
+  lua_remove(L, 2);
   lua_remove(L, 1);
   return (*ud->**p)(L);
 }
