@@ -169,7 +169,7 @@ public:
     if(y < 0 || y >= height) return oob(L);
     long z = (long)luaL_checknumber(L, 3);
     if(z < 0 || z >= depth) return oob(L);
-    lua_pushnumber(L, (lua_Number)array[x*heightdepth+y*height+z]);
+    lua_pushnumber(L, (lua_Number)array[x*heightdepth+y*depth+z]);
     return 1;
   }
   virtual int Lua_Set(lua_State* L) throw() {
@@ -202,7 +202,7 @@ public:
     if(y < 0 || y >= height) return oob(L);
     long z = (long)luaL_checknumber(L, 3);
     if(z < 0 || z >= depth) return oob(L);
-    long coord = x*heightdepth+y*height+z;
+    long coord = x*heightdepth+y*depth+z;
     lua_pushboolean(L, array[coord/32] & (1<<(coord%32)));
     return 1;
   }
@@ -214,7 +214,7 @@ public:
     if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
     long z = (long)luaL_checknumber(L, 4);
     if(z < 0 || z >= depth) return luaL_error(L, "array index 3 out of bounds");
-    long coord = x*heightdepth+y*height+z;
+    long coord = x*heightdepth+y*depth+z;
     if(val)
       array[coord/32] |= 1<<(coord%32);
     else
@@ -260,7 +260,7 @@ SUBCRITICAL_CONSTRUCTOR(name)(lua_State* L) { \
   } \
 }
 
-sa(PackedArray1D,     lua_Number, 1, dsum * 8);
+sa(PackedArray1D,     lua_Number, 1, dsum * sizeof(lua_Number));
 sa(PackedArray1D_B,   bool,       1, floor(dsum + 31 / 32) * 4);
 sa(PackedArray1D_S8,  int8_t,     1, dsum);
 sa(PackedArray1D_U8,  uint8_t,    1, dsum);
@@ -268,7 +268,7 @@ sa(PackedArray1D_S16, int16_t,    1, dsum * 2);
 sa(PackedArray1D_U16, uint16_t,   1, dsum * 2);
 sa(PackedArray1D_S32, int32_t,    1, dsum * 4);
 sa(PackedArray1D_U32, uint32_t,   1, dsum * 4);
-sa(PackedArray2D,     lua_Number, 2, dsum * 8);
+sa(PackedArray2D,     lua_Number, 2, dsum * sizeof(lua_Number));
 sa(PackedArray2D_B,   bool,       2, floor(dsum + 31 / 32) * 4);
 sa(PackedArray2D_S8,  int8_t,     2, dsum);
 sa(PackedArray2D_U8,  uint8_t,    2, dsum);
@@ -276,7 +276,7 @@ sa(PackedArray2D_S16, int16_t,    2, dsum * 2);
 sa(PackedArray2D_U16, uint16_t,   2, dsum * 2);
 sa(PackedArray2D_S32, int32_t,    2, dsum * 4);
 sa(PackedArray2D_U32, uint32_t,   2, dsum * 4);
-sa(PackedArray3D,     lua_Number, 3, dsum * 8);
+sa(PackedArray3D,     lua_Number, 3, dsum * sizeof(lua_Number));
 sa(PackedArray3D_B,   bool,       3, floor(dsum + 31 / 32) * 4);
 sa(PackedArray3D_S8,  int8_t,     3, dsum);
 sa(PackedArray3D_U8,  uint8_t,    3, dsum);
