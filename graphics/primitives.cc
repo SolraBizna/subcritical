@@ -777,12 +777,12 @@ inline void Drawable::DrawBresenline(const Fixed*restrict a, const Fixed*restric
 
 // Returns 0 instead of complex numbers.
 inline static Fixed QuickFixedSqrt(signed long long n) {
-  Fixed i = 32768, ib = 16384;
+  signed long long i = 0x80000000LL, ib = 0x40000000LL;
   // I can't believe I thought this would be fast enough!
   //for(i = 1; i < 65536 && (((long long)i*i)>>6) < n; ++i)
   //;
   do {
-    if((((long long)i*i)>>6) >= n)
+    if(((i*i)>>6) >= n)
       i -= ib;
     else
       i += ib;
@@ -943,8 +943,8 @@ inline void Drawable::DrawQuadA(const Fixed* top, const Fixed* left, const Fixed
 inline void Drawable::DrawQuadLine(Fixed width, Fixed height, const Fixed*restrict top, const Fixed*restrict bot) {
   Fixed radx = width >> 1;
   Fixed rady = height >> 1;
-  Fixed off[2] = {-(bot[1] - top[1]), bot[0] - top[0]};
-  Fixed mag = QuickFixedSqrt(((long long)off[0]*off[0] + (long long)off[1]*off[1]) >> 6);
+  long long off[2] = {-((long long)bot[1] - top[1]), (long long)bot[0] - top[0]};
+  Fixed mag = QuickFixedSqrt((off[0]*off[0] + off[1]*off[1]) >> 6);
   if(mag == 0) return;
   off[0] = off[0] * radx / mag;
   off[1] = off[1] * rady / mag;
