@@ -19,10 +19,12 @@
   Please see doc/license.html for clarifications.
  */
 #include "ipsocket.h"
+#ifndef __WIN32__
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
+#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -30,15 +32,30 @@
 
 using namespace SubCritical;
 
-IPSocket::IPSocket(lua_State* L, int sock, const struct sockaddr_in& addr) throw() : addrhost(NULL), addrhostset(false), addrportset(false), bound(true), addr(addr), sock(sock) {
+#ifdef __WIN32__
+static WSADATA wsaData;
+LUA_EXPORT int Init_ipsocket(lua_State* L) {
+  int fail;
+  if((fail = WSAStartup(MAKEWORD(1,1),&wsaData)))
+    return luaL_error(L, "WSAStartup fail: %d\n", fail);
+  fprintf(stderr, "WinSock version %i.%i in use (%i.%i max)\nDescription: %s\nStatus: %s\n", wsaData.wVersion & 255, wsaData.wVersion >> 8, wsaData.wHighVersion & 255, wsaData.wHighVersion >> 8, wsaData.szDescription, wsaData.szSystemStatus);
+  return 0;
+}
+#endif
+
+IPSocket::IPSocket(lua_State* L, SOCKET sock, const struct sockaddr_in& addr) throw() : addrhost(NULL), addrhostset(false), addrportset(false), bound(true), addr(addr), sock(sock) {
   SetBlocking(L, false); // will leak memory on failure
 }
 
 IPSocket::IPSocket(int type, int protocol) throw(std::bad_alloc, int) : addrhost(NULL), addrhostset(false), addrportset(false), bound(false) {
   addrhost = (char*)malloc(MAXHOST+1);
   if(!addrhost) throw std::bad_alloc();
-  sock = socket(PF_INET, type, protocol);
+  sock = socket(AF_INET, type, protocol);
+#ifdef __WIN32__
+  if(sock == INVALID_SOCKET) {
+#else
   if(sock < 0) {
+#endif
     free(addrhost);
     addrhost = NULL;
     throw errno;
@@ -47,7 +64,11 @@ IPSocket::IPSocket(int type, int protocol) throw(std::bad_alloc, int) : addrhost
 
 IPSocket::~IPSocket() {
   if(addrhost) free(addrhost);
+#ifdef __WIN32__
+  if(sock != INVALID_SOCKET) closesocket(sock);
+#else
   if(sock >= 0) close(sock);
+#endif
 }
 
 int IPSocket::Lua_SubGetAddressParts(lua_State* L) throw() {
@@ -70,7 +91,7 @@ int IPSocket::Lua_SubSetAddressPart(lua_State* L) throw() {
     {
       size_t size;
       const char* str = luaL_checklstring(L, 2, &size);
-      if(size > MAXHOST) return luaL_error(L, "host name may not exceed %i octets", MAXHOST);
+      if(size > MAXHOST) return luaL_error(L, "host name may not exceed %d octets", MAXHOST);
       if(str[0] == '*' && str[1] == 0)
 	memcpy(addrhost, "0.0.0.0", 8);
       else
@@ -93,15 +114,13 @@ int IPSocket::Lua_SubSetAddressPart(lua_State* L) throw() {
 
 int IPSocket::SetBlocking(lua_State* L, bool blocking) throw() {
   if(!bound) return luaL_error(L, "Not yet bound, we don't have a concept of blocking.");
-  if(blocking) {
-    if(fcntl(sock, F_SETFL, 0)) {
-      return luaL_error(L, "%s", strerror(errno));
-    }
-  }
-  else {
-    if(fcntl(sock, F_SETFL, O_NONBLOCK)) {
-      return luaL_error(L, "%s", strerror(errno));
-    }
+#ifdef __WIN32__
+  u_long nonblocking = !blocking;
+  if(ioctlsocket(sock, FIONBIO, &nonblocking) < 0) {
+#else
+  if(fcntl(sock, F_SETFL, blocking ? 0 : O_NONBLOCK) < 0) {
+#endif
+    return luaL_error(L, "%s", ErrorToString(errno));
   }
   return 0;
 }
@@ -114,12 +133,12 @@ int IPSocket::Lua_SubSetBlocking(lua_State* L) throw() {
 int IPSocket::Lua_SubGetPrintableAddress(lua_State* L) throw() {
   if(!bound) return luaL_error(L, "Not yet bound, we don't have an address.");
   if(addr.sin_addr.s_addr != INADDR_ANY) {
-    in_addr_t ip = htonl(addr.sin_addr.s_addr);
-    in_port_t port = htons(addr.sin_port);
+    uint32_t ip = htonl(addr.sin_addr.s_addr);
+    uint16_t port = htons(addr.sin_port);
     lua_pushfstring(L, "%d.%d.%d.%d:%d", (ip >> 24), (ip >> 16) & 255, (ip >> 8) & 255, ip & 255, port);
   }
   else {
-    in_port_t port = htons(addr.sin_port);
+    uint16_t port = htons(addr.sin_port);
     lua_pushfstring(L, "*:%d", port);
   }
   return 1;
@@ -134,15 +153,28 @@ int IPSocket::Lua_SubApplyAddress(lua_State* L) throw() {
   int n = 0;
   if(!host || !host->h_addr_list[n]) {
     lua_pushnil(L);
-    if(h_errno)
-      lua_pushstring(L, hstrerror(h_errno));
+    int h_err = h_errno;
+    if(h_err)
+#ifdef __WIN32__
+      lua_pushstring(L, ErrorToString(h_err));
+#else
+      lua_pushstring(L, hstrerror(h_err));
+#endif
     else
       lua_pushstring(L, "no IPv4 address records for host");
     return 2;
   }
-  addr.sin_addr.s_addr = *(in_addr_t*)(host->h_addr_list[n]);
+  addr.sin_addr.s_addr = *(uint32_t*)(host->h_addr_list[n]);
   return 0;
 }
+
+#ifdef __WIN32__
+const char* IP::WinSockErrorToString(int err) {
+  static char ret[512];
+  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, 0, err, 0, ret, 512, 0);
+  return ret;
+}
+#endif
 
 /*
   if(listen) {
