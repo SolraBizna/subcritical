@@ -1,3 +1,6 @@
+If you're on Windows, abandon all hope of building it yourself. Setting it up
+is so difficult and painful, I wouldn't even know how to do it a second time.
+
 SubCritical's build system is functional, but incomplete. To build and install
 SubCritical, first, install Lua 5.1 or later. (see: http://www.lua.org/)
 
