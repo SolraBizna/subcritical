@@ -149,7 +149,7 @@ void UDPListenSocket::Massage() throw(std::bad_alloc) {
     timeout.tv_sec = 0;
     timeout.tv_usec = 0;
     struct sockaddr_in addr;
-    int addrlen = sizeof(addr);
+    socklen_t addrlen = sizeof(addr);
     ssize_t size = recvfrom(sock, (char*)buf, UDP_MTU, 0, (struct sockaddr*)&addr, &addrlen);
     if(size <= 0) continue;
     addr_port_t source = SOCKADDR_TO_INT(addr);

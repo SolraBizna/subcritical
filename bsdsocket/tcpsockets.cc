@@ -125,7 +125,7 @@ int TCPListenSocket::Lua_ApplyAddress(lua_State* L) throw() {
 
 int TCPListenSocket::Lua_Accept(lua_State* L) throw() {
   struct sockaddr_in nuaddr;
-  int nuaddr_len = sizeof(nuaddr);
+  socklen_t nuaddr_len = sizeof(nuaddr);
   SOCKET nusock = accept(sock, (struct sockaddr*)&nuaddr, &nuaddr_len);
 #ifdef __WIN32__
   if(nusock != INVALID_SOCKET) {

@@ -37,6 +37,7 @@
 #define errno WSAGetLastError()
 #define h_errno WSAGetLastError()
 #define ErrorToString IP::WinSockErrorToString
+typedef int socklen_t;
 #else
 typedef int SOCKET;
 #include <netinet/in.h>
