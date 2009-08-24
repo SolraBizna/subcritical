@@ -27,6 +27,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#ifdef __WIN32__
+#define EMSGSIZE WSAEMSGSIZE
+#endif
+
 using namespace SubCritical;
 using namespace IP;
 using namespace std;
@@ -39,7 +43,7 @@ int UDPSocket::Lua_ApplyAddress(lua_State* L) throw() {
   { int ret; if((ret = Lua_SubApplyAddress(L))) return ret; }
   if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in))) {
     lua_pushnil(L);
-    lua_pushstring(L, strerror(errno));
+    lua_pushstring(L, ErrorToString(errno));
     return 2;
   }
   free(addrhost);
@@ -51,7 +55,7 @@ int UDPSocket::Lua_ApplyAddress(lua_State* L) throw() {
 }
 
 size_t UDPSocket::ReceiveDgram(void* buf, size_t max_size, FailReason& error) throw() {
-  ssize_t got = recv(sock, buf, max_size, 0);
+  ssize_t got = recv(sock, (char*)buf, max_size, 0);
   if(got <= 0) {
     switch(errno) {
     case EINTR:
@@ -63,7 +67,7 @@ size_t UDPSocket::ReceiveDgram(void* buf, size_t max_size, FailReason& error) th
 }
 
 bool UDPSocket::SendDgram(const void* buf, size_t max_size, FailReason& error) throw() {
-  ssize_t sent = send(sock, buf, max_size, 0);
+  ssize_t sent = send(sock, (const char*)buf, max_size, 0);
   if(sent <= 0) {
     switch(errno) {
     case EMSGSIZE: error = PacketTooBig; return false;
@@ -86,7 +90,7 @@ SUBCRITICAL_CONSTRUCTOR(UDPSocket)(lua_State* L) {
     return luaL_error(L, "std::bad_alloc caught");
   }
   catch(int e) {
-    return luaL_error(L, "%s", strerror(e));
+    return luaL_error(L, "%s", ErrorToString(e));
   }
 }
 
@@ -145,8 +149,8 @@ void UDPListenSocket::Massage() throw(std::bad_alloc) {
     timeout.tv_sec = 0;
     timeout.tv_usec = 0;
     struct sockaddr_in addr;
-    socklen_t addrlen = sizeof(addr);
-    ssize_t size = recvfrom(sock, buf, UDP_MTU, 0, (struct sockaddr*)&addr, &addrlen);
+    int addrlen = sizeof(addr);
+    ssize_t size = recvfrom(sock, (char*)buf, UDP_MTU, 0, (struct sockaddr*)&addr, &addrlen);
     if(size <= 0) continue;
     addr_port_t source = SOCKADDR_TO_INT(addr);
     map<addr_port_t, UDPSlaveSocket*>::iterator slave = slaves.find(source);
@@ -187,7 +191,7 @@ int UDPListenSocket::Lua_ApplyAddress(lua_State* L) throw() {
   { int ret; if((ret = Lua_SubApplyAddress(L))) return ret; }
   if(bind(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in))) {
     lua_pushnil(L);
-    lua_pushstring(L, strerror(errno));
+    lua_pushstring(L, ErrorToString(errno));
     return 2;
   }
   free(addrhost);
@@ -210,7 +214,7 @@ SUBCRITICAL_CONSTRUCTOR(UDPListenSocket)(lua_State* L) {
     return luaL_error(L, "std::bad_alloc caught");
   }
   catch(int e) {
-    return luaL_error(L, "%s", strerror(e));
+    return luaL_error(L, "%s", ErrorToString(e));
   }
 }
 
@@ -241,7 +245,7 @@ UDPSlaveSocket::~UDPSlaveSocket() {
 }
 
 bool UDPSlaveSocket::SendDgram(const void* buf, size_t max_size, FailReason& error) throw() {
-  ssize_t sent = send(master->sock, buf, max_size, 0);
+  ssize_t sent = send(master->sock, (const char*)buf, max_size, 0);
   if(sent <= 0) {
     switch(errno) {
     case EMSGSIZE: error = PacketTooBig; return false;

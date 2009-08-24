@@ -23,14 +23,26 @@
 #ifndef _SUBCRITICAL_BSD_IPSOCKET_H
 #define _SUBCRITICAL_BSD_IPSOCKET_H
 
-#ifndef IPSOCKET_IS_BSD
-#define IPSOCKET_IS_BSD 1
-#define IPSOCKET_IS_WINSOCK 0
-#endif
-
 #include "subcritical/socket.h"
+
+#ifdef __WIN32__
+#include <winsock2.h>
+#include <errno.h>
+#ifdef errno
+#undef errno
+#endif
+#ifdef h_errno
+#undef h_errno
+#endif
+#define errno WSAGetLastError()
+#define h_errno WSAGetLastError()
+#define ErrorToString IP::WinSockErrorToString
+#else
+typedef int SOCKET;
 #include <netinet/in.h>
 #include <netdb.h>
+#define ErrorToString strerror
+#endif
 
 #include <new>
 #include <deque>
@@ -43,6 +55,10 @@
 #endif
 
 namespace IP {
+#ifdef __WIN32__
+  LOCAL const char* WinSockErrorToString(int err);
+#endif
+  // WHY did I think this was a good idea?
   typedef uint64_t addr_port_t;
 #define SOCKADDR_TO_INT(addr) ((addr).sin_addr.s_addr | ((addr_port_t)(addr).sin_port << 32))
   struct LOCAL DeferredDgram {
@@ -63,7 +79,7 @@ namespace SubCritical {
   class LOCAL IPSocket {
   public:
     IPSocket(int, int) throw(std::bad_alloc,int);
-    IPSocket(lua_State* L, int, const struct sockaddr_in&) throw();
+    IPSocket(lua_State* L, SOCKET, const struct sockaddr_in&) throw();
     virtual ~IPSocket();
 #define IPSOCKET_SUBCLASS_PROTOTYPE() \
     virtual int Lua_GetAddressParts(lua_State* L) throw(); \
@@ -83,15 +99,15 @@ namespace SubCritical {
   protected:
     char* addrhost;
     bool addrhostset, addrportset, bound;
-    in_port_t addrport;
+    uint16_t addrport;
     struct sockaddr_in addr;
     int Lua_SubApplyAddress(lua_State* L) throw();
-    int sock;
+    SOCKET sock;
   };
   class EXPORT TCPSocket : public SocketStream, IPSocket {
   public:
     TCPSocket() throw(std::bad_alloc,int);
-    TCPSocket(lua_State*,int,const struct sockaddr_in&) throw();
+    TCPSocket(lua_State*,SOCKET,const struct sockaddr_in&) throw();
     virtual int Lua_ApplyAddress(lua_State* L) throw();
     virtual size_t ReceiveBytes(void* buf, size_t bytes, FailReason& error) throw();
     virtual size_t SendBytes(const void* buf, size_t bytes, FailReason& error) throw();

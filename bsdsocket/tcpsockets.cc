@@ -33,13 +33,13 @@ IPSOCKET_SUBCLASS_IMP(TCPListenSocket);
 
 TCPSocket::TCPSocket() throw(std::bad_alloc,int) : IPSocket(SOCK_STREAM, IPPROTO_TCP) {}
 
-TCPSocket::TCPSocket(lua_State* L, int sock, const struct sockaddr_in& addr) throw() : IPSocket(L, sock, addr) {}
+TCPSocket::TCPSocket(lua_State* L, SOCKET sock, const struct sockaddr_in& addr) throw() : IPSocket(L, sock, addr) {}
 
 int TCPSocket::Lua_ApplyAddress(lua_State* L) throw() {
   { int ret; if((ret = Lua_SubApplyAddress(L))) return ret; }
-  if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in))) {
+  if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in)) < 0) {
     lua_pushnil(L);
-    lua_pushstring(L, strerror(errno));
+    lua_pushstring(L, ErrorToString(errno));
     return 2;
   }
   free(addrhost);
@@ -51,13 +51,16 @@ int TCPSocket::Lua_ApplyAddress(lua_State* L) throw() {
 }
 
 size_t TCPSocket::ReceiveBytes(void* buf, size_t bytes, FailReason& error) throw() {
-  ssize_t did_read = read(sock, buf, bytes);
+  ssize_t did_read = recv(sock, (char*)buf, bytes, 0);
   if(did_read <= 0) {
     switch(errno) {
     case EAGAIN: if(did_read == -1) { error = NotReady; break; }
     default:
     case EPIPE:
-    case ETIMEDOUT: error = Broken; break;
+#ifdef ETIMEDOUT
+    case ETIMEDOUT:
+#endif
+      error = Broken; break;
     }
     did_read = 0;
   }
@@ -68,14 +71,17 @@ size_t TCPSocket::SendBytes(const void* buf, size_t bytes, FailReason& error) th
   const char* p = (const char*)buf;
   size_t rem = bytes;
   while(rem > 0) {
-    ssize_t did_write = write(sock, p, rem);
+    ssize_t did_write = send(sock, p, rem, 0);
     if(did_write <= 0) {
       did_write = 0;
       switch(errno) {
       case EAGAIN: error = NotReady; return bytes - rem;
       default:
       case EPIPE:
-      case ETIMEDOUT: error = Broken; return false;
+#ifdef ETIMEDOUT
+      case ETIMEDOUT:
+#endif
+	error = Broken; return false;
       }
     }
     rem = rem - did_write;
@@ -94,7 +100,7 @@ SUBCRITICAL_CONSTRUCTOR(TCPSocket)(lua_State* L) {
     return luaL_error(L, "std::bad_alloc caught");
   }
   catch(int e) {
-    return luaL_error(L, "%s", strerror(e));
+    return luaL_error(L, "%s", ErrorToString(e));
   }
 }
 
@@ -104,14 +110,14 @@ int TCPListenSocket::Lua_ApplyAddress(lua_State* L) throw() {
   { int ret; if((ret = Lua_SubApplyAddress(L))) return ret; }
   if(bind(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in))) {
     lua_pushnil(L);
-    lua_pushstring(L, strerror(errno));
+    lua_pushstring(L, ErrorToString(errno));
     return 2;
   }
   free(addrhost);
   addrhost = NULL;
   bound = true;
   if(listen(sock, 3))
-    return luaL_error(L, "listen: %s", strerror(errno));
+    return luaL_error(L, "listen: %s", ErrorToString(errno));
   SetBlocking(L, false);
   lua_pushboolean(L, 1);
   return 1;
@@ -119,9 +125,13 @@ int TCPListenSocket::Lua_ApplyAddress(lua_State* L) throw() {
 
 int TCPListenSocket::Lua_Accept(lua_State* L) throw() {
   struct sockaddr_in nuaddr;
-  socklen_t nuaddr_len = sizeof(nuaddr);
-  int nusock = accept(sock, (struct sockaddr*)&nuaddr, &nuaddr_len);
+  int nuaddr_len = sizeof(nuaddr);
+  SOCKET nusock = accept(sock, (struct sockaddr*)&nuaddr, &nuaddr_len);
+#ifdef __WIN32__
+  if(nusock != INVALID_SOCKET) {
+#else
   if(nusock >= 0) {
+#endif
     (new TCPSocket(L, nusock, nuaddr))->Push(L);
     return 1;
   }
@@ -139,6 +149,6 @@ SUBCRITICAL_CONSTRUCTOR(TCPListenSocket)(lua_State* L) {
     return luaL_error(L, "std::bad_alloc caught");
   }
   catch(int e) {
-    return luaL_error(L, "%s", strerror(e));
+    return luaL_error(L, "%s", ErrorToString(e));
   }
 }

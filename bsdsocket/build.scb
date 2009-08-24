@@ -1,9 +1,8 @@
+targets = {ipsocket={"ipsocket.cc","tcpsockets.cc","udpsockets.cc",deps={"core","socket"}}}
+install = {packages={"ipsocket"}, headers={"ipsocket.h"}}
+
 local os = config_question("OS/COMPILER")
-if(os ~= "mingw") then
-   targets = {ipsocket={"ipsocket.cc","tcpsockets.cc","udpsockets.cc",deps={"core"}}}
-   install = {packages={"ipsocket"}, headers={"ipsocket.h"}}
-else
-   print("BSD version of IPSocket not built (Windows target)")
-   targets = {}
-   install = {}
+if(os == "mingw") then
+   targets.ipsocket.libflags = "-lwsock32"
 end
+
