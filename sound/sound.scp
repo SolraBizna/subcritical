@@ -1,5 +1,5 @@
 license Compatible
-version 0b5 core
+version 0b6 core
 
 class SoundBuffer
 class MonoSoundBuffer : SoundBuffer
