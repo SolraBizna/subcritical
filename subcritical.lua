@@ -50,7 +50,7 @@ function errorf(err, ...)
 end
 
 subcritical = {}
-subcritical.version = 0x0b5
+subcritical.version = 0x0b6
 subcritical.copyright = ("SubCritical %03x \194\169 2008-2009 Solra Bizna."):format(subcritical.version)
 -- aliases
 SubCritical,SC,sc = subcritical,subcritical,subcritical
