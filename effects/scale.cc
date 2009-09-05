@@ -87,6 +87,15 @@ static float L3(float x) {
   return y >= L3SINC_TABLE_SIZE ? 0.f : l3sincf_table[y];
 }
 
+static inline float FastFloat(uint32_t u) {
+  union {
+    float f;
+    uint32_t u;
+  } x;
+  x.u = 0x4B000000U + u;
+  return x.f - 8388608.f;
+}
+
 SUBCRITICAL_UTILITY(ScaleBest)(lua_State* L) {
   Drawable*restrict source = lua_toobject(L, 1, Drawable);
   Graphic*restrict dest = new Graphic(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3), source->layout);
@@ -208,9 +217,9 @@ SUBCRITICAL_UTILITY(ScaleBest)(lua_State* L) {
 	  float sincy = L3(y_sinc);
 	  for(; sub_x < rx; ++sub_x, x_sinc += rxwind) {
 	    s = sincy * L3(x_sinc);
-	    rs += SrgbToLinear[(*src >> rsh) & 255] * s;
-	    gs += SrgbToLinear[(*src >> gsh) & 255] * s;
-	    bs += SrgbToLinear[(*src >> bsh) & 255] * s;
+	    rs += FastFloat(SrgbToLinear[(*src >> rsh) & 255]) * s;
+	    gs += FastFloat(SrgbToLinear[(*src >> gsh) & 255]) * s;
+	    bs += FastFloat(SrgbToLinear[(*src >> bsh) & 255]) * s;
 	    ++src;
 	    ts += s;
 	  }
