@@ -148,11 +148,14 @@ Graphic* PNGLoader::Load(const char* name) throw() {
     return NULL;
   }
   png_structp libpng = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-  if(!libpng)
+  if(!libpng) {
+    fclose(f);
     return NULL;
+  }
   png_infop info = png_create_info_struct(libpng);
   if(!info) {
     png_destroy_read_struct(&libpng, NULL, NULL);
+    fclose(f);
     return NULL;
   }
   Graphic* ret = NULL;
