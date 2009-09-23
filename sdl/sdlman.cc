@@ -24,7 +24,7 @@ static bool init_failed = false;
 static Uint32 init_systems = 0;
 static bool inited = false;
 
-void InitializeSubsystem(Uint32 system) {
+void SDLMan::InitializeSubsystem(Uint32 system) {
   if(init_failed) throw (const char*)"Initialization already failed once";
   if(!inited) {
     if(SDL_Init(0)) {
@@ -39,7 +39,7 @@ void InitializeSubsystem(Uint32 system) {
   init_systems |= system;
 }
 
-void QuitSubsystem(Uint32 system) {
+void SDLMan::QuitSubsystem(Uint32 system) {
   if(init_failed) throw (const char*)"Initialization already failed once";
   if(!inited) throw (const char*)"Not initialized in the first place";
   if(init_systems & system) {
