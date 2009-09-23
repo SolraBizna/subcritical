@@ -46,7 +46,7 @@ static void AudioCallback(void* userdata, Uint8* stream, int len) {
 }
 
 SDLSound::SDLSound(SoundStream* slave) throw(const char*) : SoundDevice(slave) {
-  InitializeSubsystem(SDL_INIT_AUDIO);
+  SDLMan::InitializeSubsystem(SDL_INIT_AUDIO);
   SDL_AudioSpec desired;
   desired.freq = slave->GetFramerate();
   desired.format = little_endian ? AUDIO_S16LSB : AUDIO_S16MSB;
@@ -55,7 +55,7 @@ SDLSound::SDLSound(SoundStream* slave) throw(const char*) : SoundDevice(slave) {
   desired.callback = AudioCallback;
   desired.userdata = this;
   if(SDL_OpenAudio(&desired, NULL)) {
-    QuitSubsystem(SDL_INIT_AUDIO);
+    SDLMan::QuitSubsystem(SDL_INIT_AUDIO);
     throw (const char*)SDL_GetError();
   }
   SDL_PauseAudio(0);
@@ -63,7 +63,7 @@ SDLSound::SDLSound(SoundStream* slave) throw(const char*) : SoundDevice(slave) {
 
 SDLSound::~SDLSound() {
   SDL_CloseAudio();
-  QuitSubsystem(SDL_INIT_AUDIO);
+  SDLMan::QuitSubsystem(SDL_INIT_AUDIO);
 }
 
 SUBCRITICAL_CONSTRUCTOR(SDLSound)(lua_State* L) {

@@ -25,7 +25,9 @@
 
 #include "SDL.h"
 
-LOCAL void InitializeSubsystem(Uint32 system);
-LOCAL void QuitSubsystem(Uint32 system);
+namespace SDLMan {
+  EXPORT void InitializeSubsystem(Uint32 system);
+  EXPORT void QuitSubsystem(Uint32 system);
+}
 
 #endif
