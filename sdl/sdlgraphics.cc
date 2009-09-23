@@ -112,7 +112,7 @@ static void TryGammaCorrection() throw() {
 
 SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title) :
 doing_relmouse(false), doing_textok(false) {
-  InitializeSubsystem(SDL_INIT_VIDEO);
+  SDLMan::InitializeSubsystem(SDL_INIT_VIDEO);
   Uint32 initflags = windowed ? 0 : SDL_FULLSCREEN;
   screen = SDL_SetVideoMode(width, height, 32, initflags);
   if(!screen && (initflags & SDL_HWSURFACE)) {
@@ -124,7 +124,7 @@ doing_relmouse(false), doing_textok(false) {
     screen = SDL_SetVideoMode(width, height, 32, initflags);
   }
   if(!screen) {
-    QuitSubsystem(SDL_INIT_VIDEO);
+    SDLMan::QuitSubsystem(SDL_INIT_VIDEO);
     throw (const char*)SDL_GetError();
   }
   this->width = screen->w;
@@ -368,7 +368,7 @@ int SDLGraphics::Lua_GetMousePos(lua_State* L) throw() {
 
 SDLGraphics::~SDLGraphics() {
   //SDL_FreeSurface(shadow);
-  QuitSubsystem(SDL_INIT_VIDEO);
+  SDLMan::QuitSubsystem(SDL_INIT_VIDEO);
 }
 
 PROTOCOL_IMP_PLAIN(SDLGraphics, GraphicsDevice);
