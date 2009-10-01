@@ -135,10 +135,10 @@ else
    local gpp = os.getenv("CXX") or "g++"
    local gld = os.getenv("LD") or os.getenv("CXX") or "g++"
    local platforms = {
-      linux={cxx=gpp.." -Wall -Wno-pmf-conversions -fPIC -O2 -c", ld=gld.." -fPIC -O -shared", soext=".so"},
-      cygwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 -c", ld=gld.." -O -shared", soext=".dll"},
-      mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 -c", ld=gld.." -O -shared", soext=".dll"},
-      darwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" "..gld.." -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
+      linux={cxx=gpp.." -Wall -Wno-pmf-conversions -fPIC -O2 -I/usr/include/lua51 -c", ld=gld.." -fPIC -O -L/usr/include/lua51 -shared", soext=".so"},
+      cygwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 -I/usr/include/lua51 -c", ld=gld.." -O -L/usr/include/lua51 -shared", soext=".dll"},
+      mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 -I/usr/include/lua51 -c", ld=gld.." -O -L/usr/include/lua51 -shared", soext=".dll"},
+      darwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 -I/usr/include/lua51 -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" "..gld.." -L/usr/include/lua51 -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
    }
    assert(platforms[osc])
    cxx = platforms[osc].cxx
