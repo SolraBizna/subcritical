@@ -93,7 +93,16 @@ local function check_got(self, got)
       return
    end
    -- this will never become a valid packet
-   if(tot:match("^....[0-9]*[^0-9 ]")) then return true,nil end
+   if(tot:match("^....[0-9]*[^0-9 ]")) then
+      if(self.sock:IsA("SocketDgram")) then
+	 -- expect datagram boundary to sync us back up soon
+	 self.recvq = nil
+	 return nil
+      else
+	 -- regaining sync is impossible
+	 return true,nil
+      end
+   end
    local len = tot:match("^....([0-9]+) ")
    if(len) then
       local msglen = tonumber(len) + #len + 5
