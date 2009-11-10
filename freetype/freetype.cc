@@ -122,9 +122,13 @@ static void CopyToFrisket(FT_Bitmap& bitmap, int sx, Frisket* f, int dx, int dy)
   uint8_t* sp = bitmap.buffer + sx;
   int height = f->height - dy;
   if(bitmap.rows < height) height = bitmap.rows;
-  for(int y = 0; y < height; ++y) {
+  if(dy < 0)
+    sp += -dy * bitmap.pitch;
+  for(int y = dy < 0 ? -dy : 0; y < height; ++y) {
+    if(y+dy >= f->height) break;
     Frixel* dp = f->rows[y+dy] + dx;
     int rem = width;
+    if(rem > f->width-dx) rem = f->width-dx;
     int x = 0;
     UNROLL_MORE(rem,
 		*dp++ = sp[x++]);
@@ -143,7 +147,10 @@ static void SaturateToFrisket(FT_Bitmap& bitmap, int sw, Frisket* f, int dx, int
   uint8_t* sp = bitmap.buffer;
   int height = f->height - dy;
   if(bitmap.rows < height) height = bitmap.rows;
-  for(int y = 0; y < height; ++y) {
+  if(dy < 0)
+    sp += -dy * bitmap.pitch;
+  for(int y = dy < 0 ? -dy : 0; y < height; ++y) {
+    if(y+dy >= f->height) break;
     Frixel* dp = f->rows[y+dy] + dx;
     int rem = width;
     int x = 0;
