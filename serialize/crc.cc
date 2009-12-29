@@ -42,7 +42,7 @@ LOCAL void SubCritical::build_crc_table() {
 static uint32_t update_crc(uint32_t crc, const unsigned char* buf, size_t len) {
   crc = ~crc;
   UNROLL_MORE(len,
-	      crc = crc_table[(crc & *buf++) & 255] ^ (crc >> 8));
+	      crc = crc_table[(crc ^ *buf++) & 255] ^ (crc >> 8));
   return ~crc;
 }
 
