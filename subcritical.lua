@@ -136,6 +136,13 @@ local config_dir = os.getenv("SUBCRITICAL_CONFIG_DIR") or default_config_dir
 if(config_dir:sub(-1,-1) ~= dirsep) then config_dir = config_dir .. dirsep end
 if(pathcheck) then dprintf("config_dir=%s", config_dir) end
 
+local default_plugin_dir
+if(helper.os == "windows") then default_plugin_dir = (os.getenv("USERPROFILE") or "C:\\Documents and Settings\\User").."\\SubCritical\\Plugins\\"
+else default_plugin_dir = (os.getenv("HOME") or "/home").."/.subcritical/plugins/" end
+local plugin_dir = os.getenv("SUBCRITICAL_PLUGIN_DIR") or default_plugin_dir
+if(plugin_dir:sub(-1,-1) ~= dirsep) then plugin_dir = plugin_dir .. dirsep end
+if(pathcheck) then dprintf("plugin_dir=%s", plugin_dir) end
+
 local so_extension = helper.so_extension
 
 local function listallfiles(path, ext)
@@ -644,6 +651,12 @@ end
 local function cproxy(t)
    setmetatable(t, fpmt)
    return t
+end
+
+function sc.GetPluginPath(name)
+   local path = plugin_dir..fixvarname(name)..dirsep
+   helper.ckdir(path)
+   return SC.Construct("Path", path)
 end
 
 sc.var = {}
