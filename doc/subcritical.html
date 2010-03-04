@@ -49,13 +49,17 @@
 <i>file</i> = SCVar.Write(<i>name</i>)
 <i>file</i> = scvar.Write(<i>name</i>)</dt>
 <dd>Returns a Lua <tt>file</tt> (actually, a table shadowing one) to create or replace a file by the name of <i class="code">name</i> in the SubCritical configuration directory. The location of this directory varies from platform to platform. The file is not actually created / replaced until it is explicitly closed (with <tt>:close()</tt>). In particular, if the garbage collector gets it, the file is never actually created!</dd>
-<dd>See <a href="var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
+<dd>See <a href="#var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
 <dt class="code"><a name="var.Update"><i>file</i> = SubCritical.Var.Update(<i>name</i>)
 <i>file</i> = SubCritical.var.Update(<i>name</i>)
 <i>file</i> = SCVar.Update(<i>name</i>)
 <i>file</i> = scvar.Update(<i>name</i>)</dt>
 <dd>Returns a Lua <tt>file</tt> (actually, a table shadowing one) to update a file by the name of <i class="code">name</i> in the SubCritical configuration directory. If the file does not exist, it is created. If it does, the file position starts at the end of the file. In either case, the file handle can be seeked, read from, and written to at will. The file is not actually updated until it is explicitly closed (with <tt>:close()</tt>). In particular, if the garbage collector gets it, the file is never updated!</dd>
-<dd>See <a href="var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
+<dd>See <a href="#var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
+<dt class="code"><a name="GetPluginPath" /><i>path</i> = SubCritical.GetPluginPath(<i>name</i>)</dt>
+<dd>Returns the platform-specific path of a (hopefully) user-writable directory where your game (identified by <i class="code">name</i>) may expect to find user-installed plugins. The directory is created if it doesn't exist.</dd>
+<dd>Best used with <a href="#ListFiles" class="code">ListFiles</a> or <a href="#ListFilesRecursive" class="code">ListFilesRecursive</a>.</dd>
+<dd>See <a href="#var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
 <dt class="code"><a name="version"><i>version_string</i> = ("%03x"):format(SubCritical.version)
 if(SubCritical.version < 0x0b5) then error("This game requires feature X that was added in SubCritical 0b5.") end</dt>
 <dd>The SubCritical version, as a number. Interpreted as a hexadecimal number, the least significant digit is the minor release number, the next most significant the release type, and the rest is the major version. (Example: 0b5; the sixth beta release of major version 0.)</dd>
