@@ -166,7 +166,21 @@ void UDPListenSocket::Massage() throw(std::bad_alloc) {
 
 int UDPListenSocket::Lua_Accept(lua_State* L) throw() {
   Massage();
-  if(recruits.empty()) return 0;
+  if(recruits.empty()) {
+    if(blocking) {
+      struct timeval timeout = {120,0};
+      fd_set rfd;
+      FD_ZERO(&rfd);
+      FD_SET(sock, &rfd);
+      while(select(sock+1, &rfd, NULL, NULL, &timeout) <= 0) {
+	timeout.tv_sec = 120;
+	FD_ZERO(&rfd);
+	FD_SET(sock, &rfd);
+      }
+      return Lua_Accept(L);
+    }
+    else return 0;
+  }
   deque<DeferredDgram>::iterator recruit = recruits.begin();
   UDPSlaveSocket* slave = new UDPSlaveSocket(this, (*recruit).source);
   slave->Push(L);
@@ -250,7 +264,21 @@ bool UDPSlaveSocket::SendDgram(const void* buf, size_t max_size, FailReason& err
     switch(errno) {
     case EMSGSIZE: error = PacketTooBig; return false;
     case EINTR:
-    case EAGAIN: error = NotReady; return false;
+    case EAGAIN:
+      if(master->blocking) {
+	struct timeval timeout = {120,0};
+	fd_set wfd;
+	FD_ZERO(&wfd);
+	FD_SET(master->sock, &wfd);
+	while(select(master->sock+1, NULL, &wfd, NULL, &timeout) <= 0) {
+	  timeout.tv_sec = 120;
+	  FD_ZERO(&wfd);
+	  FD_SET(master->sock, &wfd);
+	}	
+	return SendDgram(buf, max_size, error);
+      }
+      error = NotReady;
+      return false;
     default: error = Broken; return false;
     }
   }
@@ -278,7 +306,19 @@ int UDPSlaveSocket::Lua_GetPrintableAddress(lua_State* L) throw() {
 size_t UDPSlaveSocket::ReceiveDgram(void* buf, size_t max_size, FailReason& error) throw() {
   if(packets.empty()) {
     master->Massage();
-    if(packets.empty()) {
+    if(master->blocking) {
+      struct timeval timeout = {120,0};
+      fd_set rfd;
+      FD_ZERO(&rfd);
+      FD_SET(master->sock, &rfd);
+      while(select(master->sock+1, &rfd, NULL, NULL, &timeout) <= 0) {
+	timeout.tv_sec = 120;
+	FD_ZERO(&rfd);
+	FD_SET(master->sock, &rfd);
+      }
+      return ReceiveDgram(buf, max_size, error);
+    }
+    else if(packets.empty()) {
       error = NotReady;
       return 0;
     }

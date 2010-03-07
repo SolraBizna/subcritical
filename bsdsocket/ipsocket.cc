@@ -114,6 +114,7 @@ int IPSocket::Lua_SubSetAddressPart(lua_State* L) throw() {
 
 int IPSocket::SetBlocking(lua_State* L, bool blocking) throw() {
   if(!bound) return luaL_error(L, "Not yet bound, we don't have a concept of blocking.");
+  this->blocking = blocking;
 #ifdef __WIN32__
   u_long nonblocking = !blocking;
   if(ioctlsocket(sock, FIONBIO, &nonblocking) < 0) {
