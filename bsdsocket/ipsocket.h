@@ -104,6 +104,7 @@ namespace SubCritical {
     struct sockaddr_in addr;
     int Lua_SubApplyAddress(lua_State* L) throw();
     SOCKET sock;
+    bool blocking;
   };
   class EXPORT TCPSocket : public SocketStream, IPSocket {
   public:
