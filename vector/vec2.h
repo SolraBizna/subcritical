@@ -58,6 +58,29 @@ static Vec2*restrict vec_mul_2(const Vec2&restrict a, Scalar b) {
   return ret;
 }
 
+static Vec2*restrict vec_div_2(const Vec2&restrict a, Scalar b) {
+  Vec2*restrict ret = new Vec2();
+  Scalar recip= 1 / b;
+  ret->x = a.x * recip;
+  ret->y = a.y * recip;
+  return ret;
+}
+
+static Vec2*restrict vec_sadd_2(const Vec2&restrict a, Scalar b) {
+  Vec2*restrict ret = new Vec2();
+  ret->x = a.x + b;
+  ret->y = a.y + b;
+  return ret;
+}
+
+static Vec2*restrict vec_ssub_2(const Vec2&restrict a, Scalar b) {
+  Vec2*restrict ret = new Vec2();
+  ret->x = a.x - b;
+  ret->y = a.y - b;
+  return ret;
+}
+
+
 static Vec2*restrict vec_unm_2(const Vec2&restrict a) {
   Vec2*restrict ret = new Vec2();
   ret->x = -a.x;

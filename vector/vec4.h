@@ -72,6 +72,34 @@ static Vec4*restrict vec_mul_4(const Vec4&restrict a, Scalar b) {
   return ret;
 }
 
+static Vec4*restrict vec_div_4(const Vec4&restrict a, Scalar b) {
+  Vec4*restrict ret = new Vec4();
+  Scalar recip= 1 / b;
+  ret->x = a.x * recip;
+  ret->y = a.y * recip;
+  ret->z = a.z * recip;
+  ret->w = a.w * recip;
+  return ret;
+}
+
+static Vec4*restrict vec_sadd_4(const Vec4&restrict a, Scalar b) {
+  Vec4*restrict ret = new Vec4();
+  ret->x = a.x + b;
+  ret->y = a.y + b;
+  ret->z = a.z + b;
+  ret->w = a.w + b;
+  return ret;
+}
+
+static Vec4*restrict vec_ssub_4(const Vec4&restrict a, Scalar b) {
+  Vec4*restrict ret = new Vec4();
+  ret->x = a.x - b;
+  ret->y = a.y - b;
+  ret->z = a.z - b;
+  ret->w = a.w - b;
+  return ret;
+}
+
 static Vec4*restrict vec_unm_4(const Vec4& a) {
   Vec4*restrict ret = new Vec4();
   ret->x = -a.x;
