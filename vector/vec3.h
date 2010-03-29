@@ -71,6 +71,31 @@ static Vec3*restrict vec_mul_3(const Vec3& a, Scalar b) {
   return ret;
 }
 
+static Vec3*restrict vec_div_3(const Vec3& a, Scalar b) {
+  Vec3*restrict ret = new Vec3();
+  Scalar recip= 1 / b;
+  ret->x = a.x * recip;
+  ret->y = a.y * recip;
+  ret->z = a.z * recip;
+  return ret;
+}
+
+static Vec3*restrict vec_sadd_3(const Vec3& a, Scalar b) {
+  Vec3*restrict ret = new Vec3();
+  ret->x = a.x + b;
+  ret->y = a.y + b;
+  ret->z = a.z + b;
+  return ret;
+}
+
+static Vec3*restrict vec_ssub_3(const Vec3& a, Scalar b) {
+  Vec3*restrict ret = new Vec3();
+  ret->x = a.x - b;
+  ret->y = a.y - b;
+  ret->z = a.z - b;
+  return ret;
+}
+
 static Vec3*restrict vec_mul_333(const Vec3&restrict a, const Vec3&restrict b) {
   Vec3*restrict ret = new Vec3();
   ret->x = a.x * b.x;

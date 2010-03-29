@@ -57,6 +57,18 @@ static const op_vvs vec_mul[3] = {
   (op_vvs)vec_mul_2,(op_vvs)vec_mul_3,(op_vvs)vec_mul_4,
 };
 
+static const op_vvs vec_div[3] = {
+  (op_vvs)vec_div_2,(op_vvs)vec_div_3,(op_vvs)vec_div_4,
+};
+
+static const op_vvs vec_sadd[3] = {
+  (op_vvs)vec_sadd_2,(op_vvs)vec_sadd_3,(op_vvs)vec_sadd_4,
+};
+
+static const op_vvs vec_ssub[3] = {
+  (op_vvs)vec_ssub_2,(op_vvs)vec_ssub_3,(op_vvs)vec_ssub_4,
+};
+
 static const op_vvv vec_mulvv[3][3] = {
   {(op_vvv)vec_mul_222,(op_vvv)vec_mul_222,(op_vvv)vec_mul_424},
   {(op_vvv)vec_mul_222,(op_vvv)vec_mul_333,(op_vvv)vec_mul_434},
@@ -117,36 +129,52 @@ LOCAL Vector* fromtabletovector(lua_State* L, int n) {
 
 static int f_vector_add(lua_State* L) {
   Vector*restrict a = lua_toobject(L, 1, Vector);
-  if(lua_istable(L, 2)) {
-    Vector*restrict b = fromtabletovector(L, 2);
-    Vector*restrict c = (vec_add[a->n-2][b->n-2])(*a, *b);
-    delete b;
-    c->Push(L);
-    return 1;
+  if(lua_isnumber(L, 2)) {
+      Scalar b= luaL_checknumber(L, 2);
+      Vector*restrict c = (vec_sadd[a->n-2])(*a, b);
+      c->Push(L);
   }
   else {
-    Vector*restrict b = lua_toobject(L, 2, Vector);
-    Vector*restrict c = (vec_add[a->n-2][b->n-2])(*a, *b);
-    c->Push(L);
-    return 1;
+    if(lua_istable(L, 2)) {
+      Vector*restrict b = fromtabletovector(L, 2);
+      Vector*restrict c = (vec_add[a->n-2][b->n-2])(*a, *b);
+      delete b;
+      c->Push(L);
+      return 1;
+    }
+    else {
+      Vector*restrict b = lua_toobject(L, 2, Vector);
+      Vector*restrict c = (vec_add[a->n-2][b->n-2])(*a, *b);
+      c->Push(L);
+      return 1;
+    }
   }
+  return 1;
 }
 
 static int f_vector_sub(lua_State* L) {
   Vector*restrict a = lua_toobject(L, 1, Vector);
-  if(lua_istable(L, 2)) {
-    Vector*restrict b = fromtabletovector(L, 2);
-    Vector*restrict c = (vec_sub[a->n-2][b->n-2])(*a, *b);
-    delete b;
+  if(lua_isnumber(L, 2)) {
+    Scalar b= luaL_checknumber(L, 2);
+    Vector*restrict c = (vec_ssub[a->n-2])(*a, b);
     c->Push(L);
-    return 1;
   }
   else {
-    Vector*restrict b = lua_toobject(L, 2, Vector);
-    Vector*restrict c = (vec_sub[a->n-2][b->n-2])(*a, *b);
-    c->Push(L);
-    return 1;
+    if(lua_istable(L, 2)) {
+      Vector*restrict b = fromtabletovector(L, 2);
+      Vector*restrict c = (vec_sub[a->n-2][b->n-2])(*a, *b);
+      delete b;
+      c->Push(L);
+      return 1;
+    }
+    else {
+      Vector*restrict b = lua_toobject(L, 2, Vector);
+      Vector*restrict c = (vec_sub[a->n-2][b->n-2])(*a, *b);
+      c->Push(L);
+      return 1;
+    }
   }
+  return 1;
 }
 
 static int f_vector_concat(lua_State* L) {
@@ -186,6 +214,14 @@ static int f_vector_mul(lua_State* L) {
       return 1;
     }
   }
+  return 1;
+}
+
+static int f_vector_div(lua_State* L) {
+  Vector*restrict a = lua_toobject(L, 1, Vector);
+  Scalar b= luaL_checknumber(L, 2);
+  Vector*restrict c= (vec_div[a->n-2])(*a, b);
+  c->Push(L);
   return 1;
 }
 
@@ -298,6 +334,7 @@ static const struct luaL_Reg vector_ops[] = {
   {"__sub", f_vector_sub},
   {"__concat", f_vector_concat},
   {"__mul", f_vector_mul},
+  {"__div", f_vector_div},
   {"__call", f_vector_unpack},
   {"__eq", f_vector_eq},
   {"__unm", f_vector_unm},

@@ -42,8 +42,13 @@ local vector = SC.Construct(unpack(serial_table))</pre></dd>
 <dd>Returns <span class="code">true</span> if the two <span class="code">Vector</span>s are the same order and element-for-element identical, <span class="code">false</span> otherwise. (This will still return <span class="code">false</span> even if the two <span class="code">Vector</span>s are very, very close to equal.)</dd>
 <dt class="code"><i>dot_product</i> = <i>vector_A</i> .. <i>vector_B</i></dt>
 <dd>Returns the dot product of the two <span class="code">Vector</span>s.</dd>
+<dt class="code"><i>new_vector</i> = <i>old_vector</i> + <i>factor</i>
+<i>new_vector</i> = <i>old_vector</i> - <i>factor</i></dt>
+<dd><i class="code">factor</i> is a single number, which is added to (or subtracted from) all the elements of <i>old_vector</i>.</dd>
 <dt class="code"><i>new_vector</i> = <i>old_vector</i> * <i>scale_factor</i></dt>
 <dd><i class="code">scale_factor</i> is a single number, which is multiplied across all the elements of <i>old_vector</i>.</dd>
+<dt class="code"><i>new_vector</i> = <i>old_vector</i> / <i>scale_factor</i></dt>
+<dd><i class="code">scale_factor</i> is a single number, which all the elements of <i>old_vector</i> are divided by.</dd>
 <dt class="code"><i>new_vector</i> = <i>vector_A</i> * <i>vector_B</i></dt>
 <dd>Returns the component-wise product of the two vectors. <i class="code">new_vector</i> will be as small as necessary; multiply a <span class="code">Vec2</span> by a <span class="code">Vec3</span> and you get another <span class="Code">Vec2</span>.</dd>
 <dt class="code"><i>new_vector</i> = -<i>old_vector</i></dt>
