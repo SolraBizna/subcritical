@@ -56,6 +56,18 @@
 <i>file</i> = scvar.Update(<i>name</i>)</dt>
 <dd>Returns a Lua <tt>file</tt> (actually, a table shadowing one) to update a file by the name of <i class="code">name</i> in the SubCritical configuration directory. If the file does not exist, it is created. If it does, the file position starts at the end of the file. In either case, the file handle can be seeked, read from, and written to at will. The file is not actually updated until it is explicitly closed (with <tt>:close()</tt>). In particular, if the garbage collector gets it, the file is never updated!</dd>
 <dd>See <a href="#var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
+<dt class="code"><a name="var.Path"><i>path</i> = SubCritical.Var.Path(<i>name</i>)
+<i>path</i> = SubCritical.var.Path(<i>name</i>)
+<i>path</i> = SCVar.Path(<i>name</i>)
+<i>path</i> = scvar.Path(<i>name</i>)</dt>
+<dd>Returns the <a href="core.html#Path" class="code">Path</a> to the corresponding configuration file. As far as I know, the only legitimate use for this function is to <a href="graphics.html#GraphicLoader">load</a> a <a href="graphics.html#Graphic" class="code">Graphic</a> from a config file.</dd>
+<dd>See <a href="#var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
+<dt class="code"><a name="var.Path">SubCritical.Var.Remove(<i>name</i>)
+SubCritical.var.Remove(<i>name</i>)
+SCVar.Remove(<i>name</i>)
+scvar.Remove(<i>name</i>)</dt>
+<dd>Deletes the corresponding configuration file, if it exists. Never fails, even if the file was not actually deleted. Also tries to delete any temporary copies of the file that exist.</dd>
+<dd>See <a href="#var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
 <dt class="code"><a name="GetPluginPath" /><i>path</i> = SubCritical.GetPluginPath(<i>name</i>)</dt>
 <dd>Returns the platform-specific path of a (hopefully) user-writable directory where your game (identified by <i class="code">name</i>) may expect to find user-installed plugins. The directory is created if it doesn't exist.</dd>
 <dd>Best used with <a href="#ListFiles" class="code">ListFiles</a> or <a href="#ListFilesRecursive" class="code">ListFilesRecursive</a>.</dd>
