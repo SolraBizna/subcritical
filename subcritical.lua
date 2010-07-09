@@ -676,6 +676,15 @@ function sc.var.Update(name)
    helper.copy(name.."~", name) -- save memory by not doing this in Lua
    return cproxy({file=old_open(name.."~","ab+"), sname=name.."~", dname=name})
 end
+function sc.var.Path(name)
+   name = config_dir..fixvarname(name)
+   return SC.Construct("Path",name)
+end
+function sc.var.Remove(name)
+   name = config_dir..fixvarname(name)
+   os.remove(name)
+   os.remove(name.."~")
+end
 
 if(hardcheck) then
    local failed = 0
