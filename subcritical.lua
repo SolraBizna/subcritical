@@ -546,7 +546,7 @@ function SubCritical.ListFiles(extension, dirpath)
    local files = helper.listfiles(rawpath, extension)
    table.sort(files)
    for n=1,#files do
-      ret[n] = SubCritical.Construct("Path", rawpath..files[n])
+      ret[n] = SubCritical.Construct("Path", files[n])
    end
    return ret
 end
@@ -559,10 +559,10 @@ function SubCritical.ListFilesRecursive(extension, dirpath)
       table.sort(files)
       table.sort(dirs)
       for n=1,#dirs do
-	 read_dir(path..dirs[n]..dirsep)
+	 read_dir(dirs[n]..dirsep)
       end
       for n=1,#files do
-	 ret[#ret+1] = SubCritical.Construct("Path", path..files[n])
+	 ret[#ret+1] = SubCritical.Construct("Path", files[n])
       end
    end
    read_dir(rawpath)
