@@ -563,7 +563,7 @@ function SubCritical.ListFilesRecursive(extension, dirpath)
 	 read_dir(path..dirs[n]..dirsep)
       end
       for n=1,#files do
-	 ret[#ret+1] = SubCritical.Construct("Path", files[n])
+	 ret[#ret+1] = SubCritical.Construct("Path", path..files[n])
       end
    end
    read_dir(rawpath)
