@@ -75,6 +75,7 @@ static int f_listfiles(lua_State* L) {
   struct dirent* ent;
   const char* ext = luaL_checkstring(L, 2);
   DIR* dir = opendir(luaL_checkstring(L, 1));
+  bool dirs = (lua_gettop(L) == 2) ? false : lua_toboolean(L,3);
   size_t extlen = strlen(ext);
   int i;
   if(!lua_istable(L, -1))
@@ -84,10 +85,16 @@ static int f_listfiles(lua_State* L) {
   while((ent = readdir(dir))) {
     if(strlen(ent->d_name) < extlen || ent->d_name[0] == '.') continue; // lol
     if(strcasecmp(ent->d_name + strlen(ent->d_name) - extlen, ext)) continue;
+    struct stat buf;
     lua_pushvalue(L, 1);
     lua_pushstring(L, ent->d_name);
     lua_concat(L, 2);
-    lua_rawseti(L, -2, i++);
+    const char* path = lua_tostring(L, -1);
+    if(!stat(path, &buf)) {
+      if(dirs ? !S_ISDIR(buf.st_mode) : S_ISDIR(buf.st_mode)) continue;
+      lua_rawseti(L, -2, i++);
+    }
+    else lua_pop(L, 1);
   }
   closedir(dir);
   return 1;
@@ -97,6 +104,7 @@ static int f_listfiles_plusdirs(lua_State* L) {
   struct dirent* ent;
   const char* ext = luaL_checkstring(L, 2);
   DIR* dir = opendir(luaL_checkstring(L, 1));
+  bool dirs = (lua_gettop(L) == 2) ? false : lua_toboolean(L,3);
   size_t extlen = strlen(ext);
   int i, j;
   if(!dir) return 0;
@@ -112,16 +120,17 @@ static int f_listfiles_plusdirs(lua_State* L) {
     const char* path = lua_tostring(L, -1);
     if(!stat(path, &buf)) {
       lua_pop(L, 1);
-      if(S_ISDIR(buf.st_mode)) {
-	lua_pushstring(L, ent->d_name);
-	lua_rawseti(L, -2, j++);
-      }
-      else {
+      if(dirs ? S_ISDIR(buf.st_mode) : !S_ISDIR(buf.st_mode)) {
 	// it may not be a regular file, but let's treat it like one anyway
 	if(strlen(ent->d_name) < extlen) continue; // lol
 	if(strcasecmp(ent->d_name + strlen(ent->d_name) - extlen, ext)) continue;
 	lua_pushstring(L, ent->d_name);
 	lua_rawseti(L, -3, i++);
+      }
+      /* if dirs is true, we specifically do not recurse into matched dirs */
+      else if(S_ISDIR(buf.st_mode)) {
+	lua_pushstring(L, ent->d_name);
+	lua_rawseti(L, -2, j++);
       }
     }
     else lua_pop(L, 1);

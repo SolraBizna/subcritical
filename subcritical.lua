@@ -149,9 +149,9 @@ local function listallfiles(path, ext)
    local ret
    for dir in path:gmatch("[^;]+") do
       if(dir:sub(-1,-1) ~= dirsep) then
-	 ret = helper.listfiles(dir..dirsep, ext, ret)
+	 ret = helper.listfiles(dir..dirsep, ext, false, ret)
       else
-	 ret = helper.listfiles(dir, ext, ret)
+	 ret = helper.listfiles(dir, ext, false, ret)
       end
    end
    return ret or {}
@@ -539,23 +539,23 @@ function subcritical.ConstructPath(path, level)
       return construct_specific("Path", path)
    end
 end
-function SubCritical.ListFiles(extension, dirpath)
+function SubCritical.ListFiles(extension, dirpath, dirs)
    dirpath = dirpath or SubCritical.Path(".", 3)
    local rawpath = dirpath:GetPath() .. dirsep
    local ret = {}
-   local files = helper.listfiles(rawpath, extension)
+   local files = helper.listfiles(rawpath, extension or "", dirs)
    table.sort(files)
    for n=1,#files do
       ret[n] = SubCritical.Construct("Path", files[n])
    end
    return ret
 end
-function SubCritical.ListFilesRecursive(extension, dirpath)
+function SubCritical.ListFilesRecursive(extension, dirpath, dirs)
    dirpath = dirpath or SubCritical.Path(".", 3)
    local rawpath = dirpath:GetPath() .. dirsep
    local ret = {}
    local function read_dir(path)
-      local files,dirs = helper.listfiles_plusdirs(path, extension)
+      local files,dirs = helper.listfiles_plusdirs(path, extension or "", dirs)
       if not files then return end
       table.sort(files)
       table.sort(dirs)
@@ -568,6 +568,12 @@ function SubCritical.ListFilesRecursive(extension, dirpath)
    end
    read_dir(rawpath)
    return ret
+end
+function SubCritical.ListFolders(extension, dirpath)
+   return SC.ListFiles(extension, dirpath, true)
+end
+function SubCritical.ListFoldersRecursive(extension, dirpath)
+   return SC.ListFilesRecursive(extension, dirpath, true)
 end
 -- more aliases
 subcritical.Path = subcritical.ConstructPath
