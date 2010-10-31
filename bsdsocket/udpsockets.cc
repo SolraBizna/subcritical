@@ -299,7 +299,9 @@ int UDPSlaveSocket::Lua_SetBlocking(lua_State* L) throw() {
 }
 
 int UDPSlaveSocket::Lua_GetPrintableAddress(lua_State* L) throw() {
-  lua_pushfstring(L, "%d.%d.%d.%d:%d", ((int)(addr >> 24) & 255), ((int)(addr >> 16) & 255), ((int)(addr >> 8) & 255), ((int)addr & 255), (int)(addr >> 32));
+    uint32_t ip = htonl(addr);
+    uint16_t port = htons(addr >> 32);
+  lua_pushfstring(L, "%d.%d.%d.%d:%d", ((int)(ip >> 24) & 255), ((int)(ip >> 16) & 255), ((int)(ip >> 8) & 255), ((int)ip & 255), port);
   return 1;
 }
 
