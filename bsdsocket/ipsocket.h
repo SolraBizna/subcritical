@@ -42,6 +42,7 @@ typedef int socklen_t;
 typedef int SOCKET;
 #include <netinet/in.h>
 #include <netdb.h>
+#include <sys/socket.h>
 #define ErrorToString strerror
 #endif
 
