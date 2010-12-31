@@ -46,9 +46,9 @@ static inline uint16_t linear_F_to_linear_16p(float f, float a) {
 }
 
 #define STD_PRIM *p++ = op_p
-#define STD_PRIM_ALPHA r = (((uint32_t)SrgbToLinear[(*p >> rsh) & 255] * tr_a >> 16) + tr_r); g = (((uint32_t)SrgbToLinear[(*p >> gsh) & 255] * tr_a >> 16) + tr_g); b = (((uint32_t)SrgbToLinear[(*p >> bsh) & 255] * tr_a >> 16) + tr_b); if(r > 65535) r = 65535; if(g > 65535) g = 65535; if(b > 65535) b = 65535; *p++ = (LinearToSrgb[r] << rsh) | (LinearToSrgb[g] << gsh) | (LinearToSrgb[b] << bsh)
+#define STD_PRIM_ALPHA r = (((uint32_t)SrgbToLinear[(*p >> rsh) & 255] * tr_a >> 16) + tr_r); g = (((uint32_t)SrgbToLinear[(*p >> gsh) & 255] * tr_a >> 16) + tr_g); b = (((uint32_t)SrgbToLinear[(*p >> bsh) & 255] * tr_a >> 16) + tr_b); if(r > 65535) r = 65535; if(g > 65535) g = 65535; if(b > 65535) b = 65535; *p++ = (LinearToSrgb[r] << rsh) | (LinearToSrgb[g] << gsh) | (LinearToSrgb[b] << bsh) | mask
 #define STD_PRIM_UNROLL UNROLL_MORE(rem, STD_PRIM)
-#define STD_PRIM_UNROLL_ALPHA do { uint32_t r, g, b; UNROLL(rem, STD_PRIM_ALPHA); } while(0)
+#define STD_PRIM_UNROLL_ALPHA do { uint32_t r, g, b; Pixel mask = 255 << ash; UNROLL(rem, STD_PRIM_ALPHA); } while(0)
 
 void Drawable::DrawRect(int l, int t, int r, int b) throw() {
   if(l < clip_left) l = clip_left;
@@ -107,6 +107,7 @@ void Drawable::DrawPoints(int size, const Fixed* coords, size_t pointcount) thro
   if(size <= 1) {
     if(primitive_alpha) {
       uint32_t r, g, b;
+      Pixel mask = 255 << ash;
       for(size_t n = 0; n < pointcount; ++n) {
 	int x, y;
 	x = Q_TO_I(fp[0]);
@@ -163,7 +164,7 @@ void Drawable::SetPrimitiveColor(lua_Number r, lua_Number g, lua_Number b, lua_N
     trf_r = linear_F_to_linear_16((float)r);
     trf_g = linear_F_to_linear_16((float)g);
     trf_b = linear_F_to_linear_16((float)b);
-    op_p = (op_r << rsh) | (op_g << gsh) | (op_b << bsh);
+    op_p = (op_r << rsh) | (op_g << gsh) | (op_b << bsh) | (255 << ash);
   }
   else if(a <= 0.0) {
     primitive_alpha = true;
@@ -192,7 +193,7 @@ void Drawable::SetPrimitiveColorPremul(lua_Number r, lua_Number g, lua_Number b,
     trf_r = linear_F_to_linear_16((float)r);
     trf_g = linear_F_to_linear_16((float)g);
     trf_b = linear_F_to_linear_16((float)b);
-    op_p = (op_r << rsh) | (op_g << gsh) | (op_b << bsh);
+    op_p = (op_r << rsh) | (op_g << gsh) | (op_b << bsh) | (255 << ash);
   }
   else {
     primitive_alpha = true;
@@ -259,6 +260,7 @@ void Drawable::BlitFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int s
     for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
       Frixel* src;
       Pixel* dst;
+      Pixel mask = 255 << ash;
       uint32_t r, g, b, a, ra;
       src = gfk->rows[sY] + sl;
       dst = rows[dY] + dx;
@@ -272,12 +274,13 @@ void Drawable::BlitFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int s
 	     g = (trf_g * a + (uint32_t)SrgbToLinear[(*dst >> gsh) & 255] * ra) >> 16;
 	     b = (trf_b * a + (uint32_t)SrgbToLinear[(*dst >> bsh) & 255] * ra) >> 16;
 	     ++src;
-	     *dst++ = ((Pixel)LinearToSrgb[r] << rsh) | ((Pixel)LinearToSrgb[g] << gsh) | ((Pixel)LinearToSrgb[b] << bsh));
+	     *dst++ = ((Pixel)LinearToSrgb[r] << rsh) | ((Pixel)LinearToSrgb[g] << gsh) | ((Pixel)LinearToSrgb[b] << bsh) | mask);
     }
   }
   else for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
     Frixel* src;
     Pixel* dst;
+    Pixel mask = 255 << ash;
     uint32_t r, g, b, a, ra;
     src = gfk->rows[sY] + sl;
     dst = rows[dY] + dx;
@@ -290,7 +293,7 @@ void Drawable::BlitFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int s
 	   g = (trf_g * a + (uint32_t)SrgbToLinear[(*dst >> gsh) & 255] * ra) >> 8;
 	   b = (trf_b * a + (uint32_t)SrgbToLinear[(*dst >> bsh) & 255] * ra) >> 8;
 	   ++src;
-	   *dst++ = ((Pixel)LinearToSrgb[r] << rsh) | ((Pixel)LinearToSrgb[g] << gsh) | ((Pixel)LinearToSrgb[b] << bsh));
+	   *dst++ = ((Pixel)LinearToSrgb[r] << rsh) | ((Pixel)LinearToSrgb[g] << gsh) | ((Pixel)LinearToSrgb[b] << bsh) | mask);
   }
 }
 
@@ -690,6 +693,7 @@ inline void Drawable::DrawBresenlineV(const Fixed*restrict top, const Fixed*rest
   Tri_DDA_Init(line, top, bot, 1);
   if(primitive_alpha) {
     uint32_t r, g, b;
+    Pixel mask = 255 << ash;
     while((Q_TO_I(line) < 0 || Q_TO_I(line) >= width ||
 	   y < 0 || y >= height) &&
 	   rem-- > 0) {
@@ -733,6 +737,7 @@ inline void Drawable::DrawBresenlineH(const Fixed*restrict left, const Fixed*res
   Tri_DDA_Init(line, left, right, 0);
   if(primitive_alpha) {
     uint32_t r, g, b;
+    Pixel mask = 255 << ash;
     while((Q_TO_I(line) < 0 || Q_TO_I(line) >= height ||
 	   x < 0 || x >= width) &&
 	   rem-- > 0) {

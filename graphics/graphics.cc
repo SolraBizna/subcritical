@@ -175,6 +175,7 @@ void Graphic::CheckAlpha() throw() {
 	   }
 	   ++q);
   }
+  if(!has_alpha) simple_alpha = false;
 }
 
 int Drawable::Lua_GetSize(lua_State* L) const throw() {
@@ -578,6 +579,65 @@ void Frisket::MaxFrisketRect(const Frisket*restrict gfk, int sx, int sy, int sw,
   }
 }
 
+void Drawable::Copy(const Drawable*restrict gfk, int dx, int dy) restrict throw() {
+  CopyRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
+}
+
+void Drawable::CopyRect(const Drawable*restrict gfk, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw() {
+  int sl, st, sr, sb;
+  sl = sx;
+  st = sy;
+  sr = sx + sw - 1;
+  sb = sy + sh - 1;
+  if(dx < clip_left) { sl += clip_left - dx; dx = clip_left; }
+  if(dy < clip_top) { st += clip_top - dy; dy = clip_top; }
+  if(dx + (sr - sl) > clip_right) { sr += clip_right - (dx + (sr - sl)); }
+  if(dy + (sb - st) > clip_bottom) { sb += clip_bottom - (dy + (sb - st)); }
+  if(sl < 0) { dx -= sl; sl = 0; }
+  if(sr >= gfk->width) sr = gfk->width - 1;
+  if(st < 0) { dy -= st; st = 0; }
+  if(sb >= gfk->height) sb = gfk->height - 1;
+  if(sr < sl || sb < st) return;
+  if(gfk->fake_alpha) {
+    Pixel mask;
+    switch(gfk->layout) {
+    default:
+    case FB_RGBx:
+    case FB_BGRx:
+      mask = 0x000000FF; break;
+    case FB_xRGB:
+    case FB_xBGR:
+      mask = 0xFF000000; break;
+    }
+    for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
+      Pixel*restrict src, *restrict dst;
+      src = gfk->rows[sY] + sl;
+      dst = rows[dY] + dx;
+      size_t rem = sr - sl + 1;
+      UNROLL_MORE(rem,
+		  *dst++ = *src++ | mask);
+    }
+  }
+  else for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
+    Pixel*restrict src, *restrict dst;
+    src = gfk->rows[sY] + sl;
+    dst = rows[dY] + dx;
+    memcpy(dst, src, (sr - sl + 1) * sizeof(Pixel));
+    //size_t rem = sr - sl + 1;
+    //UNROLL_MORE(rem,
+    //	*dst++ = *src++);
+  }
+  if(!fake_alpha) {
+    if(!has_alpha && gfk->has_alpha) {
+      has_alpha = true;
+      simple_alpha = gfk->simple_alpha;
+    }
+    else if(has_alpha && simple_alpha) {
+      simple_alpha = simple_alpha && gfk->simple_alpha;
+    }
+  }
+}
+
 void Drawable::Blit(const Drawable*restrict gfk, int dx, int dy) restrict throw() {
   BlitRect(gfk, 0, 0, gfk->width, gfk->height, dx, dy);
 }
@@ -612,6 +672,7 @@ void Drawable::BlitRect(const Drawable*restrict gfk, int sx, int sy, int sw, int
     }
     else for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
       Pixel*restrict src, *restrict dst;
+      Pixel mask = 255 << ash;
       uint32_t r, g, b, a, ra;
       src = gfk->rows[sY] + sl;
       dst = rows[dY] + dx;
@@ -627,7 +688,7 @@ void Drawable::BlitRect(const Drawable*restrict gfk, int sx, int sy, int sw, int
 	     b = ((uint32_t)SrgbToLinear[(*src >> bsh) & 255] * a +
 		  (uint32_t)SrgbToLinear[(*dst >> bsh) & 255] * ra) >> 8;
 	     ++src;
-	     *dst++ = ((Pixel)LinearToSrgb[r] << rsh) | ((Pixel)LinearToSrgb[g] << gsh) | ((Pixel)LinearToSrgb[b] << bsh));
+	     *dst++ = ((Pixel)LinearToSrgb[r] << rsh) | ((Pixel)LinearToSrgb[g] << gsh) | ((Pixel)LinearToSrgb[b] << bsh) | mask);
     }
   }
   else if(gfk->fake_alpha) {
@@ -685,8 +746,8 @@ void Drawable::BlitRectT(const Drawable*restrict gfk, int sx, int sy, int sw, in
   if(sr < sl || sb < st) return;
   if(gfk->has_alpha) {
     if(gfk->simple_alpha) for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
-      Pixel mask = 0xFF << ash;
       Pixel*restrict src, *restrict dst;
+      Pixel mask = 0xFF << ash;
       uint32_t r, g, b, ra;
       src = gfk->rows[sY] + sl;
       dst = rows[dY] + dx;
@@ -700,12 +761,13 @@ void Drawable::BlitRectT(const Drawable*restrict gfk, int sx, int sy, int sw, in
 		    (uint32_t)SrgbToLinear[(*dst >> gsh) & 255] * ra) >> 16;
 	       b = ((uint32_t)SrgbToLinear[(*src >> bsh) & 255] * an +
 		    (uint32_t)SrgbToLinear[(*dst >> bsh) & 255] * ra) >> 16;
-	       *dst = ((Pixel)LinearToSrgb[r] << rsh) | ((Pixel)LinearToSrgb[g] << gsh) | ((Pixel)LinearToSrgb[b] << bsh);
+	       *dst = ((Pixel)LinearToSrgb[r] << rsh) | ((Pixel)LinearToSrgb[g] << gsh) | ((Pixel)LinearToSrgb[b] << bsh) | mask;
 	     }
 	     ++src; ++dst);
     }
     else for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
       Pixel*restrict src, *restrict dst;
+      Pixel mask = 0xFF << ash;
       uint32_t r, g, b, a, ra;
       src = gfk->rows[sY] + sl;
       dst = rows[dY] + dx;
@@ -722,7 +784,7 @@ void Drawable::BlitRectT(const Drawable*restrict gfk, int sx, int sy, int sw, in
 	     b = ((uint32_t)SrgbToLinear[(*src >> bsh) & 255] * a +
 		  (uint32_t)SrgbToLinear[(*dst >> bsh) & 255] * ra) >> 16;
 	     ++src;
-	     *dst++ = ((Pixel)LinearToSrgb[r] << rsh) | ((Pixel)LinearToSrgb[g] << gsh) | ((Pixel)LinearToSrgb[b] << bsh));
+	     *dst++ = ((Pixel)LinearToSrgb[r] << rsh) | ((Pixel)LinearToSrgb[g] << gsh) | ((Pixel)LinearToSrgb[b] << bsh) | mask);
     }
   }
   else for(int sY = st, dY = dy; sY <= sb; ++sY, ++dY) {
@@ -745,7 +807,7 @@ void Drawable::BlitRectT(const Drawable*restrict gfk, int sx, int sy, int sw, in
 }
 
 int Drawable::Lua_Blit(lua_State* L) restrict throw() {
-  if(has_alpha) return luaL_error(L, "Graphics with alpha channels cannot be modified with this function.");
+  if(has_alpha) return luaL_error(L, "Graphics with alpha channels cannot be modified with this function. Try :Copy.");
   Drawable*restrict gfk = lua_toobject(L,1,Drawable);
   if(gfk == this) return luaL_error(L, "Source and destination Drawable must differ");
   if(gfk->layout != layout) {
@@ -763,6 +825,25 @@ int Drawable::Lua_Blit(lua_State* L) restrict throw() {
   case 8: BlitRectT(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7), luaL_checknumber(L,8)); return 0;
   default:
     return luaL_error(L, "Blit takes 3, 4, 7, or 8 parameters");
+  }
+}
+
+int Drawable::Lua_Copy(lua_State* L) restrict throw() {
+  Drawable*restrict gfk = lua_toobject(L,1,Drawable);
+  if(gfk == this) return luaL_error(L, "Source and destination Drawable must differ");
+  if(gfk->layout != layout) {
+    if(gfk->IsA("Graphic"))
+      ((Graphic*)gfk)->ChangeLayout(layout);
+    else if(IsA("Graphic"))
+      ((Graphic*)this)->ChangeLayout(gfk->layout);
+    else
+      return luaL_error(L, "Attempt to blit between two non-morphable Drawables!");
+  }
+  switch(lua_gettop(L)) {
+  case 3: Copy(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3)); return 0;
+  case 7: CopyRect(gfk, (int)luaL_checknumber(L,2), (int)luaL_checknumber(L,3), (int)luaL_checknumber(L,4), (int)luaL_checknumber(L,5), (int)luaL_checknumber(L,6), (int)luaL_checknumber(L,7)); return 0;
+  default:
+    return luaL_error(L, "Copy takes 3 or 7 parameters");
   }
 }
 
@@ -847,6 +928,7 @@ static const struct ObjectMethod DMethods[] = {
   METHOD("DrawTriangles", &Drawable::Lua_DrawTriangles),
   METHOD("DrawTriangleStrip", &Drawable::Lua_DrawTriangleStrip),
   METHOD("DrawTriangleFan", &Drawable::Lua_DrawTriangleFan),
+  METHOD("Copy", &Drawable::Lua_Copy),
   METHOD("Blit", &Drawable::Lua_Blit),
   METHOD("BlitFrisket", &Drawable::Lua_BlitFrisket),
   METHOD("TakeSnapshot", &Graphic::Lua_TakeSnapshot),

@@ -217,7 +217,7 @@ Graphic* JPEGLoader::Load(const char* name) throw() {
       int rem = ret->width;
       jpeg_read_scanlines(&c.jpeg, &buf, 1);
       UNROLL_MORE(rem,
-		  *d++ = (s[0] << 16) | (s[1] << 8) | s[2];
+		  *d++ = (s[0] << 16) | (s[1] << 8) | s[2] | 0xFF000000;
 		  s += 3;);
     }
     break;
@@ -228,7 +228,7 @@ Graphic* JPEGLoader::Load(const char* name) throw() {
       int rem = ret->width;
       jpeg_read_scanlines(&c.jpeg, &buf, 1);
       UNROLL_MORE(rem,
-		  *d++ = (*s << 16) | (*s << 8) | *s;
+		  *d++ = (*s << 16) | (*s << 8) | *s | 0xFF000000;
 		  s++;);
     }
     break;
