@@ -93,10 +93,13 @@ namespace SubCritical {
   public:
     virtual ~Drawable();
     int Lua_GetSize(lua_State* L) const throw();
+    void CopyRect(const Drawable*restrict, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw();
+    void Copy(const Drawable*restrict, int dx, int dy) restrict throw();
     void BlitRect(const Drawable*restrict, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw();
     void Blit(const Drawable*restrict, int dx, int dy) restrict throw();
     void BlitRectT(const Drawable*restrict, int sx, int sy, int sw, int sh, int dx, int dy, lua_Number a) restrict throw();
     void BlitT(const Drawable*restrict, int dx, int dy, lua_Number a) restrict throw();
+    int Lua_Copy(lua_State* L) restrict throw();
     int Lua_Blit(lua_State* L) restrict throw();
     void BlitFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
     void BlitFrisket(const Frisket*, int dx, int dy) throw();
