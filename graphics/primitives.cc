@@ -267,7 +267,7 @@ void Drawable::BlitFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int s
       size_t rem = sr - sl + 1;
       UNROLL(rem,
 	     a = *src;
-	     a += a & 1;
+	     a += a >> 7;
 	     a = a * trf_a >> 8;
 	     ra = 65536-a;
 	     r = (trf_r * a + (uint32_t)SrgbToLinear[(*dst >> rsh) & 255] * ra) >> 16;
@@ -287,7 +287,7 @@ void Drawable::BlitFrisketRect(const Frisket* gfk, int sx, int sy, int sw, int s
     size_t rem = sr - sl + 1;
     UNROLL(rem,
 	   a = *src;
-	   a += a & 1;
+	   a += a >> 7;
 	   ra = 256-a;
 	   r = (trf_r * a + (uint32_t)SrgbToLinear[(*dst >> rsh) & 255] * ra) >> 8;
 	   g = (trf_g * a + (uint32_t)SrgbToLinear[(*dst >> gsh) & 255] * ra) >> 8;
