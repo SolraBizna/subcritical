@@ -145,6 +145,17 @@ static void ReadValue(lua_State* L, const unsigned char*& in, size_t& length, id
     case Nil: lua_pushnil(L); break;
     case False: lua_pushboolean(L, 0); break;
     case True: lua_pushboolean(L, 1); break;
+    case Zero: lua_pushnumber(L, 0.0); break;
+    case Int16: {
+      next_byte();
+      uint16_t ux = *in << 8;
+      next_byte();
+      ux |= *in;
+      soft_next_byte();
+      int16_t x = (int16_t)ux;
+      if(x >= 0) lua_pushnumber(L, x + 32);
+      else lua_pushnumber(L, x);
+    } break;
     case EndTable: throw "EndTable atom at inappropriate place in stream";
     }
     ++in;

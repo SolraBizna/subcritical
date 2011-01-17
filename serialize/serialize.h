@@ -32,6 +32,8 @@ namespace SubCritical {
     False = 0x01,
     True = 0x02,
     EndTable = 0x03,
+    Zero = 0x04,
+    Int16 = 0x05,
     BigMask = 0xE0,
     String = 0x80,
     Table = 0xA0,

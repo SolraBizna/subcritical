@@ -160,10 +160,27 @@ static void WriteValue(lua_State* L, SuperBuffer& output, idmap& ids, uint32_t& 
   case LUA_TNUMBER:
     {
       double no = (double)lua_tonumber(L, -1);
-      if(no >= 1 && no <= 31) {
+      if(no == 0) {
+	WriteAtom(output, Zero);
+	break;
+      }
+      else if(no >= -32768 && no <= 32799) {
 	double nof = floor(no);
 	if(nof == no) {
-	  WriteAtom(output, (CelduinAtom)(Number | (int)nof));
+	  if(nof >= 1 && nof <= 31)
+	    WriteAtom(output, (CelduinAtom)(Number | (int)nof));
+	  else {
+	    WriteAtom(output, Int16);
+	    int16_t x;
+	    if(nof >= 0) x = (int16_t)(nof-32);
+	    else x = (int16_t)nof;
+	    union {
+	      uint16_t u;
+	      unsigned char raw[2];
+	    } ux;
+	    ux.u = Swap16_BE((uint16_t)x);
+	    output.Write(ux.raw, sizeof(ux));
+	  }
 	  break;
 	}
       }
