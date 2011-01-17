@@ -92,8 +92,12 @@ function config_question(cachename, prompt, type, ...)
 	 end
 	 local choice = tonumber(assert(io.read("*l")))
 	 if(not choice or not arg[choice*2]) then
-	    print("Fatal: That's not a choice. Try again.")
-	    os.exit(1)
+	    if arg[1]:match("default") then
+	       return arg[2]
+	    else
+	       print("Fatal: That's not a choice. Try again.")
+	       os.exit(1)
+	    end
 	 end
 	 config[cachename] = arg[choice*2]
 	 return config[cachename]
