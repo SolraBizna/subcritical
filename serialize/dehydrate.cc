@@ -179,7 +179,7 @@ static void WriteValue(lua_State* L, SuperBuffer& output, idmap& ids, uint32_t& 
 	      unsigned char raw[2];
 	    } ux;
 	    ux.u = Swap16_BE((uint16_t)x);
-	    output.Write(ux.raw, sizeof(ux));
+	    output.Write(ux.raw, sizeof(ux.raw));
 	  }
 	  break;
 	}
