@@ -165,7 +165,7 @@ static void ReadValue(lua_State* L, const unsigned char*& in, size_t& length, id
 
 SUBCRITICAL_UTILITY(Rehydrate)(lua_State* L) {
   if(lua_gettop(L) != 1)
-    return luaL_error(L, "Usage: Dehydrate(string)");
+    return luaL_error(L, "Usage: Rehydrate(string)");
   size_t length;
   const unsigned char* in = (const unsigned char*)luaL_checklstring(L, 1, &length);
   try {
