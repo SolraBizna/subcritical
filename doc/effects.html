@@ -30,6 +30,7 @@
 <dd><i class="code">old_graphic</i> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">new_graphic</i> will be a new <a href="graphics.html#Graphic" class="code">Graphic</a> containing the image data from <i class="code">old_graphic</i> rotated 180 degrees.</dd>
 <dt class="code"><a name="MakeFrisketDirectly" /><i>frisket</i> = SCUtil.MakeFrisketDirectly(<i>graphic</i>)</dt>
 <dd><i class="code">graphic</i> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">frisket</i> will be a new <a href="graphics.html#Frisket" class="code">Frisket</a> containing exactly the green channel data from <i class="code">graphic</i>, without any colorspace conversion.</dd>
+<dd><i class="code">MakeFrisketDirectly</i> is only suitable for use on graphics with green channel data already in the correct colorspace. If you don't know what this means, don't use MakeFrisketDirectly or things will look bad.</dd>
 <dt class="code"><a name="MakeFrisketFromAlpha" /><i>frisket</i> = SCUtil.MakeFrisketFromAlpha(<i>graphic</i>)</dt>
 <dd><i class="code">graphic</i> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">frisket</i> will be a new <a href="graphics.html#Frisket" class="code">Frisket</a> equivalent to <i class="code">graphic</i> (minus color information).</dd>
 <dt class="code"><a name="MakeFrisketFromGrayscale" /><i>frisket</i> = SCUtil.MakeFrisketFromGrayscale(<i>graphic</i>)</dt>
