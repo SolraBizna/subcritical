@@ -582,7 +582,11 @@ scpath,SCPath,P = subcritical.Path,subcritical.Path,subcritical.Path
 local old_open = io.open
 function io.open(path, mode, ...)
    if(type(path) ~= "userdata" or path:Identity() ~= "Path") then
-      error("Now that SubCritical has control, io.open takes a Path parameter instead of a string.\nWhere before you would say: io.open(path, \"r\")\nTry: io.open(SCPath(path), \"r\")", 1)
+      if sc.no_strict_path then
+         return old_open(path, mode, ...)
+      else
+         error("Now that SubCritical has control, io.open takes a Path parameter instead of a string.\nWhere before you would say: io.open(path, \"r\")\nTry: io.open(SCPath(path), \"r\")\nIf fixing your code is impossible, set SubCritical.no_strict_path to true.", 1)
+      end
    end
    if(not mode) then mode = "rb"
    elseif (not mode:match("b")) then mode = mode .. "b" end
@@ -592,14 +596,22 @@ end
 local old_dofile = dofile
 function dofile(path, ...)
    if(type(path) ~= "userdata" or path:Identity() ~= "Path") then
-      error("Now that SubCritical has control, dofile takes a Path parameter instead of a string.\nWhere before you would say: dofile(path)\nTry: dofile(SCPath(path))", 1)
+      if sc.no_strict_path then
+         return old_dofile(path, ...)
+      else
+         error("Now that SubCritical has control, dofile takes a Path parameter instead of a string.\nWhere before you would say: dofile(path)\nTry: dofile(SCPath(path))\nIf fixing your code is impossible, set SubCritical.no_strict_path to true.", 1)
+      end
    end
    return old_dofile(path:GetPath(), ...)
 end
 local old_loadfile = loadfile
 function loadfile(path, ...)
    if(type(path) ~= "userdata" or path:Identity() ~= "Path") then
-      error("Now that SubCritical has control, loadfile takes a Path parameter instead of a string.\nWhere before you would say: loadfile(path)\nTry: loadfile(SCPath(path))", 1)
+      if sc.no_string_path then
+         return old_loadfile(path, ...)
+      else
+         error("Now that SubCritical has control, loadfile takes a Path parameter instead of a string.\nWhere before you would say: loadfile(path)\nTry: loadfile(SCPath(path))\nIf fixing your code is impossible, set SubCritical.no_strict_path to true.", 1)
+      end
    end
    return old_loadfile(path:GetPath(), ...)
 end
