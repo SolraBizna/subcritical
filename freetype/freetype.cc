@@ -314,7 +314,7 @@ int FreetypeFont::BreakLine(const char* string, size_t len, int width, int start
     }
     left_glyph = right_glyph;
     pen += face->glyph->advance.x;
-    if(Ceil_26_6(pen) > width) break;
+    if(Ceil_26_6(pen) >= width) break;
     if(!IsSpace(code))
       last_unbroken_pos = pos;
     else
@@ -344,7 +344,7 @@ int FreetypeFont::BreakLine(const char* string, size_t len, int width, int start
     }
     else return lpos + 1;
   }
-  else if(rem > 0) return last_broken_pos + 1;
+  else if(rem > 0) return last_broken_pos + 2;
   else return -1;
 }
 
@@ -356,6 +356,7 @@ int FreetypeFont::Lua_BreakLine(lua_State* L) throw() {
   int stop;
   start = FrellPosition((long)luaL_optnumber(L, 3, 1), len);
   int nustart = BreakLine(string, len, (size_t)luaL_optnumber(L, 2, 65536.0), start - 1, stop);
+  if((int)start == stop && string[start-1] == '\n') stop = -1;
   if(stop == -1) lua_pushnil(L);
   else lua_pushnumber(L, stop);
   if(nustart == -1) lua_pushnil(L);
