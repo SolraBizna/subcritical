@@ -41,10 +41,10 @@ function uranium.text:SetupText()
 	    local w,h = self.friskets[n]:GetSize()
 	    if(w > biggest_w) then biggest_w = w end
 	 end
-	 n = n + 1
-	 y = y + skip
-	 start = nustart
       end
+      n = n + 1
+      y = y + skip
+      start = nustart
    until not start
    if(not self.w) then self.w = biggest_w end
    if(not self.h) then self.h = math.ceil(y) end
