@@ -305,15 +305,16 @@ int FreetypeFont::BreakLine(const char* string, size_t len, int width, int start
 	return -1;
     }
     right_glyph = FT_Get_Char_Index(face, code);
-    if(FT_Load_Char(face, code, FT_LOAD_DEFAULT))
-      continue;
     if(left_glyph && right_glyph) {
       FT_Vector v;
-      FT_Get_Kerning(face, left_glyph, right_glyph, FT_KERNING_DEFAULT, &v);
+      FT_Get_Kerning(face, left_glyph, right_glyph, FT_KERNING_UNFITTED, &v);
       pen += v.x;
     }
     left_glyph = right_glyph;
     pen += face->glyph->advance.x;
+    if(FT_Load_Char(face, code, FT_LOAD_DEFAULT)) {
+      continue;
+    }
     if(Ceil_26_6(pen) >= width) break;
     if(!IsSpace(code))
       last_unbroken_pos = pos;
