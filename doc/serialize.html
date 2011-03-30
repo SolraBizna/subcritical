@@ -14,7 +14,7 @@
 <h2>Utility functions</h2>
 <dl>
 <dt class="code"><a name="Dehydrate" /><i>celduin</i> = SCUtil.Dehydrate(<i>value</i>)</dt>
-<dd><i class="code">value</i> is nil, a boolean, a number, a string, or a table. If it is a table, it can only contain booleans, numbers, strings, and other tables as keys. Duplicate references and circular references are handled correctly &mdash; you will get a semantically identical table from a later <a href="#Rehydrate" class="code">Rehydrate</a> on the same <i class="code">celduin</i>. <i class="code">celduin</i> will be a string, and will almost certainly contain NULs.</dd>
+<dd><i class="code">value</i> is nil, a boolean, a number, a string, or a table. If it is a table, it can only contain booleans, numbers, strings, and other tables as keys or values. Duplicate references and circular references are not problems &mdash; you will get a semantically identical table from a later <a href="#Rehydrate" class="code">Rehydrate</a> on the same <i class="code">celduin</i>. <i class="code">celduin</i> will be a string, and will almost certainly contain NULs.</dd>
 <dt class="code"><a name="Rehydrate" /><i>value</i> = SCUtil.Rehydrate(<i>celduin</i>)</dt>
 <dd>The inverse of <a href="#Dehydrate" class="code">Dehydrate</a>. It's recommended that you use one of the checksumming functions in this package to verify the integrity of a <i class="code">celduin</i> before rehydration, since the encoding contains no redundancy and <tt>Rehydrate</tt> will raise an error on a malformed <i class="code">celduin</i>.</dd>
 <dt class="code"><a name="QuickChecksum" /><i>sum</i> = SCUtil.QuickChecksum(<i>message</i>)
