@@ -6,12 +6,104 @@
 
 using namespace SubCritical;
 
+static int EasyDump(lua_State* L, const uint8_t* p, long size) {
+  lua_pushlstring(L, (const char*)p, size);
+  return 1;
+}
+
+static int EasyUndump(lua_State* L, uint8_t* p, long size) {
+  size_t l;
+  const char* string = luaL_checklstring(L,1,&l);
+  if(l != (size_t)size) return luaL_error(L, "dump string wrong size");
+  memcpy(p, string, size);
+  return 0;
+}
+
+template<int ASDF> static int ComplicatedDump(lua_State* L, const uint8_t* p, long size);
+template<> int ComplicatedDump<2>(lua_State* L, const uint8_t* p, long size) {
+  if(little_endian) {
+    uint8_t* buf = (uint8_t*)malloc(size*2);
+    uint8_t* q = buf;
+    size_t rem = (size_t)size;
+    UNROLL(rem, q[0] = p[1]; q[1] = p[0]; q += 2; p += 2;);
+    lua_pushlstring(L, (const char*)buf, size*2);
+    free(buf);
+    return 1;
+  }
+  else return EasyDump(L, p, size*2);
+}
+template<> int ComplicatedDump<4>(lua_State* L, const uint8_t* p, long size) {
+  if(little_endian) {
+    uint8_t* buf = (uint8_t*)malloc(size*4);
+    uint8_t* q = buf;
+    size_t rem = (size_t)size;
+    UNROLL(rem,q[0] = p[3]; q[1] = p[2]; q[2] = p[1]; q[3] = p[0]; q += 4; p += 4;);
+    lua_pushlstring(L, (const char*)buf, size*4);
+    free(buf);
+    return 1;
+  }
+  else return EasyDump(L, p, size*4);
+}
+template<> int ComplicatedDump<8>(lua_State* L, const uint8_t* p, long size) {
+  if(little_endian) {
+    uint8_t* buf = (uint8_t*)malloc(size*8);
+    uint8_t* q = buf;
+    size_t rem = (size_t)size;
+    UNROLL(rem,
+           q[0] = p[7]; q[1] = p[6]; q[2] = p[5]; q[3] = p[4]; q[4] = p[3]; q[5] = p[2]; q[6] = p[1]; q[7] = p[0]; q += 8; p += 8;);
+    lua_pushlstring(L, (const char*)buf, size*8);
+    free(buf);
+    return 1;
+  }
+  else return EasyDump(L, p, size*8);
+}
+
+template<int ASDF> static int ComplicatedUndump(lua_State* L, uint8_t* p, long size);
+template<> int ComplicatedUndump<2>(lua_State* L, uint8_t* p, long size) {
+  if(little_endian) {
+    size_t l;
+    const char* string = luaL_checklstring(L,1,&l);
+    if(l != (size_t)size*2) return luaL_error(L, "dump string wrong size");
+    const uint8_t* q = (const uint8_t*)string;
+    size_t rem = l/2;
+    UNROLL(rem, p[0] = q[1]; p[1] = q[0]; q += 2; p += 2;);
+    return 0;
+  }
+  else return EasyUndump(L, p, size*2);
+}
+template<> int ComplicatedUndump<4>(lua_State* L, uint8_t* p, long size) {
+  if(little_endian) {
+    size_t l;
+    const char* string = luaL_checklstring(L,1,&l);
+    if(l != (size_t)size*4) return luaL_error(L, "dump string wrong size");
+    const uint8_t* q = (const uint8_t*)string;
+    size_t rem = l/4;
+    UNROLL(rem, p[0] = q[3]; p[1] = q[2]; p[2] = q[1]; p[3] = q[0]; q += 4; p += 4;);
+    return 0;
+  }
+  else return EasyUndump(L, p, size*4);
+}
+template<> int ComplicatedUndump<8>(lua_State* L, uint8_t* p, long size) {
+  if(little_endian) {
+    size_t l;
+    const char* string = luaL_checklstring(L,1,&l);
+    if(l != (size_t)size*8) return luaL_error(L, "dump string wrong size");
+    const uint8_t* q = (const uint8_t*)string;
+    size_t rem = l/8;
+    UNROLL(rem, p[0] = q[7]; p[1] = q[6]; p[2] = q[5]; p[3] = q[4]; p[4] = q[3]; p[5] = q[2]; p[6] = q[1]; p[7] = q[0]; q += 8; p += 8;);
+    return 0;
+  }
+  else return EasyUndump(L, p, size*8);
+}
+
 class LOCAL ProtoPackedArray : public Object {
  public:
   ProtoPackedArray() : border(0), border_set(false) {}
   virtual ~ProtoPackedArray() {};
   virtual int Lua_Get(lua_State* L) const throw() = 0;
   virtual int Lua_Set(lua_State* L) throw() = 0;
+  virtual int Lua_Dump(lua_State* L) const throw() = 0;
+  virtual int Lua_Undump(lua_State* L) throw() = 0;
   int Lua_GetBorder(lua_State* L) const throw() {
     return oob(L);
   }
@@ -59,6 +151,18 @@ public:
     array[x] = val;
     return 0;
   }
+  virtual int Lua_Dump(lua_State* L) const throw() {
+    if(sizeof(T) == 1)
+      return EasyDump(L,(const uint8_t*)array,width);
+    else
+      return ComplicatedDump<sizeof(T)>(L,(const uint8_t*)array,width);
+  }
+  virtual int Lua_Undump(lua_State* L) throw() {
+    if(sizeof(T) == 1)
+      return EasyUndump(L,(uint8_t*)array,width);
+    else
+      return ComplicatedUndump<sizeof(T)>(L,(uint8_t*)array,width);
+  }
 private:
   T* array;
   long width;
@@ -86,6 +190,12 @@ public:
     else
       array[x/32] &= ~(1<<(x%32));
     return 0;
+  }
+  virtual int Lua_Dump(lua_State* L) const throw() {
+    return ComplicatedDump<4>(L,(const uint8_t*)array,(width+31)/32);
+  }
+  virtual int Lua_Undump(lua_State* L) throw() {
+    return ComplicatedUndump<4>(L,(uint8_t*)array,(width+31)/32);
   }
 private:
   uint32_t* array;
@@ -115,6 +225,18 @@ public:
     if(y < 0 || y >= height) return luaL_error(L, "array index 2 out of bounds");
     array[x*height+y] = val;
     return 0;
+  }
+  virtual int Lua_Dump(lua_State* L) const throw() {
+    if(sizeof(T) == 1)
+      return EasyDump(L,(const uint8_t*)array,width*height);
+    else
+      return ComplicatedDump<sizeof(T)>(L,(const uint8_t*)array,width*height);
+  }
+  virtual int Lua_Undump(lua_State* L) throw() {
+    if(sizeof(T) == 1)
+      return EasyUndump(L,(uint8_t*)array,width*height);
+    else
+      return ComplicatedUndump<sizeof(T)>(L,(uint8_t*)array,width*height);
   }
 private:
   T* array;
@@ -150,6 +272,12 @@ public:
       array[coord/32] &= ~(1<<(coord%32));
     return 0;
   }
+  virtual int Lua_Dump(lua_State* L) const throw() {
+    return ComplicatedDump<4>(L,(const uint8_t*)array,((width*height)+31)/32);
+  }
+  virtual int Lua_Undump(lua_State* L) throw() {
+    return ComplicatedUndump<4>(L,(uint8_t*)array,((width*height)+31)/32);
+  }
 private:
   uint32_t* array;
   long width, height;
@@ -182,6 +310,18 @@ public:
     if(z < 0 || z >= depth) return luaL_error(L, "array index 3 out of bounds");
     array[x*heightdepth+y*depth+z] = val;
     return 0;
+  }
+  virtual int Lua_Dump(lua_State* L) const throw() {
+    if(sizeof(T) == 1)
+      return EasyDump(L,(const uint8_t*)array,width*heightdepth);
+    else
+      return ComplicatedDump<sizeof(T)>(L,(const uint8_t*)array,width*heightdepth);
+  }
+  virtual int Lua_Undump(lua_State* L) throw() {
+    if(sizeof(T) == 1)
+      return EasyUndump(L,(uint8_t*)array,width*heightdepth);
+    else
+      return ComplicatedUndump<sizeof(T)>(L,(uint8_t*)array,width*heightdepth);
   }
 private:
   T* array;
@@ -221,6 +361,12 @@ public:
       array[coord/32] &= ~(1<<(coord%32));
     return 0;
   }
+  virtual int Lua_Dump(lua_State* L) const throw() {
+    return ComplicatedDump<4>(L,(const uint8_t*)array,((width*heightdepth)+31)/32);
+  }
+  virtual int Lua_Undump(lua_State* L) throw() {
+    return ComplicatedUndump<4>(L,(uint8_t*)array,((width*heightdepth)+31)/32);
+  }
 private:
   uint32_t* array;
   long width, height, depth, heightdepth;
@@ -237,6 +383,7 @@ static const struct ObjectMethod name##_Methods[] = { \
   METHOD("Set", &name::Lua_Set), \
   METHOD("GetBorder", &name::Lua_GetBorder), \
   METHOD("SetBorder", &name::Lua_SetBorder), \
+  METHOD("Dump", &name::Lua_Dump), \
   NOMOREMETHODS(), \
 }; \
 PROTOCOL_IMP(name, Object, name##_Methods); \

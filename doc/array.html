@@ -67,6 +67,10 @@
 <dd>Return the value that will currently be returned if an access outside the bounds of the array is attempted.</dd>
 <dt class="code"><i>array</i>:SetBorder(<i>border</i>)</dt>
 <dd>Change the value that will be returned if an access outside the bounds of the array is attempted. Valid values are nil or any number. The default is nil, and the number will not be clamped to the range of the array. (Boolean arrays still have number/nil border values.)</dd>
+<dt class="code"><i>dumped</i> = <i>array</i>:Dump()</dt>
+<dd>Get the array's contents, in big-endian form and packed as tightly as possible, suitable for serialization.</dd>
+<dt class="code"><i>array</i>:Undump(<i>dumped</i>)</dt>
+<dd>Fill the array with a string we got from a previous call to <i class="code">Dump</i>. The string must be exactly the right length, or an error will be thrown.</dd>
 </dl>
 <p>Here are some examples:</p>
 <pre>-- Create a PackedArray containing a 32x32 quarter-circle.
