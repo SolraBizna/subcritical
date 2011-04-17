@@ -1,0 +1,2 @@
+targets = {compress={"simple.cc",libflags="-lz",deps={"core"}}}
+install = {packages={"compress"}}
