@@ -384,6 +384,7 @@ static const struct ObjectMethod name##_Methods[] = { \
   METHOD("GetBorder", &name::Lua_GetBorder), \
   METHOD("SetBorder", &name::Lua_SetBorder), \
   METHOD("Dump", &name::Lua_Dump), \
+  METHOD("Undump", &name::Lua_Undump), \
   NOMOREMETHODS(), \
 }; \
 PROTOCOL_IMP(name, Object, name##_Methods); \
