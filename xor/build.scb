@@ -1,0 +1,2 @@
+targets = {xor={"xor.cc",deps={"core"}}}
+install = {packages={"xor"}}

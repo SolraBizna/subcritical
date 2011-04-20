@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>xor</tt> package</h1>
+<p><tt>xor</tt> contains no classes.</p>
+<h2>License</h2>
+<p>The <tt>xor</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Utility functions</h2>
+<dl>
+<dt class="code"><a name="XorString" /><i>mangled</i> = SCUtil.XorString(<i>string</i>, <i>cipher</i>)</dt>
+<dd>This returns a copy of <i class="code">string</i> with every character binary XOR'd with <i class="code">cipher</i>. <i class="code">cipher</i> is a number between 0 and 255 inclusive; if it is outside this range, only the low 8 bits will be used.</dd>
+<dd>Repeating this operation with the same <i class="code">cipher</i> will return the original <i class="code">string</i>. A trivial statistical analysis will "crack" this cipher, so using it for anything other than mild obfuscation is unwise.</dd>
+<dt class="code"><a name="XorStrings" /><i>mangled</i> = SCUtil.XorStrings(<i>string1</i>, <i>string2</i>)</dt>
+<dd>This is equivalent to <i class="code">XorString</i>, but each character in <i class="code">string1</i> is XOR'd with the corresponding character in <i class="code">string2</i>. If one string is longer than the other, the extra characters are appended to the <i class="code">mangled</i> string without modification.</dd>
+<dd>This can be used to implement one-time pad cryptography. If the same "key" string is never used to encrypt more than one "plaintext" string, and the "key" string is sufficiently random, no attack (theoretical or otherwise) will <b>ever</b> be able to recover the plaintext from the key. (Beware <a href="http://xkcd.com/538/">$5 wrench attacks</a>.)</dd>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

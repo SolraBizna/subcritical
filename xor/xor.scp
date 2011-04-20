@@ -1,0 +1,5 @@
+license Compatible
+version 0b6
+
+utility XorString
+utility XorStrings
