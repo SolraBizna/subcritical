@@ -17,7 +17,7 @@
 <dd>Repeating this operation with the same <i class="code">cipher</i> will return the original <i class="code">string</i>. A trivial statistical analysis will "crack" this cipher, so using it for anything other than mild obfuscation is unwise.</dd>
 <dt class="code"><a name="XorStrings" /><i>mangled</i> = SCUtil.XorStrings(<i>string1</i>, <i>string2</i>)</dt>
 <dd>This is equivalent to <i class="code">XorString</i>, but each character in <i class="code">string1</i> is XOR'd with the corresponding character in <i class="code">string2</i>. If one string is longer than the other, the extra characters are appended to the <i class="code">mangled</i> string without modification.</dd>
-<dd>This can be used to implement one-time pad cryptography. If the same "key" string is never used to encrypt more than one "plaintext" string, and the "key" string is sufficiently random, no attack (theoretical or otherwise) will <b>ever</b> be able to recover the plaintext from the key. (Beware <a href="http://xkcd.com/538/">$5 wrench attacks</a>.)</dd>
+<dd>This can be used to implement one-time pad cryptography. If the same "key" string is never used to encrypt more than one "plaintext" string, and the "key" string is sufficiently random, no attack (theoretical or otherwise) will <b>ever</b> be able to recover the plaintext from the ciphertext without the key. (Beware <a href="http://xkcd.com/538/">$5 wrench attacks</a>.)</dd>
 </dl>
 <p><a href="index.html">Back to index</a></p>
 </body>
