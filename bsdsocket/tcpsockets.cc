@@ -26,6 +26,13 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#ifdef __WIN32__
+#define socketoption(sock, lev, name, val, len) setsockopt(sock, lev, name, (const char*) val, len)
+#else
+#define socketoption(sock, lev, name, val, len) setsockopt(sock, lev, name, (int*) val, len)
+#include <netinet/tcp.h>
+#endif
+
 using namespace SubCritical;
 
 IPSOCKET_SUBCLASS_IMP(TCPSocket);
@@ -46,6 +53,8 @@ int TCPSocket::Lua_ApplyAddress(lua_State* L) throw() {
   addrhost = NULL;
   bound = true;
   SetBlocking(L, false);
+  int one = 1;
+  socketoption(sock, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
   lua_pushboolean(L, 1);
   return 1;
 }
@@ -119,6 +128,8 @@ int TCPListenSocket::Lua_ApplyAddress(lua_State* L) throw() {
   if(listen(sock, 3))
     return luaL_error(L, "listen: %s", ErrorToString(errno));
   SetBlocking(L, false);
+  int one = 1;
+  socketoption(sock, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
   lua_pushboolean(L, 1);
   return 1;
 }
@@ -132,6 +143,8 @@ int TCPListenSocket::Lua_Accept(lua_State* L) throw() {
 #else
   if(nusock >= 0) {
 #endif
+    int one = 1;
+    socketoption(nusock, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
     (new TCPSocket(L, nusock, nuaddr))->Push(L);
     return 1;
   }
