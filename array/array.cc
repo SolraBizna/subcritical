@@ -104,6 +104,7 @@ class LOCAL ProtoPackedArray : public Object {
   virtual int Lua_Set(lua_State* L) throw() = 0;
   virtual int Lua_Dump(lua_State* L) const throw() = 0;
   virtual int Lua_Undump(lua_State* L) throw() = 0;
+  virtual int Lua_GetSize(lua_State* L) const throw() = 0;
   int Lua_GetBorder(lua_State* L) const throw() {
     return oob(L);
   }
@@ -163,6 +164,10 @@ public:
     else
       return ComplicatedUndump<sizeof(T)>(L,(uint8_t*)array,width);
   }
+  virtual int Lua_GetSize(lua_State* L) const throw() {
+    lua_pushnumber(L,width);
+    return 1;
+  }
 private:
   T* array;
   long width;
@@ -196,6 +201,10 @@ public:
   }
   virtual int Lua_Undump(lua_State* L) throw() {
     return ComplicatedUndump<4>(L,(uint8_t*)array,(width+31)/32);
+  }
+  virtual int Lua_GetSize(lua_State* L) const throw() {
+    lua_pushnumber(L,width);
+    return 1;
   }
 private:
   uint32_t* array;
@@ -238,6 +247,11 @@ public:
     else
       return ComplicatedUndump<sizeof(T)>(L,(uint8_t*)array,width*height);
   }
+  virtual int Lua_GetSize(lua_State* L) const throw() {
+    lua_pushnumber(L,width);
+    lua_pushnumber(L,height);
+    return 2;
+  }
 private:
   T* array;
   long width, height;
@@ -277,6 +291,11 @@ public:
   }
   virtual int Lua_Undump(lua_State* L) throw() {
     return ComplicatedUndump<4>(L,(uint8_t*)array,((width*height)+31)/32);
+  }
+  virtual int Lua_GetSize(lua_State* L) const throw() {
+    lua_pushnumber(L,width);
+    lua_pushnumber(L,height);
+    return 2;
   }
 private:
   uint32_t* array;
@@ -323,6 +342,12 @@ public:
     else
       return ComplicatedUndump<sizeof(T)>(L,(uint8_t*)array,width*heightdepth);
   }
+  virtual int Lua_GetSize(lua_State* L) const throw() {
+    lua_pushnumber(L,width);
+    lua_pushnumber(L,height);
+    lua_pushnumber(L,depth);
+    return 3;
+  }
 private:
   T* array;
   long width, height, depth, heightdepth;
@@ -367,6 +392,12 @@ public:
   virtual int Lua_Undump(lua_State* L) throw() {
     return ComplicatedUndump<4>(L,(uint8_t*)array,((width*heightdepth)+31)/32);
   }
+  virtual int Lua_GetSize(lua_State* L) const throw() {
+    lua_pushnumber(L,width);
+    lua_pushnumber(L,height);
+    lua_pushnumber(L,depth);
+    return 3;
+  }
 private:
   uint32_t* array;
   long width, height, depth, heightdepth;
@@ -385,6 +416,7 @@ static const struct ObjectMethod name##_Methods[] = { \
   METHOD("SetBorder", &name::Lua_SetBorder), \
   METHOD("Dump", &name::Lua_Dump), \
   METHOD("Undump", &name::Lua_Undump), \
+  METHOD("GetSize", &name::Lua_GetSize), \
   NOMOREMETHODS(), \
 }; \
 PROTOCOL_IMP(name, Object, name##_Methods); \
