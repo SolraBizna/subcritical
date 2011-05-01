@@ -15,8 +15,8 @@
 <dt class="code"><a name="Compress" /><i>compressed</i> = SCUtil.Compress(<i>data</i>[, <i>level</i>])</dt>
 <dd>This compresses a string with deflate. <i class="code">level</i> is between 1 and 9, with 1 being slightly faster and 9 being much better compression. <i class="code">level</i> defaults to 6.</dd>
 <dd>deflate has very little error tolerance, so combining this with the checksum method of your choice is wise.</dd>
-<dt class="code"><a name="Uncompress" /><i>data</i> = SCUtil.Uncompress(<i>compressed</i>)</dt>
-<dd>This is the reverse of <i class="code">Compress</i>.</dd>
+<dt class="code"><a name="Uncompress" /><i>data</i> = SCUtil.Uncompress(<i>compressed</i>, <i>length</i>)</dt>
+<dd>This is the reverse of <i class="code">Compress</i>. <i class="code">length</i> is an upper bound on the length of the uncompressed data. Setting this too high will waste a lot of memory, setting this too low will cause failure.</dd>
 </dl>
 <p><a href="index.html">Back to index</a></p>
 </body>

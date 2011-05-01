@@ -34,9 +34,11 @@ SUBCRITICAL_UTILITY(Compress)(lua_State* L) throw() {
     return luaL_error(L, "level must be between 1 and 9 inclusive");
   uLongf dstlen = compressBound(len);
   char* buf = (char*)malloc(dstlen);
+  if(!buf)
+    return luaL_error(L, "memory allocation error");
   if(compress2((Bytef*)buf,&dstlen,(const Bytef*)string,len,level) != Z_OK) {
     free(buf);
-    return luaL_error(L, "BAD");
+    return luaL_error(L, "compress2 failed.");
   }
   lua_pushlstring(L, buf, dstlen);
   free(buf);
@@ -46,11 +48,13 @@ SUBCRITICAL_UTILITY(Compress)(lua_State* L) throw() {
 SUBCRITICAL_UTILITY(Uncompress)(lua_State* L) throw() {
   size_t len;
   const char* string = luaL_checklstring(L,1,&len);
-  uLongf dstlen = compressBound(len);
+  uLongf dstlen = luaL_checkinteger(L,2);
   char* buf = (char*)malloc(dstlen);
+  if(!buf)
+    return luaL_error(L, "memory allocation error");
   if(uncompress((Bytef*)buf,&dstlen,(const Bytef*)string,len) != Z_OK) {
     free(buf);
-    return luaL_error(L, "BAD");
+    return luaL_error(L, "uncompress failed. (bad stream? wrong length?)");
   }
   lua_pushlstring(L, buf, dstlen);
   free(buf);
