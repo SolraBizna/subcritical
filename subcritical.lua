@@ -680,26 +680,46 @@ end
 
 sc.var = {}
 SCVar,scvar,sc.Var = sc.var,sc.var,sc.var
-function sc.var.Read(name)
+local function confdir(config_dir,...)
+   if ... then
+      local buildup = {config_dir,...}
+      for n=2,#buildup do
+         buildup[n] = fixvarname(buildup[n])
+      end
+      return table.concat(buildup,dirsep)..dirsep
+   else
+      return config_dir
+   end
+end
+function sc.var.Read(name,...)
+   local config_dir = confdir(config_dir,...)
    name = config_dir..fixvarname(name)
    return (old_open(name,"rb"))
 end
-function sc.var.Write(name)
+function sc.var.Write(name,...)
+   local config_dir = confdir(config_dir,...)
    helper.ckdir(config_dir)
    name = config_dir..fixvarname(name)
    return cproxy({file=old_open(name.."~","wb+"), sname=name.."~", dname=name})
 end
-function sc.var.Update(name)
+function sc.var.Update(name,...)
+   local config_dir = confdir(config_dir,...)
    helper.ckdir(config_dir)
    name = config_dir..fixvarname(name)
    helper.copy(name.."~", name) -- save memory by not doing this in Lua
    return cproxy({file=old_open(name.."~","ab+"), sname=name.."~", dname=name})
 end
-function sc.var.Path(name)
-   name = config_dir..fixvarname(name)
+function sc.var.Path(name,...)
+   local config_dir = confdir(config_dir,...)
+   if name then
+      name = config_dir..fixvarname(name)
+   else
+      name = config_dir
+   end
    return SC.Construct("Path",name)
 end
-function sc.var.Remove(name)
+function sc.var.Remove(name,...)
+   local config_dir = confdir(config_dir,...)
    name = config_dir..fixvarname(name)
    os.remove(name)
    os.remove(name.."~")
