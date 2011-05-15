@@ -30,6 +30,13 @@
 #include <string.h>
 #include <errno.h>
 
+#ifdef __WIN32__
+#define socketoption(sock, lev, name, val, len) setsockopt(sock, lev, name, (const char*) val, len)
+#else
+#define socketoption(sock, lev, name, val, len) setsockopt(sock, lev, name, (int*) val, len)
+#include <netinet/tcp.h>
+#endif
+
 using namespace SubCritical;
 
 #ifdef __WIN32__
@@ -60,6 +67,8 @@ IPSocket::IPSocket(int type, int protocol) throw(std::bad_alloc, int) : addrhost
     addrhost = NULL;
     throw errno;
   }
+  int one = 1;
+  socketoption(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 }
 
 IPSocket::~IPSocket() {
