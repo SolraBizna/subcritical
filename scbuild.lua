@@ -399,7 +399,7 @@ for soname,target in pairs(targets) do
       full_ld = full_ld .. " " .. object
       real_target.deps[#real_target.deps+1] = object
    end
-   if(target.deps) then
+   if(target.deps and osc ~= "darwin") then
       for _,dep in ipairs(target.deps) do
 	 full_ld = full_ld .. " \"" .. install_lib .. dep .. soext .. "\""
       end
