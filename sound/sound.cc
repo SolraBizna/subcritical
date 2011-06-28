@@ -113,6 +113,7 @@ public:
 	if(q[n].op == SoundOpcode::ClearQueue) {
 	  front = (n + 1) & qmask;
 	  delay = -1;
+          // keep searching, there may be another ClearQueue
 	}
       }
       if(front == back) return;
