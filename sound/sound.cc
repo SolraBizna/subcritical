@@ -398,6 +398,7 @@ static int ParseSoundCommand(lua_State* L, int i, SoundCommand& cmd, bool target
     else return luaL_typerror(L, i, "table");
   }
   if(target) {
+    cmd.target = NULL; // eek!
     lua_getfield(L, i, "sound");
     if(lua_isnil(L, -1))
       lua_pop(L, 1);
