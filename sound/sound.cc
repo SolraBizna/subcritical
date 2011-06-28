@@ -115,6 +115,7 @@ public:
 	  delay = -1;
 	}
       }
+      if(front == back) return;
       const SoundCommand& Q = q[front];
       if(delay < 0 && Q.delay) {
 	delay = Q.delay;
@@ -190,7 +191,8 @@ public:
       if((size_t)delay < frames_left) frames_left = delay;
     }
     if(target_type == SoundOpcode::Nop) {
-      delay -= frames_left;
+      if(delay >= 0)
+        delay -= frames_left;
       if(delay == 0) {
 	frames -= frames_left;
 	buffer += frames_left;
@@ -206,7 +208,7 @@ public:
 	memset(aux, 0, frames_left*sizeof(Frame));
 	((SoundStream*)target)->Mix(aux, frames_left);
 	for(Frame* p = aux;
-	    frames_left > 0; --frames_left, --delay, --frames, ++p, ++buffer) {
+	    frames_left > 0; --frames_left, (delay>=0?--delay:0), --frames, ++p, ++buffer) {
 	  (*buffer)[0] += (*p)[0] * pan[0] / 4096 + (*p)[1] * pan[1] / 4096;
 	  (*buffer)[1] += (*p)[0] * pan[2] / 4096 + (*p)[1] * pan[3] / 4096;
 	}
@@ -216,7 +218,7 @@ public:
 	  StereoSoundBuffer* target = ((StereoSoundBuffer*)this->target);
 	  for(Frame* p = target->buffer + target_position;
 	      frames_left > 0 && target_position < loop_right;
-	      --frames_left, --frames, --delay, ++p, ++buffer, ++target_position) {
+	      --frames_left, --frames, (delay>=0?--delay:0), ++p, ++buffer, ++target_position) {
 	    (*buffer)[0] += (*p)[0] * pan[0] / 4096 + (*p)[1] * pan[1] / 4096;
 	    (*buffer)[1] += (*p)[0] * pan[2] / 4096 + (*p)[1] * pan[3] / 4096;
 	  }
@@ -226,7 +228,7 @@ public:
 	  MonoSoundBuffer* target = ((MonoSoundBuffer*)this->target);
 	  for(Sample* p = target->buffer + target_position;
 	      frames_left > 0 && target_position < loop_right;
-	      --frames_left, --frames, --delay, ++p, ++buffer, ++target_position) {
+	      --frames_left, --frames, (delay>=0?--delay:0), ++p, ++buffer, ++target_position) {
 	    (*buffer)[0] += *p * pan[0] / 4096 + *p * pan[1] / 4096;
 	    (*buffer)[1] += *p * pan[2] / 4096 + *p * pan[3] / 4096;
 	  }
@@ -280,7 +282,7 @@ public:
 	  (*buffer)[1] += inner_frame[0] * pan[2] / 4096 + inner_frame[1] * pan[3] / 4096;
 	  irp += rate;
 	  --frames_left;
-	  --delay;
+          if(delay >= 0) --delay;
 	  --frames;
 	  ++buffer;
 	} while(irp < 32768 && frames_left);
