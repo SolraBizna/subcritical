@@ -28,6 +28,10 @@
 <i>true_path</i> = P"<i>path</i>"</dt>
 <dd>Returns a platform-specific equivalent to <i class="code">path</i>. <i class="code">path</i> is a UNIX-style path relative to <b>the directory containing the source file containing the calling code</b>. Calling <tt>ConstructPath</tt> from code not loaded directly from a file is unwise, and will have different semantics on different platforms.<dd>
 <dd>If you write code that wishes to wrap <tt>ConstructPath</tt> without itself affecting where the path points to, use the <i class="code">level</i> parameter. A value of <tt>3</tt> denotes the function calling you, <tt>4</tt> denotes the function that called that function, etc.</dd>
+<dt class="code"><a name="ConstructRelativePath" /><i>newpath</i> = SubCritical.ConstructRelativePath(<i>source</i>, <i>path</i>)
+<i>newpath</i> = SubCritical.RelPath(<i>sourcepath</i>, <i>relpath</i>)</dt>
+<dd><i class="code">sourcepath</i> is a <a href="core.html#Path" class="code">Path</a> object. <i class="code">relpath</i> is a string containing a UNIX-style relative path. The path that results is returned as a <a href="core.html#Path" class="code">Path</a> object.</dd>
+<dd>Null components and leading and trailing slashes in <i class="code">relpath</i> are ignored. If you want to hardcode an absolute path (and break your game on other OSes) manually construct a <a href="core.html#Path" class="code">Path</a> object.</dd>
 <dt class="code"><a name="ListFiles" /><i>files</i> = SubCritical.ListFiles(<i>extension</i>[, <i>dirpath</i>])
 <a name="ListFilesRecursive" /><i>files</i> = SubCritical.ListFilesRecursive(<i>extension</i>[, <i>dirpath</i>])
 <a name="ListFolders" /><i>folders</i> = SubCritical.ListFolders(<i>extension</i>[, <i>dirpath</i>])

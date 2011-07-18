@@ -539,6 +539,22 @@ function subcritical.ConstructPath(path, level)
       return construct_specific("Path", path)
    end
 end
+function SubCritical.ConstructRelativePath(sourcepath, path)
+   assert(sourcepath, "sourcepath not given")
+   local curpath = sourcepath:GetPath()
+   for component in path:gmatch("[^/]+") do
+      if component == "." then
+      elseif component == ".." then
+         curpath = curpath .. dirsep .. ".."
+      elseif dirfrob then
+         curpath = curpath .. dirsep .. dirfrob(component)
+      else
+         curpath = curpath .. dirsep .. component
+      end
+   end
+   return construct_specific("Path",curpath)
+end
+SubCritical.RelPath = SubCritical.ConstructRelPath
 function SubCritical.ListFiles(extension, dirpath, dirs)
    dirpath = dirpath or SubCritical.Path(".", 3)
    local rawpath = dirpath:GetPath() .. dirsep
