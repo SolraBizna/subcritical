@@ -10,8 +10,9 @@
 <p><tt>freetype</tt> depends on <a href="graphics.html#Frisket" class="code">Frisket</a></p>
 <p><tt>freetype</tt> contains no utilities.</p>
 <h2>License</h2>
-<p>The <tt>freetype</tt> package is marked as <tt>Compatible</tt>, which means any game can use it. However, if your game is not GPL and uses <tt>FreetypeFont</tt>, you must add the following notice somewhere in the game (such as the title screen) in order to comply with the FreeType license:</p>
+<p>The <tt>freetype</tt> package is marked as <tt>Compatible</tt>, which means any game can use it. However, if your game is not GPL and uses <tt>FreetypeFont</tt>, you must add the following notice (or a similar one) somewhere in the game (such as the title screen) in order to comply with the FreeType license:</p>
 <blockquote>Portions of this software are copyright (C) 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 The FreeType Project (www.freetype.org). All rights reserved.</blockquote>
+<p>When the <tt>freetype</tt> package is loaded, it prints this notice to stdout at startup. Most users won't see this, so it doesn't count. Your game should present this notice (or an equivalent) somehow, such as on the splash screeen. This is only printed to remind you, the developer, that you need to present a notice to the user. You can suppress the printing of this notice by setting the global <tt>freetype_copyright_ok</tt> to a non-nil value before initializing SubCritical.</p>
 <h2>Classes</h2>
 <h3 class="code"><a name="FreetypeFont" />FreetypeFont</h3>
 <p><tt>FreetypeFont</tt> encapsulates an instance of a Font in the FreeType library. It can be used to render TrueType (<tt>TTF</tt>) and other fonts for display.</p>

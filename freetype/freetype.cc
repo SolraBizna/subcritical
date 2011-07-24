@@ -435,6 +435,8 @@ SUBCRITICAL_CONSTRUCTOR(FreetypeFont)(lua_State* L) {
 }
 
 LUA_EXPORT int Init_freetype(lua_State* L) {
-  fprintf(stderr,"Portions of this SubCritical game's runtime environment are copyright (C) 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 The FreeType Project (www.freetype.org). All rights reserved.\n(This game ought to display a notice of such on startup if it is not GPL.)\n");
+  lua_getfield(L,LUA_GLOBALSINDEX,"freetype_copyright_ok");
+  if(lua_isnil(L,-1))
+    fprintf(stderr,"Portions of this SubCritical game's runtime environment are copyright (C) 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 The FreeType Project (www.freetype.org). All rights reserved.\n(This game ought to display a notice of such on startup if it is not GPL.)\n");
   return 0;
 }
