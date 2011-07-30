@@ -108,10 +108,10 @@ static void sha256(const unsigned char* message, size_t size, unsigned char dige
   do {
     uint32_t w[64];
     {
-      unsigned char x[64];
-      unsigned char* p = x;
-      eof = buf.Next64(x);
       if(little_endian) {
+        unsigned char x[64];
+        unsigned char* p = x;
+        eof = buf.Next64(x);
 	w[0] = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]; p += 4;
 	w[1] = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]; p += 4;
 	w[2] = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]; p += 4;
@@ -130,7 +130,8 @@ static void sha256(const unsigned char* message, size_t size, unsigned char dige
 	w[15] = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]; p += 4;
       }
       else {
-	w[0] = *(uint32_t*)p; p += 4;
+        eof = buf.Next64((unsigned char*)w);
+	/*w[0] = *(uint32_t*)p; p += 4;
 	w[1] = *(uint32_t*)p; p += 4;
 	w[2] = *(uint32_t*)p; p += 4;
 	w[3] = *(uint32_t*)p; p += 4;
@@ -145,7 +146,7 @@ static void sha256(const unsigned char* message, size_t size, unsigned char dige
 	w[12] = *(uint32_t*)p; p += 4;
 	w[13] = *(uint32_t*)p; p += 4;
 	w[14] = *(uint32_t*)p; p += 4;
-	w[15] = *(uint32_t*)p; p += 4;
+	w[15] = *(uint32_t*)p; p += 4;*/
       }
     }
     for(int i = 16; i < 64; ++i) {
@@ -160,8 +161,8 @@ static void sha256(const unsigned char* message, size_t size, unsigned char dige
       ch = (e & f) ^ (~e & g);
       t1 = h + s1 + ch + k[i] + w[i];
       h = g; g = f; f = e; e = d + t1; d = c; c = b; b = a; a = t1 + s0 + maj;
-      h0 += a; h1 += b; h2 += c; h3 += d; h4 += e; h5 += f; h6 += g; h7 += h;
     }
+    h0 += a; h1 += b; h2 += c; h3 += d; h4 += e; h5 += f; h6 += g; h7 += h;
   } while(!eof);
   if(little_endian) {
     digest[ 0] = h0 >> 24; digest[ 1] = h0 >> 16; digest[ 2] = h0 >> 8; digest[ 3] = h0;
