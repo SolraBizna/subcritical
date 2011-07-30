@@ -154,13 +154,14 @@ static void sha256(const unsigned char* message, size_t size, unsigned char dige
     }
     a = h0; b = h1; c = h2; d = h3; e = h4; f = h5; g = h6; h = h7;
     for(int i = 0; i < 64; ++i) {
-      uint32_t s0, maj, s1, ch, t1;
-      s0 = rotateleft(a, 30) ^ rotateleft(a, 19) ^ rotateleft(a, 10);
-      maj = (a & b) ^ (a & c) ^ (b & c);
-      s1 = rotateleft(e, 26) ^ rotateleft(e, 21) ^ rotateleft(e, 7);
-      ch = (e & f) ^ (~e & g);
-      t1 = h + s1 + ch + k[i] + w[i];
-      h = g; g = f; f = e; e = d + t1; d = c; c = b; b = a; a = t1 + s0 + maj;
+      uint32_t E0 = rotateleft(a, 30) ^ rotateleft(a, 19) ^ rotateleft(a, 10);
+      uint32_t E1 = rotateleft(e, 26) ^ rotateleft(e, 21) ^ rotateleft(e, 7);
+      uint32_t Ma = (a&b)^(a&c)^(b&c);
+      uint32_t Ch = (e&f)^(~e&g);
+      uint32_t x = w[i] + k[i] + h + Ch + E1;
+      uint32_t y = x + Ma + E0;
+      h = g; g = f; f = e; e = d + x;
+      d = c; c = b; b = a; a = y;
     }
     h0 += a; h1 += b; h2 += c; h3 += d; h4 += e; h5 += f; h6 += g; h7 += h;
   } while(!eof);
