@@ -32,16 +32,16 @@ using namespace SubCritical;
 
 #if POWERPC
 #define rotateleft(operand, constant) \
-  ({unsigned int __rot; \
+  ({uint32_t __rot; \
     __asm__("rlwinm %0,%1," #constant ",0xFFFFFFFF" : "=r"(__rot) : "r"(operand)); \
     __rot;})
 #else
-static unsigned int rotateleft(unsigned int operand, int constant) {
+static uint32_t rotateleft(uint32_t operand, int constant) {
   return (operand << constant) | (operand >> (32 - constant));
 }
 #endif
 
-static unsigned int k[64] = {
+static uint32_t k[64] = {
   0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
   0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
   0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -153,7 +153,7 @@ static void sha256(const unsigned char* message, size_t size, unsigned char dige
     }
     a = h0; b = h1; c = h2; d = h3; e = h4; f = h5; g = h6; h = h7;
     for(int i = 0; i < 64; ++i) {
-      unsigned int s0, maj, s1, ch, t1;
+      uint32_t s0, maj, s1, ch, t1;
       s0 = rotateleft(a, 30) ^ rotateleft(a, 19) ^ rotateleft(a, 10);
       maj = (a & b) ^ (a & c) ^ (b & c);
       s1 = rotateleft(e, 26) ^ rotateleft(e, 21) ^ rotateleft(e, 7);
