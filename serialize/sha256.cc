@@ -156,8 +156,8 @@ static void sha256(const unsigned char* message, size_t size, unsigned char dige
     for(int i = 0; i < 64; ++i) {
       uint32_t E0 = rotateleft(a, 30) ^ rotateleft(a, 19) ^ rotateleft(a, 10);
       uint32_t E1 = rotateleft(e, 26) ^ rotateleft(e, 21) ^ rotateleft(e, 7);
-      uint32_t Ma = (a&b)^(a&c)^(b&c);
-      uint32_t Ch = (e&f)^(~e&g);
+      uint32_t Ma = (a&b)|(c&(a|b)); //(a&b)^(a&c)^(b&c);
+      uint32_t Ch = g^(e&(f^g));     //(e&f)^(~e&g);
       uint32_t x = w[i] + k[i] + h + Ch + E1;
       uint32_t y = x + Ma + E0;
       h = g; g = f; f = e; e = d + x;
