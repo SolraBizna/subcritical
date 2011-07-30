@@ -58,7 +58,7 @@ public:
     superbuf[0] = 0x80;
     remsuperbuf = 1;
     while((len + remsuperbuf) % 64 != 56) superbuf[remsuperbuf++] = 0;
-    uint64_t biglen = len;
+    uint64_t biglen = (uint64_t)len * 8;
     superbuf[remsuperbuf++] = biglen >> 56;
     superbuf[remsuperbuf++] = biglen >> 48;
     superbuf[remsuperbuf++] = biglen >> 40;
