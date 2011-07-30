@@ -163,25 +163,26 @@ static void sha256(const unsigned char* message, size_t size, unsigned char dige
       h0 += a; h1 += b; h2 += c; h3 += d; h4 += e; h5 += f; h6 += g; h7 += h;
     }
   } while(!eof);
-  #if POWERPC
-  ((uint32_t*)digest)[0] = h0;
-  ((uint32_t*)digest)[1] = h1;
-  ((uint32_t*)digest)[2] = h2;
-  ((uint32_t*)digest)[3] = h3;
-  ((uint32_t*)digest)[4] = h4;
-  ((uint32_t*)digest)[5] = h5;
-  ((uint32_t*)digest)[6] = h6;
-  ((uint32_t*)digest)[7] = h7;
-#else
-  digest[ 0] = h0 >> 24; digest[ 1] = h0 >> 16; digest[ 2] = h0 >> 8; digest[ 3] = h0;
-  digest[ 4] = h1 >> 24; digest[ 5] = h1 >> 16; digest[ 6] = h1 >> 8; digest[ 7] = h1;
-  digest[ 8] = h2 >> 24; digest[ 9] = h2 >> 16; digest[10] = h2 >> 8; digest[11] = h2;
-  digest[12] = h3 >> 24; digest[13] = h3 >> 16; digest[14] = h3 >> 8; digest[15] = h3;
-  digest[16] = h4 >> 24; digest[17] = h4 >> 16; digest[18] = h4 >> 8; digest[19] = h4;
-  digest[20] = h5 >> 24; digest[21] = h5 >> 16; digest[22] = h5 >> 8; digest[23] = h5;
-  digest[24] = h6 >> 24; digest[25] = h6 >> 16; digest[26] = h6 >> 8; digest[27] = h6;
-  digest[28] = h7 >> 24; digest[29] = h7 >> 16; digest[30] = h7 >> 8; digest[31] = h7;
-#endif
+  if(little_endian) {
+    digest[ 0] = h0 >> 24; digest[ 1] = h0 >> 16; digest[ 2] = h0 >> 8; digest[ 3] = h0;
+    digest[ 4] = h1 >> 24; digest[ 5] = h1 >> 16; digest[ 6] = h1 >> 8; digest[ 7] = h1;
+    digest[ 8] = h2 >> 24; digest[ 9] = h2 >> 16; digest[10] = h2 >> 8; digest[11] = h2;
+    digest[12] = h3 >> 24; digest[13] = h3 >> 16; digest[14] = h3 >> 8; digest[15] = h3;
+    digest[16] = h4 >> 24; digest[17] = h4 >> 16; digest[18] = h4 >> 8; digest[19] = h4;
+    digest[20] = h5 >> 24; digest[21] = h5 >> 16; digest[22] = h5 >> 8; digest[23] = h5;
+    digest[24] = h6 >> 24; digest[25] = h6 >> 16; digest[26] = h6 >> 8; digest[27] = h6;
+    digest[28] = h7 >> 24; digest[29] = h7 >> 16; digest[30] = h7 >> 8; digest[31] = h7;
+  }
+  else {
+    ((uint32_t*)digest)[0] = h0;
+    ((uint32_t*)digest)[1] = h1;
+    ((uint32_t*)digest)[2] = h2;
+    ((uint32_t*)digest)[3] = h3;
+    ((uint32_t*)digest)[4] = h4;
+    ((uint32_t*)digest)[5] = h5;
+    ((uint32_t*)digest)[6] = h6;
+    ((uint32_t*)digest)[7] = h7;
+  }
 }
 
 SUBCRITICAL_UTILITY(GoodChecksum)(lua_State* L) {
