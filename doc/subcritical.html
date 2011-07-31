@@ -44,34 +44,34 @@
 ... = SCUtil.<i>name</i>(...)
 ... = scutil.<i>name</i>(...)</dt>
 <dd>All of the above are equivalent ways to call a native <tt>utility</tt> function named <i class="code">name</i>.</dd>
-<dt class="code"><a name="var.Read"><i>file</i> = SubCritical.Var.Read(<i>name</i>, ...)
-<i>file</i> = SubCritical.var.Read(<i>name</i>, ...)
-<i>file</i> = SCVar.Read(<i>name</i>, ...)
-<i>file</i> = scvar.Read(<i>name</i>, ...)</dt>
+<dt class="code"><a name="var.Read"><i>file</i> = SubCritical.Var.Read(..., <i>name</i>)
+<i>file</i> = SubCritical.var.Read(..., <i>name</i>)
+<i>file</i> = SCVar.Read(..., <i>name</i>)
+<i>file</i> = scvar.Read(..., <i>name</i>)</dt>
 <dd>Returns a Lua <tt>file</tt> (actually, a table shadowing one) to read a file by the name of <i class="code">name</i> (optionally under one or more subdirectories passed as additional arguments) in the SubCritical configuration directory. The location of this directory varies from platform to platform.</dd>
 <dd><i class="code">name</i>, as well as any subdirectories, must not begin with a period or end with a tilde (~). In addition, if it contains slashes (/), they are converted to underscores (_). Some platforms may name the file differently than the name you provide; on those platforms, it is guaranteed that there is a one-to-one mapping between <i class="code">name</i> parameters and actual filenames.</dd>
-<dt class="code"><a name="var.Write"><i>file</i> = SubCritical.Var.Write(<i>name</i>, ...)
-<i>file</i> = SubCritical.var.Write(<i>name</i>, ...)
-<i>file</i> = SCVar.Write(<i>name</i>, ...)
-<i>file</i> = scvar.Write(<i>name</i>, ...)</dt>
+<dt class="code"><a name="var.Write"><i>file</i> = SubCritical.Var.Write(..., <i>name</i>)
+<i>file</i> = SubCritical.var.Write(..., <i>name</i>)
+<i>file</i> = SCVar.Write(..., <i>name</i>)
+<i>file</i> = scvar.Write(..., <i>name</i>)</dt>
 <dd>Returns a Lua <tt>file</tt> (actually, a table shadowing one) to create or replace a file by the name of <i class="code">name</i> (optionally under one or more subdirectories passed as additional arguments) in the SubCritical configuration directory. The location of this directory varies from platform to platform. The file is not actually created / replaced until it is explicitly closed (with <tt>:close()</tt>). In particular, if the garbage collector gets it, the file is never actually created!</dd>
 <dd>See <a href="#var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
-<dt class="code"><a name="var.Update"><i>file</i> = SubCritical.Var.Update(<i>name</i>, ...)
-<i>file</i> = SubCritical.var.Update(<i>name</i>, ...)
-<i>file</i> = SCVar.Update(<i>name</i>, ...)
-<i>file</i> = scvar.Update(<i>name</i>, ...)</dt>
+<dt class="code"><a name="var.Update"><i>file</i> = SubCritical.Var.Update(..., <i>name</i>)
+<i>file</i> = SubCritical.var.Update(..., <i>name</i>)
+<i>file</i> = SCVar.Update(..., <i>name</i>)
+<i>file</i> = scvar.Update(..., <i>name</i>)</dt>
 <dd>Returns a Lua <tt>file</tt> (actually, a table shadowing one) to update a file by the name of <i class="code">name</i> (optionally under one or more subdirectories passed as additional arguments) in the SubCritical configuration directory. If the file does not exist, it is created. If it does, the file position starts at the end of the file. In either case, the file handle can be seeked, read from, and written to at will. The file is not actually updated until it is explicitly closed (with <tt>:close()</tt>). In particular, if the garbage collector gets it, the file is never updated!</dd>
 <dd>See <a href="#var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
-<dt class="code"><a name="var.Path"><i>path</i> = SubCritical.Var.Path(<i>name</i>, ...)
-<i>path</i> = SubCritical.var.Path(<i>name</i>, ...)
-<i>path</i> = SCVar.Path(<i>name</i>, ...)
-<i>path</i> = scvar.Path(<i>name</i>, ...)</dt>
+<dt class="code"><a name="var.Path"><i>path</i> = SubCritical.Var.Path(..., <i>name</i>)
+<i>path</i> = SubCritical.var.Path(..., <i>name</i>)
+<i>path</i> = SCVar.Path(..., <i>name</i>)
+<i>path</i> = scvar.Path(..., <i>name</i>)</dt>
 <dd>Returns the <a href="core.html#Path" class="code">Path</a> to the corresponding configuration file (optionally under one or more subdirectories passed as additional arguments). If <i>name</i> is nil, returns the <a href="core.html#Path" class="code">Path</a> to the configuration directory (or, if given, one or more subdirectories underneath it). As far as I know, the only legitimate use for this function is to <a href="graphics.html#GraphicLoader">load</a> a <a href="graphics.html#Graphic" class="code">Graphic</a> from a config file, or <a href="#ListFiles">list</a> some subset of the configuration files.</dd>
 <dd>See <a href="#var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
-<dt class="code"><a name="var.Path">SubCritical.Var.Remove(<i>name</i>, ...)
-SubCritical.var.Remove(<i>name</i>, ...)
-SCVar.Remove(<i>name</i>, ...)
-scvar.Remove(<i>name</i>, ...)</dt>
+<dt class="code"><a name="var.Path">SubCritical.Var.Remove(..., <i>name</i>)
+SubCritical.var.Remove(..., <i>name</i>)
+SCVar.Remove(..., <i>name</i>)
+scvar.Remove(..., <i>name</i>)</dt>
 <dd>Deletes the corresponding configuration file, if it exists. Never fails, even if the file was not actually deleted. Also tries to delete any temporary copies of the file that exist. Like the other SCVar functions, one or more subdirectories can optionally be passed.</dd>
 <dd>See <a href="#var.Read" class="code">Var.Read</a> for restrictions on <i class="code">name</i></dd>
 <dt class="code"><a name="GetPluginPath" /><i>path</i> = SubCritical.GetPluginPath(<i>name</i>)</dt>
