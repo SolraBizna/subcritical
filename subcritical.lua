@@ -697,36 +697,38 @@ end
 sc.var = {}
 SCVar,scvar,sc.Var = sc.var,sc.var,sc.var
 local function confdir(config_dir,...)
-   if ... then
-      local buildup = {config_dir,...}
+   assert(..., "no name provided")
+   local buildup = {config_dir,...}
+   local name = table.remove(buildup,#buildup)
+   if #buildup >= 2 then
       for n=2,#buildup do
          buildup[n] = fixvarname(buildup[n])
       end
-      return table.concat(buildup,dirsep)..dirsep
+      return table.concat(buildup,dirsep)..dirsep,name
    else
-      return config_dir
+      return config_dir,name
    end
 end
-function sc.var.Read(name,...)
-   local config_dir = confdir(config_dir,...)
+function sc.var.Read(...)
+   local config_dir,name = confdir(config_dir,...)
    name = config_dir..fixvarname(name)
    return (old_open(name,"rb"))
 end
-function sc.var.Write(name,...)
-   local config_dir = confdir(config_dir,...)
+function sc.var.Write(...)
+   local config_dir,name = confdir(config_dir,...)
    helper.ckdir(config_dir)
    name = config_dir..fixvarname(name)
    return cproxy({file=old_open(name.."~","wb+"), sname=name.."~", dname=name})
 end
-function sc.var.Update(name,...)
-   local config_dir = confdir(config_dir,...)
+function sc.var.Update(...)
+   local config_dir,name = confdir(config_dir,...)
    helper.ckdir(config_dir)
    name = config_dir..fixvarname(name)
    helper.copy(name.."~", name) -- save memory by not doing this in Lua
    return cproxy({file=old_open(name.."~","ab+"), sname=name.."~", dname=name})
 end
-function sc.var.Path(name,...)
-   local config_dir = confdir(config_dir,...)
+function sc.var.Path(...)
+   local config_dir,name = confdir(config_dir,...)
    if name then
       name = config_dir..fixvarname(name)
    else
@@ -734,8 +736,8 @@ function sc.var.Path(name,...)
    end
    return SC.Construct("Path",name)
 end
-function sc.var.Remove(name,...)
-   local config_dir = confdir(config_dir,...)
+function sc.var.Remove(...)
+   local config_dir,name = confdir(config_dir,...)
    name = config_dir..fixvarname(name)
    os.remove(name)
    os.remove(name.."~")
