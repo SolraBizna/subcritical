@@ -34,7 +34,8 @@
 <p><tt>SoundMaster</tt> has no methods or other useful attributes for Lua code, and is of no use to anyone except someone implementing something that fits its paradigm.</p>
 <h3 class="code"><a name="SoundDevice" />SoundDevice : <a href="#SoundMaster" class="code">SoundMaster</a></h3>
 <p><tt>SoundDevice</tt> is the obvious application of <tt>SoundMaster</tt>. It plays the attached <a href="#SoundStream" class="code">SoundStream</a> through some kind of sound hardware.</p>
-<p><tt>SoundDevice</tt> has no methods or other useful attributes for Lua code. Once it is constructed, it must merely be kept around. If you want easily-controlled "sound effects" like you've probably been expecting for the last several classes, attach a <tt>SoundDevice</tt> to a <a href="#SoundMixer" class="code">SoundMixer</a>.</p>
+<p><tt>SoundDevice</tt> has no methods or other useful attributes for Lua code. Once it is constructed, it must merely be kept around. Putting it in a local that you never touch again won't cut it, as it will probably be garbage collected, causing your sound to mysteriously stop. Tucking it away in a global will work, however.</p>
+<p>If you want easily-controlled "sound effects" like you've probably been expecting for the last several classes, attach a <tt>SoundDevice</tt> to a <a href="#SoundMixer" class="code">SoundMixer</a>.</p>
 <dl>
 <dt class="code"><i>device</i> = SubCritical.Construct("SoundDevice", <i>some_stream</i>)</dt>
 </dl>
