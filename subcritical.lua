@@ -554,7 +554,7 @@ function SubCritical.ConstructRelativePath(sourcepath, path)
    end
    return construct_specific("Path",curpath)
 end
-SubCritical.RelPath = SubCritical.ConstructRelPath
+SubCritical.RelPath = SubCritical.ConstructRelativePath
 function SubCritical.ListFiles(extension, dirpath, dirs)
    dirpath = dirpath or SubCritical.Path(".", 3)
    local rawpath = dirpath:GetPath() .. dirsep
