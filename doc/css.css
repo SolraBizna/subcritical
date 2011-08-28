@@ -3,10 +3,10 @@ font-family: "Liberation Sans", sans;
 background: #000;
 color: #eff;
 }
-a { color: #0df; }
-a:visited { color: #fa5; }
-a:hover { color: #ff3; }
-a:active { color: #fff; }
+:link { color: #0df; }
+:visited { color: #fa5; }
+:link:hover { color: #ff3; }
+:link:active { color: #fff; }
 h1,h2 { color: #afe; }
 pre {
 border-left: 0.5ex solid #eee;
