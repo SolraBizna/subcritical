@@ -104,6 +104,11 @@ public:
   inline bool QueueCommand(const struct SoundCommand& command) {
     if(((back+1)&qmask) == front) return false;
     q[back] = command;
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)
+    __sync_synchronize();
+#else
+#warning There may be a tiny, tiny, tiny chance (roughly 200,000,000,000,000 to one) that attempting to queue a SoundCommand will crash. Add fence code here. If your compiler supports "Intel Itanium Processor-specific Application Binary Interface" section 7.4 (which can apply on all platforms, not just Itanium), just enable the code above this warning.
+#endif
     back = (back + 1) & qmask;
     return true;
   }
