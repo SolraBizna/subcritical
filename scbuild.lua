@@ -224,7 +224,7 @@ for entry in package.cpath:gmatch("[^;]+") do
    end
 end
 install_c = config_question("INSTALL_C",
-			    "Enter the path where we should expect to install C package files for Lua:\n(note that you may need to set LUA_CPATH in the environment\nif you change this from the default)",
+			    "Enter the path where we should install sc_helper.so so that Lua can find it:\n(note that you may need to set LUA_CPATH in the environment if you change this\nto something your local Lua interpreter won't expect)",
 			    "freeform",
 			    cpath) -- cpath can be nil, making prompt silly
 install_c = sanitize_path(install_c)
@@ -236,7 +236,7 @@ for entry in package.path:gmatch("[^;]+") do
    end
 end
 install_lua = config_question("INSTALL_LUA",
-			      "Enter the path where we should expect to install non-C Lua packages:\n(note that you may need to set LUA_PATH in the environment\nif you change this from the default)",
+			      "Enter the path where we should install subcritical.lua so that Lua can find it:\n(note that you may need to set LUA_PATH in the environment if you change this\nto something your local Lua interpreter won't expect)",
 			      "freeform",
 			      lpath)
 install_lua = sanitize_path(install_lua)
