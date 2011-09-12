@@ -21,7 +21,9 @@ celnet_server:add_sock(new_socket, new_client_id)
 celnet_server:send_to(client_id, message)
 -- Returns, if it can, a client and a received message. If the received message
 -- is nil (note that false *is* a sendable message), it signifies that the
--- client disconnected or a serious error occurred.
+-- client disconnected or a serious error occurred. (In this case, you must
+-- call del_sock on that client_id, or else you'll keep getting failure
+-- notifications forever.)
 -- Before it even checks to see if any messages have arrived, it tries its
 -- hardest to empty all the message queues of all the associated clients.
 client_id,message = celnet_server:get_packet()
