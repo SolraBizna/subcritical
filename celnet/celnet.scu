@@ -51,7 +51,7 @@ local function flush_sendq(peer)
 	 peer.send_part = false
 	 table.remove(peer.sendq, 1)
       else
-	 peer.send_part = sent + 1
+	 peer.send_part = (peer.send_part or 1) + sent
       end
    end
 end
