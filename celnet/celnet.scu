@@ -59,9 +59,9 @@ end
 function celproto:del_sock(identifier)
    local a = self.peers_by_id[identifier]
    assert(a, "del_sock used to delete an unknown socket?")
-   if(a.sendq[1]) then
-      flush_sendq(a) -- at least try!
-   end
+   --if(a.sendq[1]) then
+   --flush_sendq(a) -- at least try!
+   --end
    self.peers[a.sock] = nil
    self.peers_by_id[identifier] = nil
 end
