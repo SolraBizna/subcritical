@@ -47,7 +47,7 @@ local function flush_sendq(peer)
 	 else
 	    return id,nil
 	 end
-      elseif (sent == #peer.sendq[1]) then
+      elseif ((peer.send_part or 1) + sent - 1 == #peer.sendq[1]) then
 	 peer.send_part = false
 	 table.remove(peer.sendq, 1)
       else
