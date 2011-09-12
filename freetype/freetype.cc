@@ -281,72 +281,68 @@ int FreetypeFont::Lua_GetTextWidth(lua_State* L) throw() {
   return 1;
 }
 
+static inline int CalcStop(int stop, int len) {
+  return stop >= len ? len : stop;
+}
+
 int FreetypeFont::BreakLine(const char* string, size_t len, int width, int start, int& stop) throw() {
   const char* ostring = string;
   int rem = len - start;
+  int pos = 0, lastspace = 0;
   uint32_t code;
   if(rem < 0 || width < 1) {
     stop = -1;
-    return -1;
+    return -1;  
   }
-  string += start;
-  int pen = 0, pos = start;
-  int last_unbroken_pos = 0, last_broken_pos = -1;
+  string += start; /* string points to the beginning of the current character */
+  int pen = 0;
   FT_UInt left_glyph = 0, right_glyph;
   do {
-    int opos = pos;
-    pos = string - ostring; 
     code = UTF8_To_UTF32(string, rem);
+    /* string now points to the beginning of the NEXT character */
+    if(IsSpace(code))
+      lastspace = string - ostring;
     if(code == '\n') {
-      stop = opos + 1;
-      if(rem > 0)
-	return pos + 2;
-      else
-	return -1;
+      pos = string - ostring;
+      stop = CalcStop(pos - 1, len);
+      return pos + 1;
     }
     right_glyph = FT_Get_Char_Index(face, code);
     if(left_glyph && right_glyph) {
       FT_Vector v;
       FT_Get_Kerning(face, left_glyph, right_glyph, FT_KERNING_UNFITTED, &v);
-      pen += v.x;
+      pen += v.x >> 6;
     }
     left_glyph = right_glyph;
-    pen += face->glyph->advance.x;
     if(FT_Load_Char(face, code, FT_LOAD_DEFAULT)) {
       continue;
     }
-    if(Ceil_26_6(pen) >= width) break;
-    if(!IsSpace(code))
-      last_unbroken_pos = pos;
-    else
-      last_broken_pos = last_unbroken_pos;
-  } while(rem > 0);
-  if(last_broken_pos == -1) last_broken_pos = last_unbroken_pos;
-  if(rem == 0 && !IsSpace(code) && code != '\n') {
-    stop = len;
-    return -1;
-  }
-  stop = last_broken_pos + 1;
-  int arem = string - (ostring + last_broken_pos);
-  string -= arem;
-  rem += arem;
-  (void)UTF8_To_UTF32(string, rem);
-  code = UTF8_To_UTF32(string, rem);
-  if(IsSpace(code)) {
-    int lpos;
-    do {
-      if(rem == 0) return -1;
-      lpos = string - ostring;
-      code = UTF8_To_UTF32(string, rem);
-    } while(IsSpace(code));
-    if(code == '\n') {
-      if(rem > 0) return lpos + 2;
-      else return -1;
+    pen += face->glyph->advance.x;
+    /* if the pen is now past the break width, break the line */
+    if(Ceil_26_6(pen) > width) {
+      pos = string - ostring;
+      if(!IsSpace(code)) {
+        /* the current character is not a space, handle it appropriately */
+        if(lastspace == 0) {
+          stop = CalcStop(pos - 1, len);
+          return pos;
+        }
+        else {
+          stop = CalcStop(lastspace, len);
+          return lastspace + 1;
+        }
+      }
+      else {
+        /* the current character is a space, handle it appropriately */
+        stop = CalcStop(pos, len);
+        return pos + 1;
+      }
+      break;
     }
-    else return lpos + 1;
-  }
-  else if(rem > 0) return last_broken_pos + 2;
-  else return -1;
+  } while(rem > 0);
+  /* This shouldn't happen, but will prevent infinite loops */
+  stop = CalcStop(string - ostring, len);
+  return -1;
 }
 
 int FreetypeFont::Lua_BreakLine(lua_State* L) throw() {
