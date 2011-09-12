@@ -94,6 +94,7 @@ size_t TCPSocket::SendBytes(const void* buf, size_t bytes, FailReason& error) th
       }
     }
     rem = rem - did_write;
+    p = p + did_write;
   }
   return bytes;
 }
