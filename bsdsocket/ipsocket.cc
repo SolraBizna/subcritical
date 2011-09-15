@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <signal.h>
 #endif
 
 #include <stdlib.h>
@@ -46,6 +47,11 @@ LUA_EXPORT int Init_ipsocket(lua_State* L) {
   if((fail = WSAStartup(MAKEWORD(1,1),&wsaData)))
     return luaL_error(L, "WSAStartup fail: %d\n", fail);
   fprintf(stderr, "WinSock version %i.%i in use (%i.%i max)\nDescription: %s\nStatus: %s\n", wsaData.wVersion & 255, wsaData.wVersion >> 8, wsaData.wHighVersion & 255, wsaData.wHighVersion >> 8, wsaData.szDescription, wsaData.szSystemStatus);
+  return 0;
+}
+#else
+LUA_EXPORT int Init_ipsocket(lua_State* L) {
+  signal(SIGPIPE, SIG_IGN);
   return 0;
 }
 #endif
