@@ -113,6 +113,46 @@ function config_question(cachename, prompt, type, ...)
    end
 end
 
+--print("Detecting Lua flags...")
+local lua_cflags = ""
+if os.execute("pkg-config lua5.1 --exists") == 0 then
+   lua_cflags="`pkg-config lua5.1 --cflags`"
+else
+   local searchpath = {
+      "/opt/local",
+      "/opt",
+      "/usr/local",
+      "/usr",
+   }
+   local subpath = {
+      "/",
+      "/lua5.1/",
+      "/lua51/"
+   }
+   if os.getenv("HOME") then
+      table.insert(searchpath,1,os.getenv("HOME"))
+   end
+   local function exists(path)
+      local f = io.open(path,"r")
+      if f then
+         f:close()
+         return true
+      else
+         return false
+      end
+   end
+   for n=1,#searchpath do
+      for m=1,#subpath do
+         local dir = searchpath[n].."/include"..subpath[m]
+         if exists(dir.."lua.h") then
+            lua_cflags = "-I\""..dir.."\""
+            break
+         end
+      end
+      if lua_cflags ~= "" then break end
+   end
+end
+
 local osc
 local cxx
 local ld
@@ -139,10 +179,10 @@ else
    local gpp = os.getenv("CXX") or "g++"
    local gld = os.getenv("LD") or os.getenv("CXX") or "g++"
    local platforms = {
-      linux={cxx=gpp.." -Wall -Wno-pmf-conversions -fPIC -O2 -I/usr/include/lua51 -c", ld=gld.." -fPIC -O -L/usr/lib/lua51 -shared", soext=".so"},
-      cygwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 -I/usr/include/lua51 -c", ld=gld.." -O -L/usr/lib/lua51 -shared", soext=".dll"},
-      mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 -I/usr/include/lua51 -c", ld=gld.." -O -L/usr/lib/lua51 -shared", soext=".dll"},
-      darwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 -I/usr/include/lua51 -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" "..gld.." -L/usr/lib/lua51 -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
+      linux={cxx=gpp.." -Wall -Wno-pmf-conversions -fPIC -O2 "..lua_cflags.." -c", ld=gld.." -fPIC -O -shared", soext=".so"},
+      cygwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -c", ld=gld.." -O -shared", soext=".dll"},
+      mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 "..lua_cflags.." -c", ld=gld.." -O -shared", soext=".dll"},
+      darwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" "..gld.." -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
    }
    assert(platforms[osc])
    cxx = platforms[osc].cxx
