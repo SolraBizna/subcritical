@@ -53,6 +53,9 @@
 <dt class="code"><a name="RenderPreCompressed" />function <i>my_render_function</i>(<i>x</i>, <i>y</i>) ... return <i>r</i>,<i>g</i>,<i>b</i>[,<i>a</i>] end
 <i>graphic</i> = SCUtil.RenderPreCompressed(<i>my_render_function</i>, <i>width</i>, <i>height</i>[, <i>alpha</i>])</dt>
 <dd>This behaves exactly as <a href="#Render" class="code">Render</a> above, with one exception. The <i class="code">r</i>, <i class="code">g</i>, and <i class="code">b</i> return values of <i class="code">my_render_function</i> are assumed to be in an sRGB colorspace. (One might use this function to implement an image loader in Lua.)</dd>
+<dt class="code"><a name="RenderFrisket" />function <i>my_render_function</i>(<i>x</i>, <i>y</i>) ... return <i>a</i> end
+<i>frisket</i> = SCUtil.RenderFrisket(<i>my_render_function</i>, <i>width</i>, <i>height</i>)</dt>
+<dd>This behaves exactly as <a href="#Render" class="code">Render</a> above, but creates a Frisket instead.</dd>
 <dt class="code"><a name="RotateLeft" /><i>new_graphic</i> = SCUtil.RotateLeft(<i>old_graphic</i>)</dt>
 <dd><i class="code">old_graphic</i></a> can be any <a href="graphics.html#Drawable" class="code">Drawable</a>. <i class="code">new_graphic</i> will be a new <a href="graphics.html#Graphic" class="code">Graphic</a> containing the image data from <i class="code">old_graphic</i> rotated 90 degrees counter-clockwise.</dd>
 <dt class="code"><a name="RotateRight" /><i>new_graphic</i> = SCUtil.RotateRight(<i>old_graphic</i>)</dt>
