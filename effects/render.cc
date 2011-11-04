@@ -112,3 +112,21 @@ SUBCRITICAL_UTILITY(RenderPreCompressed)(lua_State* L) {
   }
   return 1;
 }
+
+SUBCRITICAL_UTILITY(RenderFrisket)(lua_State* L) {
+  if(!lua_isfunction(L, 1)) return luaL_typerror(L, 1, "function");
+  Frisket* ret = new Frisket(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3));
+  ret->Push(L); // we want it to be collected on error, this is the easiest way
+  for(int y = 0; y < ret->height; ++y) {
+    Frixel* dest = ret->rows[y];
+    for(int x = 0; x < ret->width; ++x) {
+      lua_pushvalue(L, 1);
+      lua_pushnumber(L, x);
+      lua_pushnumber(L, y);
+      lua_call(L, 2, 1);
+      *dest++ = num2lin(lua_tonumber(L,-1));
+      lua_pop(L, 1);
+    }
+  }
+  return 1;
+}
