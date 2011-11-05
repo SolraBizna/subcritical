@@ -68,6 +68,7 @@ class EXPORT SDLGraphics : public GraphicsDevice {
   bool doing_relmouse, doing_textok;
 #if CAN_DO_OPENGL
   GLenum glformat, gltype;
+  int clear_count;
 #endif
 };
 
@@ -345,9 +346,8 @@ doing_relmouse(false), doing_textok(false) {
     gluOrtho2D(0.0, screen->w, 0.0, screen->h);
     glMatrixMode(GL_MODELVIEW);
     assertgl();
-    /* we only need to do this once */
     glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    clear_count = 0;
     assertgl();
   }
 #endif
@@ -369,6 +369,19 @@ void SDLGraphics::indirect_update(SDL_Surface* target, SDL_Rect& a,
 #if CAN_DO_OPENGL
   else if(screen->flags & SDL_OPENGL) {
     glFinish();
+    if(fake_rectangle.x != 0 || fake_rectangle.y != 0 ||
+       fake_rectangle.w != screen->w || fake_rectangle.h != screen->h) {
+      if(clear_count <= 0) {
+        clear_count = 100;
+        /* we SHOULD only need to do this once, but some drivers are screwy */
+        glClear(GL_COLOR_BUFFER_BIT);
+        a.x = 0;
+        a.y = 0;
+        a.w = target->w;
+        a.h = target->h;
+        b = fake_rectangle;
+      } else --clear_count;
+    }
     assertgl();
     if(a.x == 0 && a.y == 0 && a.w == target->w && a.h == target->h)
       glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB, target->w, target->h,
