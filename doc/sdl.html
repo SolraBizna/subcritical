@@ -12,7 +12,7 @@
 <p>The <tt>sdl</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
 <h2>Classes</h2>
 <h3 class="code"><a name="SDLGraphics" />SDLGraphics : <a href="graphics.html#GraphicsDevice">GraphicsDevice</a></h3>
-<p><tt>SDLGraphics</tt> is the standard cross-platform <a href="graphics.html#GraphicsDevice">GraphicsDevice</a> implementor. It tries its best to adjust the screen to sRGB before proceeding.</p>
+<p><tt>SDLGraphics</tt> is the standard cross-platform <a href="graphics.html#GraphicsDevice">GraphicsDevice</a> implementor. It tries its best to adjust the screen to sRGB before proceeding (to disable, set NO_FIX_GAMMA=1 in the environment). It will try to use OpenGL when simulating a different-sized framebuffer via the <tt>true_width</tt> and <tt>true_height</tt> parameters. You can disable OpenGL and force it to use software by setting NO_OPENGL=1 in the environment; be warned that the software implementation is lazy and will not have correct results when doing partial updates.</p>
 <p>A future version of <tt>SDLGraphics</tt> will support additional joystick-related functions.</p>
 <p><tt>SDLGraphics</tt> has no methods it didn't inherit.</p>
 <h3 class="code"><a name="SDLSound" />SDLSound : <a href="sound.html#SoundDevice">SoundDevice</a></h3>

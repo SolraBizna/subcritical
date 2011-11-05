@@ -101,8 +101,18 @@ end</pre></dd>
 <p>A <tt>GraphicsDevice</tt> is a mild-mannered <a href="#Drawable" class="code">Drawable</a> by day and what the user actually sees by night.</p>
 <dl>
 <dt class="code"><i>device</i> = SubCritical.Construct("GraphicsDevice", <i>width</i>, <i>height</i>)
-<i>device</i> = SubCritical.Construct("GraphicsDevice", <i>width</i>, <i>height</i>, {[windowed=<i>is_windowed</i>,] [title=<i>window_title</i>]})</dt>
-<dd>Tries to construct and initialize a new <tt>GraphicsDevice</tt> of the given <i class="code">width</i> and <i class="code">height</i>. If <tt>windowed</tt>, try to create a windowed context instead of a fullscreen one. If <tt>title</tt> is specified, use <i class="code">window_title</i> instead of the device-specific default title.</dd>
+<i>device</i> = SubCritical.Construct("GraphicsDevice", <i>width</i>, <i>height</i>, {[windowed=<i>is_windowed</i>,] [title=<i>window_title</i>,] [extensions]})</dt>
+<dd>Tries to construct and initialize a new <tt>GraphicsDevice</tt> of the given <i class="code">width</i> and <i class="code">height</i>. If <tt>windowed</tt>, try to create a windowed context instead of a fullscreen one. If <tt>windowed</tt> is <b>not</b> specified, and <i class="code">width</i> and <i class="code">height</i> are zero, pick a reasonable size (such as the user's current desktop resolution). If the exact resolution cannot be achieved, use black borders and the smallest resolution large enough to fit all the requested pixels. If <tt>title</tt> is specified, use <i class="code">window_title</i> instead of the device-specific default title.</dd>
+<dd>A list of known extensions:
+<dl>
+<dt class="code">true_width, true_height = <i>some_width</i>, <i>some_height</i></dt>
+<dd>If specified, the GraphicsDevice will simulate a framebuffer of these dimensions, scaling up or down as needed for display. A retro-style game might set a true_width of 256 and a true_height of 224 for a Super Nintendo screen, for instance.</dd>
+<dt class="code">keep_aspect = true</dt>
+<dd>If true, and a <i class="code">true_width</i> and/or <i class="code">true_height</i> are specified, black borders may be added to avoid "squishing" of the video. You probably want to specify this, especially if the display <i class="code">width</i> and <i class="code">height</i> are zero.</dd>
+<dt class="code">smooth_filter = true</dt>
+<dd>If true, and a <i class="code">true_width</i> and/or <i class="code">true_height</i> are specified, try to use a smoother filter for magnification. If you are not dealing with a display <i class="code">width</i> and <i class="code">height</i> that are an integer multiple of the <i class="code">true_width</i> and <i class="code">true_height</i>, you probably want this.</dd>
+</dl>
+</dd>
 <dt class="code"><a name="GraphicsDevice:Update" /><i>device</i>:Update()
 <i>device</i>:Update(<i>x</i>, <i>y</i>, <i>width</i>, <i>height</i>)</dt>
 <dd>Copies the pixels inside the given rectangle (or, if none is specified, all pixels) to the screen, where the user can get at them. A common mistake is to forget to call this after you're finished blitting.</dd>
