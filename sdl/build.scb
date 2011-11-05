@@ -13,9 +13,9 @@ targets = {
 }
 
 if(os ~= "mingw") then
-   targets.scsdl.libflags = "`sdl-config --libs`"
+   targets.scsdl.libflags = "`sdl-config --libs` -lGL -lGLU"
 else
-   targets.scsdl.libflags = "-lSDL"
+   targets.scsdl.libflags = "-lSDL -lGL -lGLU"
 end
 
 install = {

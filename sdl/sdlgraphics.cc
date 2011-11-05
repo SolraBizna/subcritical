@@ -26,9 +26,31 @@
 
 using namespace SubCritical;
 
+#if !NO_OPENGL
+#define CAN_DO_OPENGL 1
+#include "SDL_opengl.h"
+#else
+#define CAN_DO_OPENGL 0
+#endif
+
+#if SDL_MAJOR_VERSION == 1 && SDL_MINOR_VERSION == 2 && SDL_PATCHLEVEL >= 13
+#define CAN_DO_SOFTSTRETCH 1
+// OpenGL will always be preferred if available
+static bool ShouldDoSoftStretch() {
+  const SDL_version* version = SDL_Linked_Version();
+  // 1.12 and earlier have a crash bug in them
+  return version->major == 1 && version->minor == 2 && version->patch >= 13;
+}
+#else
+// 1.3 doesn't have SoftStretch anymore, and it's not clear which version it
+// was added in
+#define CAN_DO_SOFTSTRETCH 0
+#endif
+
 class EXPORT SDLGraphics : public GraphicsDevice {
  public:
-  SDLGraphics(int width, int height, bool windowed, const char* title);
+  SDLGraphics(int width, int height, bool windowed, const char* title,
+              int true_width, int true_height, bool keep_aspect, bool smooth_filter);
   virtual ~SDLGraphics();
   virtual void Update(int x, int y, int w, int h) throw();
   virtual void UpdateAll() throw();
@@ -36,9 +58,17 @@ class EXPORT SDLGraphics : public GraphicsDevice {
   virtual int Lua_GetMousePos(lua_State* L) throw();
   PROTOCOL_PROTOTYPE();
  private:
+  void indirect_update(SDL_Surface* source, SDL_Rect& a,
+                       SDL_Surface* dest, SDL_Rect& b) throw() LOCAL;
   int RealGetEvent(lua_State* L, bool wait, bool relmouse, bool textok) throw() LOCAL;
   SDL_Surface* screen;
+  SDL_Surface* shadow; // used for SoftStretch and for OpenGL
+  SDL_Surface* target; // either shadow or screen; the target of blitting
+  SDL_Rect fake_rectangle; // only used if target != screen
   bool doing_relmouse, doing_textok;
+#if CAN_DO_OPENGL
+  GLenum glformat, gltype;
+#endif
 };
 
 struct LOCAL gamma_frob {
@@ -62,6 +92,7 @@ void gamma_frob::frobnicate(const char* envp) {
   const char* env;
 #if defined(__MACOSX__) || defined(__MACOS__)
   // Macintoshes have always come factory-calibrated to approximately 1.8 gamma
+  // TODO: update this for Snow Leopard
   old_factor = 1.8;
 #else
   // PC monitors are generally uncalibrated; CRTs natively have a gamma varying
@@ -110,12 +141,81 @@ static void TryGammaCorrection() throw() {
   }
 }
 
-SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title) :
+#if CAN_DO_OPENGL
+/* http://www.mesa3d.org/brianp/sig97/exten.htm */
+bool CheckExtension(const char* extName, const char* extensions) {
+  /*
+  ** Search for extName in the extensions string.  Use of strstr()
+  ** is not sufficient because extension names can be prefixes of
+  ** other extension names.  Could use strtok() but the constant
+  ** string returned by glGetString can be in read-only memory.
+  */
+  const char* p = extensions;
+  const char* end;
+  int extNameLen;
+  extNameLen = strlen(extName);
+  end = p + strlen(p);
+  while (p < end) {
+    int n = strcspn(p, " ");
+    if((extNameLen == n) && (strncmp(extName, p, n) == 0)) {
+      return true;
+    }
+    p += (n + 1);
+  }
+  return false;
+}
+
+static bool haveRectTexture() {
+  const char* exts = (const char*)glGetString(GL_EXTENSIONS);
+  if(!exts) return false;
+  return CheckExtension("GL_ARB_texture_rectangle",exts) || CheckExtension("GL_EXT_texture_rectangle",exts); // don't go with GL_NV_texture_rectangle.
+}
+
+static void _assertgl(const char* file, int line) {
+  GLenum err;
+  bool errored = false;
+  while((err = glGetError()) != GL_NO_ERROR) {
+    errored = true;
+    fprintf(stderr, "GL error: %s\n", gluErrorString(err));
+  }
+  if(errored) {
+    fprintf(stderr, "Fatal GL errors detected at: %s:%i\n", file, line);
+    fprintf(stderr, "We could try to recover, but we won't.\n");
+    exit(1);
+  }
+}
+#define assertgl() _assertgl(__FILE__, __LINE__)
+#endif
+
+SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title, int true_width, int true_height, bool keep_aspect, bool smooth_filter) :
 doing_relmouse(false), doing_textok(false) {
   SDLMan::InitializeSubsystem(SDL_INIT_VIDEO);
   Uint32 initflags = windowed ? 0 : SDL_FULLSCREEN;
+  bool tryFakeDoubling = false;
+  if(((true_width != 0 && true_width != width) ||
+      (true_height != 0 && true_height != height)))
+    tryFakeDoubling = true;
+#if CAN_DO_OPENGL
+  if(tryFakeDoubling && !getenv("NO_OPENGL")) {
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    if(!getenv("ALLOW_SOFTWARE_OPENGL"))
+      SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    initflags |= SDL_OPENGL;
+  }
+#endif
   screen = SDL_SetVideoMode(width, height, 32, initflags);
+  if((!screen && (initflags & SDL_OPENGL))
+#if CAN_DO_OPENGL
+     || ((initflags & SDL_OPENGL) && !haveRectTexture())
+#endif
+     ) {
+    initflags &= ~SDL_OPENGL;
+    screen = SDL_SetVideoMode(width, height, 32, initflags);
+  }
   if(!screen && (initflags & SDL_HWSURFACE)) {
+    /* NOTREACHED */
     initflags &= ~SDL_HWSURFACE;
     screen = SDL_SetVideoMode(width, height, 32, initflags);
   }
@@ -127,8 +227,6 @@ doing_relmouse(false), doing_textok(false) {
     SDLMan::QuitSubsystem(SDL_INIT_VIDEO);
     throw (const char*)SDL_GetError();
   }
-  this->width = screen->w;
-  this->height = screen->h;
   SDL_WM_SetCaption(title, title);
   // Determine the best layout to use.
   if(screen->format->BytesPerPixel != 4) throw (const char*)"Non-32-bit mode given";
@@ -153,7 +251,107 @@ doing_relmouse(false), doing_textok(false) {
 #undef DO_FBLAYOUT
   }
   assert((screen->pitch&3)==0);
-  SetupDrawable(screen->pixels, screen->pitch/sizeof(Pixel));
+  target = screen;
+  if(false
+#if CAN_DO_OPENGL
+     || (screen->flags & SDL_OPENGL)
+#endif
+#if CAN_DO_SOFTSTRETCH
+     || (tryFakeDoubling && ShouldDoSoftStretch())
+#endif
+       ) {
+    shadow = SDL_CreateRGBSurface(0, true_width, true_height, 32, rmask, gmask, bmask, 0);
+    if(!shadow)
+      throw (const char*)SDL_GetError();
+    assert((shadow->pitch&3)==0);
+    target = shadow;
+    if(!(screen->flags & SDL_OPENGL)) {
+      /* clear boundaries, if any */
+      SDL_FillRect(screen, NULL, 0);
+      SDL_Flip(screen);
+    }
+  }
+  if(target != screen) {
+    if(keep_aspect) {
+      if(screen->h * target->w > screen->w * target->h) {
+        fake_rectangle.x = 0;
+        fake_rectangle.w = screen->w;
+        fake_rectangle.h = target->h * screen->w / target->w;
+        fake_rectangle.y = (screen->h - fake_rectangle.h) / 2;
+      }
+      else {
+        fake_rectangle.y = 0;
+        fake_rectangle.h = screen->h;
+        fake_rectangle.w = target->w * screen->h / target->h;
+        fake_rectangle.x = (screen->w - fake_rectangle.w) / 2;
+      }
+    }
+    else {
+      fake_rectangle.x = 0;
+      fake_rectangle.y = 0;
+      fake_rectangle.w = screen->w;
+      fake_rectangle.h = screen->h;
+    }
+  }
+  this->width = target->w;
+  this->height = target->h;
+#if CAN_DO_OPENGL
+  if(screen->flags & SDL_OPENGL) {
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, target->w);
+    assertgl();
+    glEnable(GL_TEXTURE_RECTANGLE_ARB);
+    switch(this->layout) {
+    case FB_xRGB:
+      gltype = little_endian ? GL_UNSIGNED_INT_8_8_8_8 : GL_UNSIGNED_INT_8_8_8_8_REV;
+      glformat = GL_BGRA;
+      break;
+    case FB_BGRx:
+      gltype = little_endian ? GL_UNSIGNED_INT_8_8_8_8_REV : GL_UNSIGNED_INT_8_8_8_8;
+      glformat = GL_BGRA;
+      break;
+    case FB_xBGR:
+      gltype = little_endian ? GL_UNSIGNED_INT_8_8_8_8 : GL_UNSIGNED_INT_8_8_8_8_REV;
+      glformat = GL_RGBA;
+      break;
+    case FB_RGBx:
+      gltype = little_endian ? GL_UNSIGNED_INT_8_8_8_8_REV : GL_UNSIGNED_INT_8_8_8_8;
+      glformat = GL_RGBA;
+      break;
+    }
+    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB,0,GL_RGB,target->w,target->h,
+                 0,glformat,gltype,NULL);
+    assertgl();
+    /* we should handle an error here, really; that just involves shuffling
+       this function a bit. the reason I haven't done it is that I think the
+       failure case is REALLY unlikely. */
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, smooth_filter?GL_LINEAR:GL_NEAREST);
+    assertgl();
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    assertgl();
+    glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+    glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+    float u[4] = {(float)target->w/fake_rectangle.w, 0.f, 0.f, -(fake_rectangle.x*(float)target->w/fake_rectangle.w)};
+    float v[4] = {0.f, -((float)target->h/fake_rectangle.h), 0.f, target->h+(fake_rectangle.y*(float)target->h/fake_rectangle.h)};
+    glTexGenfv(GL_S, GL_OBJECT_PLANE, u);
+    glTexGenfv(GL_T, GL_OBJECT_PLANE, v);
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+    assertgl();
+    glEnableClientState(GL_VERTEX_ARRAY);
+    assertgl();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0.0, screen->w, 0.0, screen->h);
+    glMatrixMode(GL_MODELVIEW);
+    assertgl();
+    /* we only need to do this once */
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    assertgl();
+  }
+#endif
+  SetupDrawable(target->pixels, target->pitch/sizeof(Pixel));
   SDL_EventState(SDL_SYSWMEVENT, SDL_IGNORE);
   SDL_EventState(SDL_VIDEORESIZE, SDL_IGNORE);
   SDL_ShowCursor(SDL_DISABLE);
@@ -165,19 +363,84 @@ doing_relmouse(false), doing_textok(false) {
 #endif
 }
 
+void SDLGraphics::indirect_update(SDL_Surface* target, SDL_Rect& a,
+                                  SDL_Surface* screen, SDL_Rect& b) throw() {
+  if(false) {/* NOTREACHED */}
+#if CAN_DO_OPENGL
+  else if(screen->flags & SDL_OPENGL) {
+    glFinish();
+    assertgl();
+    if(a.x == 0 && a.y == 0 && a.w == target->w && a.h == target->h)
+      glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB, target->w, target->h,
+                   0, glformat, gltype, target->pixels);
+    else
+      glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, a.x, a.y, a.w, a.h,
+                      glformat, gltype, rows[a.y] + a.x);
+    assertgl();
+    GLushort rect[8] = {
+      fake_rectangle.x, fake_rectangle.y,
+      fake_rectangle.x+fake_rectangle.w, fake_rectangle.y,
+      fake_rectangle.x+fake_rectangle.w, fake_rectangle.y+fake_rectangle.h,
+      fake_rectangle.x, fake_rectangle.y+fake_rectangle.h,
+    };
+    glVertexPointer(2, GL_SHORT, 0, rect);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    SDL_GL_SwapBuffers();
+    assertgl();
+  }
+#endif
+#if CAN_DO_SOFTSTRETCH
+  else {
+    /* This is wrong for partial updates on non-integer scale factors. I'm
+       probably the only person who will ever use scaling with non-integer
+       scale factors AND no OpenGL AND partial updates, so I don't care about
+       fixing it. If so much as a single person asks me to actually fix this,
+       I'll fix it. */
+    SDL_SoftStretch(target, &a, screen, &b);
+    SDL_UpdateRect(screen, b.x, b.y, b.w, b.h);
+  }
+#else
+  else {
+    fprintf(stderr, "WARNING: target != screen and no suitable indirect update method is available! THIS SHOULD NEVER HAPPEN!\n");
+  }
+#endif
+}
+
 void SDLGraphics::Update(int x, int y, int w, int h) throw() {
-  //SDL_Rect r = {x, y, w, h};
-  //SDL_BlitSurface(shadow, &r, screen, &r);
-  SDL_UpdateRect(screen, x, y, w, h);
-  // prevent asynchronous blitting as well as we can... this is needed on at
-  // least one platform
-  SDL_LockSurface(screen);
-  SDL_UnlockSurface(screen);
+  if(x < 0) { w += x; x = 0; }
+  if(y < 0) { h += y; y = 0; }
+  if(w + x > target->w) w = target->w - x;
+  if(h + y > target->h) h = target->h - y;
+  if(x == 0 && y == 0 && w == target->w && h == target->h) UpdateAll();
+  else {
+    if(screen != target) {
+      SDL_Rect a = {x, y, w, h};
+      SDL_Rect b;
+      b.x = x * fake_rectangle.w / target->w;
+      b.y = y * fake_rectangle.h / target->h;
+      b.w = (x+w) * fake_rectangle.w / target->w - b.x;
+      b.h = (y+h) * fake_rectangle.h / target->h - b.y;
+      b.x += fake_rectangle.x;
+      b.y += fake_rectangle.y;
+      indirect_update(target, a, screen, b);
+    }
+    else SDL_UpdateRect(screen, x, y, w, h);
+    // prevent asynchronous blitting as well as we can... this is needed on at
+    // least one platform
+    SDL_LockSurface(screen);
+    SDL_UnlockSurface(screen);
+  }
 }
 
 void SDLGraphics::UpdateAll() throw() {
   //SDL_BlitSurface(shadow, NULL, screen, NULL);
-  SDL_Flip(screen);
+  if(target != screen) {
+    SDL_Rect a = {0, 0, target->w, target->h};
+    SDL_Rect b = fake_rectangle;
+    indirect_update(target, a, screen, b);
+  }
+  else
+    SDL_Flip(screen);
   SDL_LockSurface(screen);
   SDL_UnlockSurface(screen);
 }
@@ -268,6 +531,12 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
       lua_pushnumber(L, evt.motion.yrel);
       lua_setfield(L, -2, "y");
     }
+    else if(target != screen) {
+      lua_pushnumber(L, (evt.motion.x-fake_rectangle.x)*target->w/screen->w);
+      lua_setfield(L, -2, "x");
+      lua_pushnumber(L, (evt.motion.y-fake_rectangle.y)*target->h/screen->h);
+      lua_setfield(L, -2, "y");
+    }
     else {
       lua_pushnumber(L, evt.motion.x);
       lua_setfield(L, -2, "x");
@@ -283,10 +552,18 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
     lua_pushnumber(L, evt.button.button);
     lua_setfield(L, -2, "button");
     if(!relmouse) {
-      lua_pushnumber(L, evt.button.x);
-      lua_setfield(L, -2, "x");
-      lua_pushnumber(L, evt.button.y);
-      lua_setfield(L, -2, "y");
+      if(target != screen) {
+        lua_pushnumber(L, (evt.button.x-fake_rectangle.x)*target->w/screen->w);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, (evt.button.y-fake_rectangle.y)*target->h/screen->h);
+        lua_setfield(L, -2, "y");
+      }
+      else {
+        lua_pushnumber(L, evt.button.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, evt.button.y);
+        lua_setfield(L, -2, "y");
+      }
     }
     break;
     // TODO: joysticks
@@ -361,8 +638,14 @@ int SDLGraphics::Lua_GetEvent(lua_State* L) throw() {
 int SDLGraphics::Lua_GetMousePos(lua_State* L) throw() {
   int x, y;
   SDL_GetMouseState(&x, &y);
-  lua_pushinteger(L, x);
-  lua_pushinteger(L, y);
+  if(target != screen) {
+    lua_pushnumber(L, (x-fake_rectangle.x)*target->w/screen->w);
+    lua_pushnumber(L, (y-fake_rectangle.y)*target->h/screen->h);
+  }
+  else {
+    lua_pushnumber(L, x);
+    lua_pushnumber(L, y);
+  }
   return 2;
 }
 
@@ -375,7 +658,8 @@ PROTOCOL_IMP_PLAIN(SDLGraphics, GraphicsDevice);
 
 SUBCRITICAL_CONSTRUCTOR(SDLGraphics)(lua_State* L) {
   int width, height;
-  bool windowed = false;
+  int true_width = 0, true_height = 0;
+  bool windowed = false, keep_aspect = false, smooth_filter = false;
   const char* title = NULL;
   width = (int)luaL_checknumber(L, 1);
   height = (int)luaL_checknumber(L, 2);
@@ -384,10 +668,20 @@ SUBCRITICAL_CONSTRUCTOR(SDLGraphics)(lua_State* L) {
     windowed = lua_toboolean(L, -1);
     lua_getfield(L, 3, "title");
     if(lua_isstring(L, -1)) title = lua_tostring(L, -1);
-    lua_pop(L, 2);
+    lua_getfield(L, 3, "true_width");
+    true_width = luaL_optinteger(L, -1, 0);
+    lua_getfield(L, 3, "true_height");
+    true_height = luaL_optinteger(L, -1, 0);
+    lua_getfield(L, 3, "keep_aspect");
+    keep_aspect = lua_toboolean(L,-1);
+    lua_getfield(L, 3, "smooth_filter");
+    smooth_filter = lua_toboolean(L,-1);
+    lua_pop(L, 6);
   }
   try {
-    SDLGraphics* ret = new SDLGraphics(width, height, windowed, title);
+    SDLGraphics* ret = new SDLGraphics(width, height, windowed, title,
+                                       true_width, true_height,
+                                       keep_aspect, smooth_filter);
     ret->Push(L);
     return 1;
   }
