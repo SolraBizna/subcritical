@@ -192,6 +192,26 @@ int Frisket::Lua_GetSize(lua_State* L) const throw() {
   return 2;
 }
 
+int Frisket::Lua_GetFrixel(lua_State* L) const throw() {
+  lua_Integer x, y;
+  x = luaL_checkinteger(L, 1);
+  y = luaL_checkinteger(L, 2);
+  if(x < 0 || x >= width || y < 0 || y >= height)
+    return luaL_error(L, "coordinate out of range");
+  lua_pushnumber(L, rows[y][x]/255.0);
+  return 1;
+}
+
+int Frisket::Lua_GetRawFrixel(lua_State* L) const throw() {
+  lua_Integer x, y;
+  x = luaL_checkinteger(L, 1);
+  y = luaL_checkinteger(L, 2);
+  if(x < 0 || x >= width || y < 0 || y >= height)
+    return luaL_error(L, "coordinate out of range");
+  lua_pushnumber(L, rows[y][x]);
+  return 1;
+}
+
 int Graphic::Lua_OptimizeFor(lua_State* L) restrict throw() {
   Drawable*restrict dev = lua_toobject(L, 1, Drawable);
   if(dev == this) return luaL_error(L, "Source and destination Frisket must differ");
@@ -222,6 +242,8 @@ static const struct ObjectMethod FMethods[] = {
   METHOD("SubtractFrisket", &Frisket::Lua_SubtractFrisket),
   METHOD("MinFrisket", &Frisket::Lua_MinFrisket),
   METHOD("MaxFrisket", &Frisket::Lua_MaxFrisket),
+  METHOD("GetFrixel", &Frisket::Lua_GetFrixel),
+  METHOD("GetRawFrixel", &Frisket::Lua_GetRawFrixel),
   NOMOREMETHODS(),
 };
 PROTOCOL_IMP(Frisket, Object, FMethods);
@@ -354,6 +376,146 @@ int Drawable::Lua_GetClipRect(lua_State* L) throw() {
   lua_pushinteger(L, y);
   lua_pushinteger(L, w);
   lua_pushinteger(L, h);
+  return 4;
+}
+
+int Drawable::Lua_GetPixel(lua_State* L) const throw() {
+  lua_Integer x, y;
+  x = luaL_checkinteger(L, 1);
+  y = luaL_checkinteger(L, 2);
+  if(x < 0 || x >= width || y < 0 || y >= height)
+    return luaL_error(L, "coordinate out of range");
+  Pixel pixel = rows[y][x];
+  switch(layout) {
+  case FB_xRGB:
+    lua_pushnumber(L, SrgbToLinear[(pixel>>16)&255]/65535.0);
+    lua_pushnumber(L, SrgbToLinear[(pixel>>8)&255]/65535.0);
+    lua_pushnumber(L, SrgbToLinear[pixel&255]/65535.0);
+    lua_pushnumber(L, (pixel>>24)/255.0);
+    break;
+  case FB_RGBx:
+    lua_pushnumber(L, SrgbToLinear[pixel>>24]/65535.0);
+    lua_pushnumber(L, SrgbToLinear[(pixel>>16)&255]/65535.0);
+    lua_pushnumber(L, SrgbToLinear[(pixel>>8)&255]/65535.0);
+    lua_pushnumber(L, (pixel&255)/255.0);
+    break;
+  case FB_xBGR:
+    lua_pushnumber(L, SrgbToLinear[pixel&255]/65535.0);
+    lua_pushnumber(L, SrgbToLinear[(pixel>>8)&255]/65535.0);
+    lua_pushnumber(L, SrgbToLinear[(pixel>>16)&255]/65535.0);
+    lua_pushnumber(L, (pixel>>24)/255.0);
+    break;
+  case FB_BGRx:
+    lua_pushnumber(L, SrgbToLinear[(pixel>>8)&255]/65535.0);
+    lua_pushnumber(L, SrgbToLinear[(pixel>>16)&255]/65535.0);
+    lua_pushnumber(L, SrgbToLinear[pixel>>24]/65535.0);
+    lua_pushnumber(L, (pixel&255)/255.0);
+    break;
+  }
+  return 4;
+}
+
+int Drawable::Lua_GetRawPixel(lua_State* L) const throw() {
+  lua_Integer x, y;
+  x = luaL_checkinteger(L, 1);
+  y = luaL_checkinteger(L, 2);
+  if(x < 0 || x >= width || y < 0 || y >= height)
+    return luaL_error(L, "coordinate out of range");
+  Pixel pixel = rows[y][x];
+  switch(layout) {
+  case FB_xRGB:
+    lua_pushnumber(L, pixel);
+    break;
+  case FB_RGBx:
+    lua_pushnumber(L, (pixel >> 8) | (pixel << 24));
+    break;
+  case FB_BGRx:
+    lua_pushnumber(L, Swap32(pixel));
+    break;
+  case FB_xBGR:
+    lua_pushnumber(L, Swap32((pixel << 8) | (pixel >> 24)));
+    break;
+  }
+  return 1;
+}
+
+int Drawable::Lua_GetRawPixelNoAlpha(lua_State* L) const throw() {
+  lua_Integer x, y;
+  x = luaL_checkinteger(L, 1);
+  y = luaL_checkinteger(L, 2);
+  if(x < 0 || x >= width || y < 0 || y >= height)
+    return luaL_error(L, "coordinate out of range");
+  Pixel pixel = rows[y][x];
+  switch(layout) {
+  case FB_xRGB:
+    lua_pushnumber(L, pixel & 0xFFFFFF);
+    break;
+  case FB_RGBx:
+    lua_pushnumber(L, pixel >> 8);
+    break;
+  case FB_BGRx:
+    lua_pushnumber(L, Swap32(pixel & 0xFFFFFF));
+    break;
+  case FB_xBGR:
+    lua_pushnumber(L, Swap32(pixel << 8));
+    break;
+  }
+  return 1;
+}
+
+int Drawable::Lua_GetRawAlpha(lua_State* L) const throw() {
+  lua_Integer x, y;
+  x = luaL_checkinteger(L, 1);
+  y = luaL_checkinteger(L, 2);
+  if(x < 0 || x >= width || y < 0 || y >= height)
+    return luaL_error(L, "coordinate out of range");
+  Pixel pixel = rows[y][x];
+  switch(layout) {
+  case FB_xRGB:
+  case FB_xBGR:
+    lua_pushnumber(L, pixel >> 24);
+    break;
+  case FB_RGBx:
+  case FB_BGRx:
+    lua_pushnumber(L, pixel & 255);
+    break;
+  }
+  return 1;
+}
+
+int Drawable::Lua_GetSRGBPixel(lua_State* L) const throw() {
+  lua_Integer x, y;
+  x = luaL_checkinteger(L, 1);
+  y = luaL_checkinteger(L, 2);
+  if(x < 0 || x >= width || y < 0 || y >= height)
+    return luaL_error(L, "coordinate out of range");
+  Pixel pixel = rows[y][x];
+  switch(layout) {
+  case FB_xRGB:
+    lua_pushnumber(L, ((pixel>>16)&255)/255.0);
+    lua_pushnumber(L, ((pixel>>8)&255)/255.0);
+    lua_pushnumber(L, (pixel&255)/255.0);
+    lua_pushnumber(L, (pixel>>24)/255.0);
+    break;
+  case FB_RGBx:
+    lua_pushnumber(L, (pixel>>24)/255.0);
+    lua_pushnumber(L, ((pixel>>16)&255)/255.0);
+    lua_pushnumber(L, ((pixel>>8)&255)/255.0);
+    lua_pushnumber(L, (pixel&255)/255.0);
+    break;
+  case FB_xBGR:
+    lua_pushnumber(L, (pixel&255)/255.0);
+    lua_pushnumber(L, ((pixel>>8)&255)/255.0);
+    lua_pushnumber(L, ((pixel>>16)&255)/255.0);
+    lua_pushnumber(L, (pixel>>24)/255.0);
+    break;
+  case FB_BGRx:
+    lua_pushnumber(L, ((pixel>>8)&255)/255.0);
+    lua_pushnumber(L, ((pixel>>16)&255)/255.0);
+    lua_pushnumber(L, (pixel>>24)/255.0);
+    lua_pushnumber(L, (pixel&255)/255.0);
+    break;
+  }
   return 4;
 }
 
@@ -950,7 +1112,12 @@ static const struct ObjectMethod DMethods[] = {
   METHOD("Copy", &Drawable::Lua_Copy),
   METHOD("Blit", &Drawable::Lua_Blit),
   METHOD("BlitFrisket", &Drawable::Lua_BlitFrisket),
-  METHOD("TakeSnapshot", &Graphic::Lua_TakeSnapshot),
+  METHOD("TakeSnapshot", &Drawable::Lua_TakeSnapshot),
+  METHOD("GetPixel", &Drawable::Lua_GetPixel),
+  METHOD("GetRawPixel", &Drawable::Lua_GetRawPixel),
+  METHOD("GetRawPixelNoAlpha", &Drawable::Lua_GetRawPixelNoAlpha),
+  METHOD("GetRawAlpha", &Drawable::Lua_GetRawAlpha),
+  METHOD("GetSRGBPixel", &Drawable::Lua_GetSRGBPixel),
   NOMOREMETHODS(),
 };
 PROTOCOL_IMP(Drawable, Object, DMethods);
