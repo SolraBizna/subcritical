@@ -85,6 +85,8 @@ namespace SubCritical {
     void MaxFrisket(const Frisket*restrict, int dx, int dy) restrict throw();
     int Lua_MaxFrisket(lua_State* L) restrict throw();
     int Lua_GetSize(lua_State* L) const throw();
+    int Lua_GetFrixel(lua_State* L) const throw();
+    int Lua_GetRawFrixel(lua_State* L) const throw();
     PROTOCOL_PROTOTYPE();
     int width, height;
     Frixel*restrict* rows;
@@ -141,6 +143,11 @@ namespace SubCritical {
     static int PadWidth(int width);
     PROTOCOL_PROTOTYPE();
     int Lua_TakeSnapshot(lua_State* L) throw();
+    int Lua_GetPixel(lua_State* L) const throw();
+    int Lua_GetRawPixel(lua_State* L) const throw();
+    int Lua_GetRawPixelNoAlpha(lua_State* L) const throw();
+    int Lua_GetRawAlpha(lua_State* L) const throw();
+    int Lua_GetSRGBPixel(lua_State* L) const throw();
   protected:
     void SetupDrawable(bool invert_y = false) throw();
     void SetupDrawable(void* buffer, int32_t pitch) throw();

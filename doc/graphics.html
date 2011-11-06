@@ -29,6 +29,10 @@
 <dd>Replace each frixel of <i class="code">destination</i> with the frixels from <i class="code">source</i> (a <a href="#Frisket" class="code">Frisket</a>), but only if the new frixel is more <b>opaque</b> than the old one; with the top-left corner at <i class="code">x,y</i>. If <i class="code">source_*</i> are provided, deal with that subset of <i class="code">source</i>.</dd>
 <dt class="code"><a name="Frisket:GetSize" /><i>width</i>,<i>height</i> = <i>frisket</i>:GetSize()</dt>
 <dd>Returns the pixel dimensions of this <tt>Frisket</tt></dd>
+<dt class="code"><a name="Frisket:GetFrixel" /><i>alpha</i> = <i>frisket</i>:GetFrixel(<i>x</i>, <i>y</i>)</dt>
+<dd>Returns the <i class="code">alpha</i> value at a given coordinate. This function is really slow.</dd>
+<dt class="code"><a name="Frisket:GetRawFrixel" /><i>frixel</i> = <i>frisket</i>:GetRawFrixel(<i>x</i>, <i>y</i>)</dt>
+<dd>Returns the raw <i class="code">frixel</i> value (0-255) at a given coordinate. This function is really slow, but a little faster than <a href="#Frisket:GetFrixel" class="code">GetFrixel</a>.</dd>
 </dl>
 <h3 class="code"><a name="Drawable" />Drawable</h3>
 <p>A <tt>Drawable</tt> is, basically, an image. It normally comes in two flavors, <a href="#Graphic" class="code">Graphic</a> and <a href="#GraphicsDevice" class="code">GraphicsDevice</a>. Both flavors support all of the below code.</p>
@@ -88,6 +92,16 @@ end</pre></dd>
 <dd>Returns the clip rectangle of <i class="code">drawable</i>.</dd>
 <dt class="code"><a name="Drawable:TakeSnapshot" /><i>graphic</i> = <i>drawable</i>:TakeSnapshot()</dt>
 <dd>A convenience function that returns a <a href="#Graphic" class="code">Graphic</a> containing a copy of the current image data in <i class="code">drawable</i>. No drawing state is copied, only image data.</dd>
+<dt class="code"><a name="Drawable:GetPixel" /><i>red</i>, <i>green</i>, <i>blue</i>, <i>alpha</i> = <i>drawable</i>:GetPixel(<i>x</i>, <i>y</i>)</dt>
+<dd>Returns the color values at a given coordinate in a linear colorspace. This function is really slow.</dd>
+<dt class="code"><a name="Drawable:GetRawPixel" /><i>pixel</i> = <i>drawable</i>:GetRawPixel(<i>x</i>, <i>y</i>)</dt>
+<dd>Returns the raw <i class="code">pixel</i> value (0-4294967295 in ARGB8888 format) at a given coordinate. This function is really slow, but a little faster than <a href="#Drawable:GetPixel" class="code">GetPixel</a> or <a href="#Drawable:GetSRGBPixel" class="code">GetSRGBPixel</a>.</dd>
+<dt class="code"><a name="Drawable:GetRawAlpha" /><i>alpha</i> = <i>drawable</i>:GetRawAlpha(<i>x</i>, <i>y</i>)</dt>
+<dd>Returns the raw <i class="code">alpha</i> value (0-255) at a given coordinate. This function is really slow, but a little faster than <a href="#Drawable:GetPixel" class="code">GetPixel</a> or <a href="#Drawable:GetSRGBPixel" class="code">GetSRGBPixel</a>.</dd>
+<dt class="code"><a name="Drawable:GetRawPixelNoAlpha" /><i>pixel</i> = <i>drawable</i>:GetRawPixelNoAlpha(<i>x</i>, <i>y</i>)</dt>
+<dd>Returns the raw <i class="code">pixel</i> value (0-16777215 in RGB888 format) with the alpha channel removed at a given coordinate. This function is really slow, but a little faster than <a href="#Drawable:GetPixel" class="code">GetPixel</a> or <a href="#Drawable:GetSRGBPixel" class="code">GetSRGBPixel</a>.</dd>
+<dt class="code"><a name="Drawable:GetSRGBPixel" /><i>red</i>, <i>green</i>, <i>blue</i>, <i>alpha</i> = <i>drawable</i>:GetSRGBPixel(<i>x</i>, <i>y</i>)</dt>
+<dd>Returns the raw color values at a given coordinate in the sRGB colorspace. This function is really slow, but a little faster than <a href="#Drawable:GetPixel" class="code">GetPixel</a>. sRGB color values are not suitable for direct use by other SubCritical functions accepting colors as parameters; if you intend to use these values elsewhere in SubCritical, you probably want <a href="#Drawable:GetPixel" class="code">GetPixel</a> instead.</dd>
 </dl>
 <h3 class="code"><a name="Graphic" />Graphic : <a href="#Drawable">Drawable</a></h3>
 <p>A <tt>Graphic</tt> is a <a href="#Drawable" class="code">Drawable</a> whose lot in life is to eventually be blitted to other <a href="#Drawable" class="code">Drawable</a>s. See <a href="#Drawable:Blit" class="code">Drawable:Blit</a>.</p>
