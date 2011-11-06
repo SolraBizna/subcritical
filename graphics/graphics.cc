@@ -33,11 +33,13 @@ Drawable::Drawable() : has_alpha(false),simple_alpha(true),buffer(NULL) {}
 
 static const struct ObjectMethod CAMethods[] = {
   METHOD("GetCount", &CoordArray::Lua_GetCount),
+  METHOD("GetCoord", &CoordArray::Lua_GetCoord),
   NOMOREMETHODS(),
 };
 PROTOCOL_IMP(CoordArray, Object, CAMethods);
 static const struct ObjectMethod IAMethods[] = {
   METHOD("GetCount", &IndexArray::Lua_GetCount),
+  METHOD("GetIndex", &IndexArray::Lua_GetIndex),
   NOMOREMETHODS(),
 };
 PROTOCOL_IMP(IndexArray, Object, IAMethods);
@@ -359,6 +361,15 @@ CoordArray::CoordArray(size_t count) : count(count) {
   coords = (Fixed*)calloc(sizeof(Fixed), count*2);
 }
 
+int CoordArray::Lua_GetCoord(lua_State* L) const throw() {
+  lua_Integer index = luaL_checkinteger(L, 1);
+  if(index < 0 || index >= (lua_Integer)count)
+    return luaL_error(L, "index out of range");
+  lua_pushnumber(L, Q_TO_F(coords[index*2]));
+  lua_pushnumber(L, Q_TO_F(coords[index*2+1]));
+  return 2;
+}
+
 int CoordArray::Lua_GetCount(lua_State* L) const throw() {
   lua_pushnumber(L, count);
   return 1;
@@ -374,6 +385,14 @@ IndexArray::IndexArray(size_t count) : count(count) {
 
 int IndexArray::Lua_GetCount(lua_State* L) const throw() {
   lua_pushnumber(L, count);
+  return 1;
+}
+
+int IndexArray::Lua_GetIndex(lua_State* L) const throw() {
+  lua_Integer index = luaL_checkinteger(L, 1);
+  if(index < 0 || index >= (lua_Integer)count)
+    return luaL_error(L, "index out of range");
+  lua_pushnumber(L, indices[index]);
   return 1;
 }
 

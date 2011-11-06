@@ -25,10 +25,11 @@
 #include "subcritical/core.h"
 
 #define F_TO_Q(f) (Fixed)((f)*64)
-#define I_TO_Q(f) F_TO_Q(f) // that macro is really type-agnostic
-#define Q_TO_I(f) (((f)+31)>>6) // rounds down on x.5
-#define Q_FLOOR(f) ((f)>>6)
-#define Q_CEIL(f) Q_FLOOR((f)+63)
+#define I_TO_Q(i) F_TO_Q(i) // that macro is really type-agnostic
+#define Q_TO_F(q) ((q)/64.f)
+#define Q_TO_I(q) (((q)+31)>>6) // rounds down on x.5
+#define Q_FLOOR(q) ((q)>>6)
+#define Q_CEIL(q) Q_FLOOR((q)+63)
 
 namespace SubCritical {
   typedef uint32_t Pixel;
@@ -40,6 +41,7 @@ namespace SubCritical {
     CoordArray(size_t count);
     virtual ~CoordArray();
     int Lua_GetCount(lua_State* L) const throw();
+    int Lua_GetCoord(lua_State* L) const throw();
     PROTOCOL_PROTOTYPE();
     size_t count;
     Fixed* coords;
@@ -49,6 +51,7 @@ namespace SubCritical {
     IndexArray(size_t count);
     virtual ~IndexArray();
     int Lua_GetCount(lua_State* L) const throw();
+    int Lua_GetIndex(lua_State* L) const throw();
     PROTOCOL_PROTOTYPE();
     size_t count;
     Index* indices;
