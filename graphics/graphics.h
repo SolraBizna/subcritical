@@ -85,10 +85,15 @@ namespace SubCritical {
     void MaxFrisket(const Frisket*restrict, int dx, int dy) restrict throw();
     int Lua_MaxFrisket(lua_State* L) restrict throw();
     int Lua_GetSize(lua_State* L) const throw();
+    void SetClipRect(int l, int t, int r, int b) throw();
+    int Lua_SetClipRect(lua_State* L) throw();
+    void GetClipRect(int& l, int& t, int& r, int& b) throw();
+    int Lua_GetClipRect(lua_State* L) throw();
     int Lua_GetFrixel(lua_State* L) const throw();
     int Lua_GetRawFrixel(lua_State* L) const throw();
     PROTOCOL_PROTOTYPE();
     int width, height;
+    int clip_left, clip_top, clip_right, clip_bottom;
     Frixel*restrict* rows;
     Frixel* buffer;
   };
