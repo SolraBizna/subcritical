@@ -29,6 +29,10 @@
 <dd>Replace each frixel of <i class="code">destination</i> with the frixels from <i class="code">source</i> (a <a href="#Frisket" class="code">Frisket</a>), but only if the new frixel is more <b>opaque</b> than the old one; with the top-left corner at <i class="code">x,y</i>. If <i class="code">source_*</i> are provided, deal with that subset of <i class="code">source</i>.</dd>
 <dt class="code"><a name="Frisket:GetSize" /><i>width</i>,<i>height</i> = <i>frisket</i>:GetSize()</dt>
 <dd>Returns the pixel dimensions of this <tt>Frisket</tt></dd>
+<dt class="code"><a name="Frisket:SetClipRect" /><i>frisket</i>:SetClipRect(<i>x</i>, <i>y</i>, <i>width</i>, <i>height</i>)</dt>
+<dd>Sets the clip rectangle of <i class="code">frisket</i>. No frixels outside the clip rectangle will ever change.</dd>
+<dt class="code"><a name="Frisket:GetClipRect" /><i>x</i>, <i>y</i>, <i>width</i>, <i>height</i> = <i>frisket</i>:GetClipRect()</dt>
+<dd>Returns the clip rectangle of <i class="code">frisket</i>.</dd>
 <dt class="code"><a name="Frisket:GetFrixel" /><i>alpha</i> = <i>frisket</i>:GetFrixel(<i>x</i>, <i>y</i>)</dt>
 <dd>Returns the <i class="code">alpha</i> value at a given coordinate. This function is really slow.</dd>
 <dt class="code"><a name="Frisket:GetRawFrixel" /><i>frixel</i> = <i>frisket</i>:GetRawFrixel(<i>x</i>, <i>y</i>)</dt>

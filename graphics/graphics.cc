@@ -99,6 +99,8 @@ Frisket::Frisket(int width, int height) : width(width), height(height) {
   for(Frixel*restrict* p = rows; p - rows < height; ++p) {
     *p = buffer + pitch * (p - rows);
   }
+  clip_left = 0; clip_right = width - 1;
+  clip_top = 0; clip_bottom = height - 1;
 }
 
 static void EndianSwapPixels(Pixel* p, size_t rem) throw() {
@@ -379,6 +381,56 @@ int Drawable::Lua_GetClipRect(lua_State* L) throw() {
   return 4;
 }
 
+void Frisket::SetClipRect(int l, int t, int r, int b) throw() {
+  clip_left = l;
+  clip_top = t;
+  clip_right = r;
+  clip_bottom = b;
+}
+
+int Frisket::Lua_SetClipRect(lua_State* L) throw() {
+  int x, y, w, h;
+  x = (int)luaL_checknumber(L, 1);
+  y = (int)luaL_checknumber(L, 2);
+  w = (int)luaL_checknumber(L, 3);
+  h = (int)luaL_checknumber(L, 4);
+  int l, t, r, b;
+  l = x;
+  t = y;
+  r = x + w - 1;
+  b = y + h - 1;
+  if(l < 0) l = 0;
+  if(t < 0) t = 0;
+  if(r >= width) r = width - 1;
+  if(b >= width) b = width - 1;
+  if(r - l < 0 || b - t < 0) return luaL_error(L, "Invalid clip rect");
+  SetClipRect(l, t, r, b);
+  return 0;
+}
+
+void Frisket::GetClipRect(int& l, int& t, int& r, int& b) throw() {
+  l = clip_left;
+  t = clip_top;
+  r = clip_right;
+  b = clip_bottom;
+}
+
+int Frisket::Lua_GetClipRect(lua_State* L) throw() {
+  int l, t, r, b;
+  GetClipRect(l, t, r, b);
+  int x, y, w, h;
+  x = l;
+  y = t;
+  w = r - l + 1;
+  h = b - t + 1;
+  SetClipRect(l, t, r, b);
+  lua_pushinteger(L, x);
+  lua_pushinteger(L, y);
+  lua_pushinteger(L, w);
+  lua_pushinteger(L, h);
+  return 4;
+}
+
 int Drawable::Lua_GetPixel(lua_State* L) const throw() {
   lua_Integer x, y;
   x = luaL_checkinteger(L, 1);
@@ -610,6 +662,10 @@ void Frisket::CopyFrisketRect(const Frisket*restrict gfk, int sx, int sy, int sw
   st = sy;
   sr = sx + sw - 1;
   sb = sy + sh - 1;
+  if(dx < clip_left) { sl += clip_left - dx; dx = clip_left; }
+  if(dy < clip_top) { st += clip_top - dy; dy = clip_top; }
+  if(dx + (sr - sl) > clip_right) { sr += clip_right - (dx + (sr - sl)); }
+  if(dy + (sb - st) > clip_bottom) { sb += clip_bottom - (dy + (sb - st)); }
   if(sl < 0) { dx -= sl; sl = 0; }
   if(sr >= gfk->width) sr = gfk->width - 1;
   if(st < 0) { dy -= st; st = 0; }
@@ -636,6 +692,10 @@ void Frisket::ModulateFrisketRect(const Frisket*restrict gfk, int sx, int sy, in
   st = sy;
   sr = sx + sw - 1;
   sb = sy + sh - 1;
+  if(dx < clip_left) { sl += clip_left - dx; dx = clip_left; }
+  if(dy < clip_top) { st += clip_top - dy; dy = clip_top; }
+  if(dx + (sr - sl) > clip_right) { sr += clip_right - (dx + (sr - sl)); }
+  if(dy + (sb - st) > clip_bottom) { sb += clip_bottom - (dy + (sb - st)); }
   if(sl < 0) { dx -= sl; sl = 0; }
   if(sr >= gfk->width) sr = gfk->width - 1;
   if(st < 0) { dy -= st; st = 0; }
@@ -662,6 +722,10 @@ void Frisket::AddFrisketRect(const Frisket*restrict gfk, int sx, int sy, int sw,
   st = sy;
   sr = sx + sw - 1;
   sb = sy + sh - 1;
+  if(dx < clip_left) { sl += clip_left - dx; dx = clip_left; }
+  if(dy < clip_top) { st += clip_top - dy; dy = clip_top; }
+  if(dx + (sr - sl) > clip_right) { sr += clip_right - (dx + (sr - sl)); }
+  if(dy + (sb - st) > clip_bottom) { sb += clip_bottom - (dy + (sb - st)); }
   if(sl < 0) { dx -= sl; sl = 0; }
   if(sr >= gfk->width) sr = gfk->width - 1;
   if(st < 0) { dy -= st; st = 0; }
@@ -690,6 +754,10 @@ void Frisket::SubtractFrisketRect(const Frisket*restrict gfk, int sx, int sy, in
   st = sy;
   sr = sx + sw - 1;
   sb = sy + sh - 1;
+  if(dx < clip_left) { sl += clip_left - dx; dx = clip_left; }
+  if(dy < clip_top) { st += clip_top - dy; dy = clip_top; }
+  if(dx + (sr - sl) > clip_right) { sr += clip_right - (dx + (sr - sl)); }
+  if(dy + (sb - st) > clip_bottom) { sb += clip_bottom - (dy + (sb - st)); }
   if(sl < 0) { dx -= sl; sl = 0; }
   if(sr >= gfk->width) sr = gfk->width - 1;
   if(st < 0) { dy -= st; st = 0; }
@@ -718,6 +786,10 @@ void Frisket::MinFrisketRect(const Frisket*restrict gfk, int sx, int sy, int sw,
   st = sy;
   sr = sx + sw - 1;
   sb = sy + sh - 1;
+  if(dx < clip_left) { sl += clip_left - dx; dx = clip_left; }
+  if(dy < clip_top) { st += clip_top - dy; dy = clip_top; }
+  if(dx + (sr - sl) > clip_right) { sr += clip_right - (dx + (sr - sl)); }
+  if(dy + (sb - st) > clip_bottom) { sb += clip_bottom - (dy + (sb - st)); }
   if(sl < 0) { dx -= sl; sl = 0; }
   if(sr >= gfk->width) sr = gfk->width - 1;
   if(st < 0) { dy -= st; st = 0; }
@@ -744,6 +816,10 @@ void Frisket::MaxFrisketRect(const Frisket*restrict gfk, int sx, int sy, int sw,
   st = sy;
   sr = sx + sw - 1;
   sb = sy + sh - 1;
+  if(dx < clip_left) { sl += clip_left - dx; dx = clip_left; }
+  if(dy < clip_top) { st += clip_top - dy; dy = clip_top; }
+  if(dx + (sr - sl) > clip_right) { sr += clip_right - (dx + (sr - sl)); }
+  if(dy + (sb - st) > clip_bottom) { sb += clip_bottom - (dy + (sb - st)); }
   if(sl < 0) { dx -= sl; sl = 0; }
   if(sr >= gfk->width) sr = gfk->width - 1;
   if(st < 0) { dy -= st; st = 0; }
