@@ -22,7 +22,7 @@
 <dt class="code"><i>font</i> = SubCritical.Construct("FreetypeFont", <i>path</i>)
 <i>font</i> = assert(SubCritical.Construct("FreetypeFont", <i>path</i>))</dt>
 <dd>Tries to load the font located at <i>path</i> (see <a href="subcritical.html#ConstructPath">SCPath</a>) in a format FreeType knows. If this font is important, you may want to assert it (as above).</dd>
-<dt class="code"><a name="FreetypeFont:GetNextChar" /><i>offset</i> = <i>font</i>:GetNextChar(string, [<i>start</i>[, <i>stop</i>]])</dt>
+<dt class="code"><a name="FreetypeFont:GetNextChar" /><i>offset</i> = <i>font</i>:GetNextChar(string[, <i>start</i>[, <i>stop</i>]])</dt>
 <dd>Returns the byte offset to add to <i class="code">start</i> to skip one UTF-8 character. This can be used in a text editing situation to construct a table of character boundaries with which to move the insertion point back and forth. <i class="code">start</i> and <i class="code">stop</i> behave like the parameters of <tt>string.sub</tt>.</dd>
 <dt class="code"><a name="FreetypeFont:SetSize" /><i>font</i>:SetSize(<i>size</i>)
 <i>font</i>:SetSize(<i>xsize</i>, <i>ysize</i>)</dt>
