@@ -29,10 +29,15 @@ public:
   FakeDrawable(Drawable*restrict src, int x, int y, int w, int h);
   virtual ~FakeDrawable();
   void Update(int x, int y, int w, int h) throw() {
-    if(!src->IsA("GraphicsDevice")) return;
-    GraphicsDevice*restrict devsrc = (GraphicsDevice*)src;
     /* don't need to do any clipping here */
-    devsrc->Update(x+xoff,y+yoff,w,h);
+    if(src->IsA("GraphicsDevice")) {
+      GraphicsDevice*restrict devsrc = (GraphicsDevice*)src;
+      devsrc->Update(x+xoff,y+yoff,w,h);
+    }
+    else if(src->IsA("FakeDrawable")) {
+      FakeDrawable*restrict fakesrc = (FakeDrawable*)src;
+      fakesrc->Update(x+xoff,y+yoff,w,h);
+    }
   }
   void UpdateAll() throw() { Update(0, 0, width, height); }
   int Lua_Update(lua_State* L) throw();
