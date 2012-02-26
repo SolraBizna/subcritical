@@ -19,6 +19,9 @@
 <dl>
 <dt class="code"><i>fake</i> = SubCritical.Construct("FakeDrawable", <i>real</i>, [<i>x</i>], [<i>y</i>], [<i>width</i>], [<i>height</i>])</dt>
 <dd>Create a <tt>FakeDrawable</tt> as a window into the <i class="code">real</i> <tt>Drawable</tt>. The optional parameters define a rectangle subset of the <i class="code">real</i> <tt>Drawable</tt> that this <tt>FakeDrawable</tt> will impersonate.</dd>
+<dt class="code"><a name="FakeDrawable:Update" /><i>fake</i>:Update()
+<i>fake</i>:Update(<i>x</i>, <i>y</i>, <i>width</i>, <i>height</i>)</dt>
+<dd>If <i class="code">fake</i> is a <a class="code" href="graphics.html#GraphicsDevice">GraphicsDevice</a>, call <a class="code" href="graphics.html#GraphicsDevice:Update">Update</a> on the appropriate subset of it. If it is not, do nothing.</dd>
 </dl>
 <h2>Utility functions</h2>
 <dl>
