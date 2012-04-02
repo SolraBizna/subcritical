@@ -24,6 +24,10 @@
 #include <math.h>
 #include <assert.h>
 
+#if defined(__MACOSX__) || defined(__MACOS__)
+#include <CoreServices/CoreServices.h>
+#endif
+
 using namespace SubCritical;
 
 #if !NO_OPENGL
@@ -92,8 +96,8 @@ static Uint16 table_get(double i, Uint16 t[256]) {
 void gamma_frob::frobnicate(const char* envp) {
   const char* env;
 #if defined(__MACOSX__) || defined(__MACOS__)
-  // Macintoshes have always come factory-calibrated to approximately 1.8 gamma
-  // TODO: update this for Snow Leopard
+  // before Snow Leopard, Macs came calibrated to 1.8 gamma
+  // with Snow Leopard and later, autocalibration is disabled
   old_factor = 1.8;
 #else
   // PC monitors are generally uncalibrated; CRTs natively have a gamma varying
@@ -129,6 +133,15 @@ void gamma_frob::frobnicate(const char* envp) {
 static void TryGammaCorrection() throw() {
   struct gamma_frob r, g, b;
   if(getenv("NO_FIX_GAMMA")) return;
+#if defined(__MACOSX__) || defined(__MACOS__)
+  // if we're running on 10.6 or later, disable automatic recalibration, since
+  // it will probably do more harm than good and piss off people who calibrate
+  // their displays themselves
+  SInt32 major, minor;
+  Gestalt(gestaltSystemVersionMajor, &major);
+  Gestalt(gestaltSystemVersionMinor, &minor);
+  if(major >= 11 || (major == 10 && minor >= 6)) return;
+#endif
   if(SDL_GetGammaRamp(r.old_ramp, g.old_ramp, b.old_ramp)) {
     fprintf(stderr, "Warning: Unable to get gamma ramps. Blending will look wrong.\n");
     return;
