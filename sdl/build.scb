@@ -13,9 +13,19 @@ targets = {
 }
 
 if(os ~= "mingw") then
-   targets.scsdl.libflags = "`sdl-config --libs` -lGL -lGLU"
+   targets.scsdl.libflags = "`sdl-config --libs`"
 else
-   targets.scsdl.libflags = "-lSDL -lGL -lGLU"
+   targets.scsdl.libflags = "-lSDL"
+end
+
+if os ~= "darwin" and not config_question("ALLOW_OPENGL", "Compile OpenGL support? (Answer no only if you don't have OpenGL headers.)", "bool") then
+   if(os == "darwin") then
+      targets.scsdl.libflags = targets.scsdl.libflags .. " -framework OpenGL"
+   else
+      targets.scsdl.libflags = targets.scsdl.libflags .. " -lGL -lGLU"
+   end
+else
+   append_cflags"-DNO_OPENGL"
 end
 
 install = {
