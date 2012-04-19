@@ -25,7 +25,7 @@ collectgarbage("stop")
 
 -- ensure that a compatible interpreter is running
 do
-   local major, minor = string.match(_VERSION, "([0-9]+)%.([0-9]+)")
+   local major, minor = string.match(_VERSION or "", "([0-9]+)%.([0-9]+)")
    major = tonumber(major)
    minor = tonumber(minor)
    if not major or not minor then
