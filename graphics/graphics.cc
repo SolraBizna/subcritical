@@ -1,6 +1,6 @@
 /*
   This source file is part of the SubCritical core package set.
-  Copyright (C) 2008 Solra Bizna.
+  Copyright (C) 2008-2012 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -616,7 +616,7 @@ IndexArray::~IndexArray() {
 
 SUBCRITICAL_UTILITY(CompileCoords)(lua_State* L) {
   if(!lua_istable(L,1)) return luaL_typerror(L, 1, "table");
-  int count = lua_objlen(L, 1);
+  int count = lua_rawlen(L, 1);
   if(count <= 0) return 0;
   count /= 2;
   CoordArray* ret = new CoordArray(count);
@@ -636,7 +636,7 @@ SUBCRITICAL_UTILITY(CompileCoords)(lua_State* L) {
 
 SUBCRITICAL_UTILITY(CompileIndices)(lua_State* L) {
   if(!lua_istable(L,1)) return luaL_typerror(L, 1, "table");
-  int count = lua_objlen(L, 1);
+  int count = lua_rawlen(L, 1);
   if(count <= 0) return 0;
   IndexArray* ret = new IndexArray(count);
   for(int n = 0; n < count; ++n) {

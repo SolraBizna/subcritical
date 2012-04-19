@@ -1,6 +1,6 @@
 /*
   This source file is part of the SubCritical core package set.
-  Copyright (C) 2008 Solra Bizna.
+  Copyright (C) 2008-2012 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -216,9 +216,9 @@ int ObjectProtocol::PushIdentity(lua_State* L) const throw() {
 }
 
 Object* Object::To(lua_State* L, int n, const char* type) throw() {
-  if(!lua_isuserdata(L, n)) luaL_error(L, "Expected %s at stack index %d, but found something else instead", type ? type : "a SubCritical object", n);
+  if(!lua_isuserdata(L, n)) luaL_error(L, "Expected %s at stack index %d, but found %s instead", type ? type : "a SubCritical object", n, lua_typename(L, lua_type(L, n)));
   Object** ud = (Object**)lua_topointer(L, n);
-  if(type && !(*ud)->IsA(type)) luaL_error(L, "%s at stack index %d where %s should be", (*ud)->GetProtocol()->name, n, type);
+  if(type && !(*ud)->IsA(type)) luaL_error(L, "Expected %s at stack index %d, but found %s instead", type, n, (*ud)->GetProtocol()->name);
   return *ud;
 }
 
@@ -260,6 +260,12 @@ static ObjectProtocol Object_Protocol("Object", ObjectMethods, NULL);
 
 const ObjectProtocol* Object::GetProtocol() const throw() {
   return &Object_Protocol;
+}
+
+const char* SubCritical::TypeName(lua_State* L, int n) {
+  if(!lua_isuserdata(L, n)) return lua_typename(L, lua_type(L, n));
+  Object** ud = (Object**)lua_topointer(L, n);
+  return (*ud)->GetProtocol()->name;
 }
 
 LUA_EXPORT int Init_core(lua_State* L) {
@@ -325,7 +331,10 @@ PROTOCOL_IMP(Path, Object, PathMethods);
 
 const char* SubCritical::GetPath(lua_State* L, int n) {
   Path* path = lua_toobject(L, n, Path);
-  if(!path->IsA("Path"))
+  if(!path->IsA("Path")) {
     luaL_typerror(L, n, "Path");
+    /* NOTREACHED */
+    return NULL;
+  }
   return path->GetPath();
 }

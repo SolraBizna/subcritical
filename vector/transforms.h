@@ -1,7 +1,7 @@
 // -*- c++ -*-
 /*
   This source file is part of the SubCritical core package set.
-  Copyright (C) 2008-2009 Solra Bizna.
+  Copyright (C) 2008-2012 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -22,7 +22,7 @@
 
 SUBCRITICAL_CONSTRUCTOR(VectorArray)(lua_State* L) {
   if(!lua_istable(L, 1)) return luaL_typerror(L, 1, "table of Vectors");
-  uint32_t count = lua_objlen(L, 1);
+  uint32_t count = lua_rawlen(L, 1);
   lua_rawgeti(L,1,1);
   Vector* v = lua_toobject(L, -1, Vector);
   uint32_t order = v->n;
@@ -53,7 +53,7 @@ SUBCRITICAL_UTILITY(CompileVectors)(lua_State* L) {
   Fixed dx, dy;
   dx = F_TO_Q(luaL_optnumber(L, 2, 0));
   dy = F_TO_Q(luaL_optnumber(L, 3, 0));
-  int len = lua_objlen(L, 1);
+  int len = lua_rawlen(L, 1);
   lua_settop(L, 1); // slight optimization, part 1
   CoordArray* ret = new CoordArray(len);
   Fixed* p = ret->coords;
@@ -89,7 +89,7 @@ SUBCRITICAL_UTILITY(PerspectiveCompileVectors)(lua_State* L) {
   Fixed dx, dy;
   dx = F_TO_Q(luaL_optnumber(L, 2, 0));
   dy = F_TO_Q(luaL_optnumber(L, 3, 0));
-  int len = lua_objlen(L, 1);
+  int len = lua_rawlen(L, 1);
   lua_settop(L, 1); // slight optimization, part 1
   CoordArray* ret = new CoordArray(len);
   Fixed* p = ret->coords;

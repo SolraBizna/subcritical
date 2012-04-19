@@ -1,6 +1,6 @@
 /*
   This source file is part of the SubCritical kernel.
-  Copyright (C) 2008 Solra Bizna.
+  Copyright (C) 2008-2012 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -23,6 +23,13 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 }
+
+/* we'll need an identical check in core.h */
+#if LUA_VERSION_NUM < 502
+#error Lua version too old. Please install Lua 5.2 and make sure scbuild can find your headers.
+#elif LUA_VERSION_NUM > 502
+#warning Lua version may be too new.
+#endif
 
 #include <string.h>
 #include <assert.h>
@@ -81,7 +88,7 @@ static int f_listfiles(lua_State* L) {
   if(!lua_istable(L, -1))
     lua_newtable(L);
   if(!dir) return 1;
-  i = lua_objlen(L, -1) + 1;
+  i = lua_rawlen(L, -1) + 1;
   while((ent = readdir(dir))) {
     if(strlen(ent->d_name) < extlen || ent->d_name[0] == '.') continue; // lol
     if(strcasecmp(ent->d_name + strlen(ent->d_name) - extlen, ext)) continue;
@@ -407,7 +414,7 @@ static const luaL_Reg regs[] = {
 
 LUA_EXPORT int luaopen_subcritical_helper(lua_State* L) {
   lua_newtable(L);
-  luaL_register(L, NULL, regs);
+  luaL_setfuncs(L, regs, 0);
   lua_pushliteral(L, OS);
   lua_setfield(L, -2, "os");
   lua_pushliteral(L, SO_EXTENSION);

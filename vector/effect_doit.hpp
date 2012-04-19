@@ -18,6 +18,7 @@
 static int C4(doit,IN4,OUT4,IN_A)(lua_State* L, const Drawable* in, Matrix* _mat, Scalar plusr, Scalar plusg, Scalar plusb, Scalar plusa) {
   Mat& mat = *(Mat*)_mat;
   int rsh, gsh, bsh, ash;
+  (void)ash; // ash is not necessarily used
   Graphic* ret = new Graphic(in->width, in->height, in->layout);
   ret->Push(L); // will now be garbage collected
   switch(in->layout) {

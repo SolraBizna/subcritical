@@ -1,7 +1,7 @@
 // -*- c++ -*-
 /*
   This source file is part of the SubCritical core package set.
-  Copyright (C) 2008-2009 Solra Bizna.
+  Copyright (C) 2008-2012 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -26,6 +26,13 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 }
+
+/* exactly the same as the check in helper.cc */
+#if LUA_VERSION_NUM < 502
+#error Lua version too old. Please install Lua 5.2 and make sure scbuild can find your headers.
+#elif LUA_VERSION_NUM > 502
+#warning Lua version may be too new.
+#endif
 
 #if __GNUC__ >= 3
 #define restrict __restrict__
@@ -134,6 +141,8 @@ const ObjectProtocol* class::GetProtocol() const throw() { \
     char* path, *filep;
     bool shouldfree;
   };
+  EXPORT const char* TypeName(lua_State* L, int n);
+#define luaL_typerror(L, n, wat) luaL_error(L, "Expected %s at arg %i, found %s instead", wat, n, SubCritical::TypeName(L, n))
   // convenience function
   EXPORT const char* GetPath(lua_State* L, int);
 }

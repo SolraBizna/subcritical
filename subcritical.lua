@@ -2,7 +2,7 @@
 
 --[[
   This source file is part of the SubCritical kernel.
-  Copyright (C) 2008-2010 Solra Bizna.
+  Copyright (C) 2008-2012 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -22,6 +22,33 @@
 ]]
 
 collectgarbage("stop")
+
+-- ensure that a compatible interpreter is running
+do
+   local major, minor = string.match(_VERSION, "([0-9]+)%.([0-9]+)")
+   major = tonumber(major)
+   minor = tonumber(minor)
+   if not major or not minor then
+      io.stderr:write("WARNING:\nCan't identify the running Lua version. SubCritical requires Lua 5.2.\n")
+   elseif major < 5 or major == 5 and minor < 2 then
+      io.stderr:write("Your Lua interpreter is too old. Lua 5.2 is required, but you have ".._VERSION..".\nPlease install Lua 5.2 before attempting to build SubCritical.\n")
+      os.exit(1)
+   elseif major > 5 or minor > 2 then
+      io.stderr:write("WARNING:\nYour Lua interpreter may be too new. SubCritical is designed for Lua 5.2,\nbut you have ".._VERSION..". There may be incompatibilities.\n")
+   end
+end
+
+-- deprecated function compatibility-with-warnings
+function loadstring(...)
+   io.stderr:write("WARNING:\nThis game calls loadstring. Any such calls should be replaced with a call to\nload.\n")
+   loadstring = load -- only warn once
+   return load(...)
+end
+function unpack(...)
+   io.stderr:write("WARNING:\nThis game calls unpack. Any such calls should be replaced with a call to\ntable.unpack.\n")
+   unpack = table.unpack -- only warn once
+   return table.unpack(...)
+end
 
 local debugging = not not os.getenv("SUBCRITICAL_DEBUG")
 local hardcheck = not not os.getenv("SUBCRITICAL_HARD_CHECK")
