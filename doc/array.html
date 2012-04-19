@@ -9,7 +9,7 @@
 <h1><tt>array</tt> package</h1>
 <h2>License</h2>
 <p>The <tt>array</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
-<p>This package contains 24 classes, all of them variations on a theme. You can create a densely packed fixed-size array of either 1, 2, or 3 dimensions, containing Lua numbers, booleans, or signed/unsigned 8-, 16-, or 32-bit integers.</p>
+<p>This package contains 30 classes, all of them variations on a theme. You can create a densely packed fixed-size array of either 1, 2, or 3 dimensions, containing Lua numbers, booleans, signed/unsigned 8-, 16-, or 32-bit integers, or 32- or 64-bit floating point values.</p>
 <table>
 <thead>
 <tr><th>Class</th><th>Dim.</th><th>Range</th></tr>
@@ -23,6 +23,8 @@
 <tr><td>PackedArray1D_U16</td><td>1D</td><td>0 <= integer <= 65535</td></tr>
 <tr><td>PackedArray1D_S32</td><td>1D</td><td>-2147483648 <= integer <= 2147483647</td></tr>
 <tr><td>PackedArray1D_U32</td><td>1D</td><td>0 <= integer <= 4294967295</td></tr>
+<tr><td>PackedArray1D_F32</td><td>1D</td><td>-126 <= exponent <= 127, 23+1 digits (binary)</td></tr>
+<tr><td>PackedArray1D_F64</td><td>1D</td><td>-1022 <= exponent <= 1023, 52+1 digits (binary)</td></tr>
 </tbody>
 <tbody>
 <tr><td>PackedArray2D</td><td>2D</td><td>any <tt>number</tt></td></tr>
@@ -33,6 +35,8 @@
 <tr><td>PackedArray2D_U16</td><td>2D</td><td>0 <= integer <= 65535</td></tr>
 <tr><td>PackedArray2D_S32</td><td>2D</td><td>-2147483648 <= integer <= 2147483647</td></tr>
 <tr><td>PackedArray2D_U32</td><td>2D</td><td>0 <= integer <= 4294967295</td></tr>
+<tr><td>PackedArray2D_F32</td><td>2D</td><td>-126 <= exponent <= 127, 23+1 digits (binary)</td></tr>
+<tr><td>PackedArray2D_F64</td><td>2D</td><td>-1022 <= exponent <= 1023, 52+1 digits (binary)</td></tr>
 </tbody>
 <tbody>
 <tr><td>PackedArray3D</td><td>3D</td><td>any <tt>number</tt></td></tr>
@@ -43,6 +47,8 @@
 <tr><td>PackedArray3D_U16</td><td>3D</td><td>0 <= integer <= 65535</td></tr>
 <tr><td>PackedArray3D_S32</td><td>3D</td><td>-2147483648 <= integer <= 2147483647</td></tr>
 <tr><td>PackedArray3D_U32</td><td>3D</td><td>0 <= integer <= 4294967295</td></tr>
+<tr><td>PackedArray3D_F32</td><td>3D</td><td>-126 <= exponent <= 127, 23+1 digits (binary)</td></tr>
+<tr><td>PackedArray3D_F64</td><td>3D</td><td>-1022 <= exponent <= 1023, 52+1 digits (binary)</td></tr>
 </tbody>
 </table>
 <p>Each variant takes up the minimum necessary memory to store its contents, and accesses are performed in O(1) time.</p>
