@@ -5,7 +5,7 @@
 
 --[[
   This source file is part of the SubCritical kernel.
-  Copyright (C) 2008-2009 Solra Bizna.
+  Copyright (C) 2008-2012 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -24,12 +24,28 @@
   Please see doc/license.html for clarifications.
 ]]
 
+-- check version
+-- we're going to have to do an identical check in subcritical.lua
+do
+   local major, minor = string.match(_VERSION, "([0-9]+)%.([0-9]+)")
+   major = tonumber(major)
+   minor = tonumber(minor)
+   if not major or not minor then
+      io.stderr:write("WARNING:\nCan't identify the running Lua version. SubCritical requires Lua 5.2.\n")
+   elseif major < 5 or major == 5 and minor < 2 then
+      io.stderr:write("Your Lua interpreter is too old. Lua 5.2 is required, but you have ".._VERSION..".\nPlease install Lua 5.2 before attempting to build SubCritical.\n")
+      os.exit(1)
+   elseif major > 5 or minor > 2 then
+      io.stderr:write("WARNING:\nYour Lua interpreter may be too new. SubCritical is designed for Lua 5.2,\nbut you have ".._VERSION..". There may be incompatibilities.\n")
+   end
+end
+
 if(arg and #arg >= 1 and arg[1] == "clean") then
    -- Special case!
    local clean_command = "rm -f core *~ \\#*\\# *.o *.so *.scc *.dylib *.bundle *.dll *.a *.d"
    print(clean_command)
    local status = os.execute(clean_command)
-   if(status ~= 0 or #arg == 1) then os.exit(status) end
+   if(status ~= true or #arg == 1) then os.exit(1) end
 end
 
 -- Set these in the environment of an automatic build script. You'd be
@@ -53,18 +69,24 @@ if(not source) then
    os.exit(1)
 end
 
+local confcheck = "(for "..(_VERSION or "unknown Lua version")..")"
+
 local config = {}
 do
    local f = io.open(confpath, "r")
    if(f) then
-      for l in f:lines() do
-	 local k,v = l:match("^([^=]+)=(.*)$")
-	 if(k) then
-	    if(v=="__true") then config[k] = true
-	    elseif (v=="__false") then config[k] = false
-	    else config[k] = v
-	    end
-	 end
+      if f:read() ~= confcheck then
+         print("The last time scbuild was run, it was for a different version of Lua.\nDiscarding all config information.")
+      else
+         for l in f:lines() do
+            local k,v = l:match("^([^=]+)=(.*)$")
+            if(k) then
+               if(v=="__true") then config[k] = true
+               elseif (v=="__false") then config[k] = false
+               else config[k] = v
+               end
+            end
+         end
       end
       f:close()
    end
@@ -102,10 +124,19 @@ function config_question(cachename, prompt, type, ...)
 	 config[cachename] = arg[choice*2]
 	 return config[cachename]
       elseif (type == "bool") then
-	 io.write(prompt.." (yes/NO) ")
+         local default = ...
+         if default then
+            io.write(prompt.." (YES/no) ")
+         else
+            io.write(prompt.." (yes/NO) ")
+         end
 	 io.flush()
 	 local response = io.read("*l"):lower()
-	 config[cachename] = (tonumber(response) and tonumber(response) ~= 0) or response:sub(1,1) == "y" or response:sub(1,1) == "t"
+         if default then
+            config[cachename] = not ((tonumber(response) and tonumber(response) == 0) or response:sub(1,1) == "n" or response:sub(1,1) == "f")
+         else
+            config[cachename] = (tonumber(response) and tonumber(response) ~= 0) or response:sub(1,1) == "y" or response:sub(1,1) == "t"
+         end
 	 return config[cachename]
       else
 	 error("we were asked for "..cachename..", which I don't know, and it was explained it to me in a weird way.", 1)
@@ -115,8 +146,8 @@ end
 
 --print("Detecting Lua flags...")
 local lua_cflags = ""
-if os.execute("pkg-config lua5.1 --exists") == 0 then
-   lua_cflags="`pkg-config lua5.1 --cflags`"
+if os.execute("pkg-config lua5.2 --exists") then
+   lua_cflags="`pkg-config lua5.2 --cflags`"
 else
    local searchpath = {
       "/opt/local",
@@ -126,8 +157,8 @@ else
    }
    local subpath = {
       "/",
-      "/lua5.1/",
-      "/lua51/"
+      "/lua5.2/",
+      "/lua52/"
    }
    if os.getenv("HOME") then
       table.insert(searchpath,1,os.getenv("HOME"))
@@ -304,6 +335,10 @@ if(os.getenv("LDFLAGS")) then
    ld = ld .. " " .. os.getenv("LDFLAGS")
 end
 
+local hack_flags
+if(os.getenv("STUPID_LINKER_HACK_FLAGS")) then hack_flags = " " .. os.getenv("STUPID_LINKER_HACK_FLAGS") else hack_flags = "" end
+if(osc == "mingw") then hack_flags = " /mingw/lib/lua51.dll " .. hack_flags end
+
 function append_cxxflags(flags)
    cxx = cxx .. " " .. flags
 end
@@ -323,6 +358,7 @@ end
 do
    local f = io.open(confpath, "w")
    if(f) then
+      f:write(confcheck.."\n")
       for k,v in pairs(config) do
 	 if(type(v) == "string") then
 	    f:write(("%s=%s\n"):format(k, v))
@@ -360,8 +396,9 @@ function fake_targets.install()
    build("all", false)
    local function pe(v)
       print(v)
-      if(os.execute(v) ~= 0) then
-	 print("*** Install command failed!")
+      local success,error = os.execute(v)
+      if not success then
+	 print("*** Install command ended with error "..error)
 	 os.exit(1)
       end
    end
@@ -422,10 +459,6 @@ function fake_targets.install()
    print("Installed.")
    return true
 end
-
-local hack_flags
-if(os.getenv("STUPID_LINKER_HACK_FLAGS")) then hack_flags = " " .. os.getenv("STUPID_LINKER_HACK_FLAGS") else hack_flags = "" end
-if(osc == "mingw") then hack_flags = " /mingw/lib/lua51.dll " .. hack_flags end
 
 for soname,target in pairs(targets) do
    local sofile = soname..soext
@@ -517,9 +550,9 @@ function build(target, fake)
 	    io.write(pstr)
 	    io.flush()
 	 end
-	 local status = os.execute(v)
-	 if(status ~= 0) then
-	    print("ERROR: Command exited with status "..status)
+	 local success,err = os.execute(v)
+	 if not success then
+	    print("ERROR: Command ended with error "..err)
 	    return false
 	 end
       end

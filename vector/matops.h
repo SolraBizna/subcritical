@@ -1,7 +1,7 @@
 // -*- c++ -*-
 /*
   This source file is part of the SubCritical core package set.
-  Copyright (C) 2008-2009 Solra Bizna.
+  Copyright (C) 2008-2012 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -114,6 +114,6 @@ static const struct luaL_Reg matrix_ops[] = {
 
 static void populate_matrix_ops(lua_State* L, int n) {
   lua_getmetatable(L, n);
-  luaL_register(L, NULL, matrix_ops);
+  luaL_setfuncs(L, matrix_ops, 0);
   lua_pop(L, 1);
 }

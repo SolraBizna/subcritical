@@ -1,7 +1,7 @@
 // -*- c++ -*-
 /*
   This source file is part of the SubCritical core package set.
-  Copyright (C) 2008-2009 Solra Bizna.
+  Copyright (C) 2008-2012 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -97,7 +97,7 @@ static const op_Lvns vec_newindex[3] = {
 
 LOCAL Vector* fromtabletovector(lua_State* L, int n) {
   Vector* ret;
-  int order = lua_objlen(L, n);
+  int order = lua_rawlen(L, n);
   switch(order) {
   case 2:
     lua_rawgeti(L, n, 1);
@@ -275,7 +275,7 @@ static int f_vector_index(lua_State* L) {
       return 1;
     }
   }
-  else if(lua_isstring(L, 2) && lua_objlen(L, 2) == 1) {
+  else if(lua_isstring(L, 2) && lua_rawlen(L, 2) == 1) {
     switch(*lua_tostring(L, 2)) {
     case 'x': case 'X':
       lua_pushnumber(L, (vec_index[a->n-2])(L, *a, 1));
@@ -314,7 +314,7 @@ static int f_vector_newindex(lua_State* L) {
       return (vec_newindex[a->n-2])(L, *a, 4, s);
     }
   }
-  else if(lua_isstring(L, 2) && lua_objlen(L, 2) == 1) {
+  else if(lua_isstring(L, 2) && lua_rawlen(L, 2) == 1) {
     switch(*lua_tostring(L, 2)) {
     case 'x': case 'X':
       return (vec_newindex[a->n-2])(L, *a, 1, s);
@@ -347,6 +347,6 @@ static void populate_vector_ops(lua_State* L, int n) {
   lua_getmetatable(L, n);
   lua_getfield(L, -1, "__index");
   lua_setfield(L, -2, "__oldindex");
-  luaL_register(L, NULL, vector_ops);
+  luaL_setfuncs(L, vector_ops, 0);
   lua_pop(L, 1);
 }

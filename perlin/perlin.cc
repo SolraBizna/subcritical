@@ -1,6 +1,6 @@
 /*
   This source file is part of the SubCritical core package set.
-  Copyright (C) 2011 Solra Bizna.
+  Copyright (C) 2011-2012 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as

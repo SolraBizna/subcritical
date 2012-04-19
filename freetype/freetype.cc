@@ -1,6 +1,6 @@
 /*
   This source file is part of the SubCritical core package set.
-  Copyright (C) 2008 Solra Bizna.
+  Copyright (C) 2008-2012 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -431,7 +431,7 @@ SUBCRITICAL_CONSTRUCTOR(FreetypeFont)(lua_State* L) {
 }
 
 LUA_EXPORT int Init_freetype(lua_State* L) {
-  lua_getfield(L,LUA_GLOBALSINDEX,"freetype_copyright_ok");
+  lua_getglobal(L,"freetype_copyright_ok");
   if(lua_isnil(L,-1))
     fprintf(stderr,"Portions of this SubCritical game's runtime environment are copyright (C) 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 The FreeType Project (www.freetype.org). All rights reserved.\n(This game ought to display a notice of such on startup if it is not GPL.)\n");
   return 0;

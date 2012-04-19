@@ -2,7 +2,7 @@ If you're on Windows, abandon all hope of building it yourself. Setting it up
 is so difficult and painful, I wouldn't even know how to do it a second time.
 
 SubCritical's build system is functional, but incomplete. To build and install
-SubCritical, first, install Lua 5.1 or later. (see: http://www.lua.org/)
+SubCritical, first, install Lua 5.2 or later. (see: http://www.lua.org/)
 
 From inside the top-level SubCritical source directory:
 
@@ -42,5 +42,8 @@ SubCritical also includes some useful utilities. Currently:
   fontman: Font management and consolidation
   garbage: Standardized garbage collection deferral
   libconfig: Configuration file management
-  scui: A UI toolkit
+  scui: UI toolkit
+  uranium: Widget set built on scui
+  quantum: Support library for fixed-tickrate variable-framerate games
+  vectoracious: Vector graphics support library intended for use with quantum
 See their appropriate README files for more information.

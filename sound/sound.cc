@@ -1,6 +1,6 @@
 /*
   This source file is part of the SubCritical core package set.
-  Copyright (C) 2008 Solra Bizna.
+  Copyright (C) 2008-2012 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -475,7 +475,7 @@ static int ParseSoundCommand(lua_State* L, int i, SoundCommand& cmd, bool target
   if(!lua_isnil(L, -1)) {
     if(!lua_istable(L, -1)) return luaL_error(L, "\"pan\" parameter must be a table with 1, 2, or 4 members");
     cmd.pan_present = 1;
-    lua_Integer num = lua_objlen(L, -1);
+    lua_Integer num = lua_rawlen(L, -1);
     switch(num) {
     case 1:
       lua_rawgeti(L, -1, 1);
