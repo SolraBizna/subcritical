@@ -81,6 +81,7 @@ public:
       else {
 	memcpy(out, buf, n);
 	rem -= n;
+        buf += n;
 	return false;
       }
     }
