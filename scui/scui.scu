@@ -19,14 +19,14 @@
   Please see doc/license.html for clarifications.
 ]]
 
-if(not pcall(require,"garbage")) then
+local garbage
+if(not pcall(function() garbage = require "garbage" end)) then
    print("WARNING: garbage is not installed! We like garbage!")
 end
-local garbage = garbage
 
 local dirty_debug = not not os.getenv("DEBUG_SCUI_UPDATES")
 
-scui = {}
+local scui = {}
 
 local protots = {}
 function scui.Inherit(sub, super) 
@@ -336,3 +336,5 @@ function scui.CenterWidget(widget)
       widget.y = math.floor((sh-widget.h)/2)
    end
 end
+
+return scui

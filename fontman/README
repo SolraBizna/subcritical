@@ -1,6 +1,6 @@
 fontman is a very simple package, simplifying FreetypeFont management:
 
-require "fontman"
+local fontman = require "fontman"
 myfont = fontman.newfont(P"MyFont.ttf")
 
 Obtain, and automatically cache, different font sizes by indexing myfont. For
@@ -28,7 +28,7 @@ If you install this, you may also want to install the included Liberation font p
 $ cp -r liberation /usr/subcritical/lib/
 
 Font packages (like the included Liberation fonts) are encouraged to create
-subtables of the provided TTF table (also accessible by ttf):
+subtables of the provided global TTF table (also accessible as ttf):
 
 TTF.MyFamily = fontman.newfont(P"MyFamily-Regular.ttf")
 TTF.MyFamily.Bold = fontman.newfont(P"MyFamily-Bold.ttf")

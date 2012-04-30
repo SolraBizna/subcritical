@@ -21,8 +21,7 @@
 
 local pi,pi2 = math.pi,math.pi*2
 
-vgl = {}
-vectoracious = vgl
+local vgl = {}
 
 function vgl.instantiate(instance)
    local ret = {}
@@ -235,4 +234,10 @@ function vgl_instance:render(last_scenegraph, scenegraph, irp)
    end
 end
 
+-- don't clobber an existing global
+local old_vgl = _ENV.vgl
+_ENV.vgl = vgl
 dofile(P"obj.lua")
+_ENV.vgl = old_vgl
+
+return vgl

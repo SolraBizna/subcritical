@@ -19,6 +19,7 @@
   Please see doc/license.html for clarifications.
 ]]
 
+local uranium = uranium
 uranium.box = {}
 
 function uranium.box:RenderSelf(window)

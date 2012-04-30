@@ -19,10 +19,10 @@
   Please see doc/license.html for clarifications.
 ]]
 
-require "scui"
+local scui = require "scui"
 require "liberation"
 
-uranium = {}
+local uranium = {}
 uranium.font = TTF.Liberation.Sans[12]
 uranium.bfont = TTF.Liberation.Sans.Bold[12]
 
@@ -36,11 +36,15 @@ function uranium.DrawBox(x, y, w, h)
    end
 end
 
+-- avoid clobbering any existing value for the uranium global
+local old_uranium = _ENV.uranium
+_ENV.uranium = uranium
 dofile(P"box.lua")
 dofile(P"text.lua")
 dofile(P"button.lua")
 dofile(P"field.lua")
 dofile(P"cursor.lua")
+_ENV.uranium = old_uranium
 
 function uranium.Alert(text, default_button, cancel_button, other_button)
    if(default_button == true) then default_button = "OK" end
@@ -65,3 +69,5 @@ function uranium.Alert(text, default_button, cancel_button, other_button)
    scui.CompileWidget(alert)
    return scui.RunModal(alert, nil, uranium.cursor())
 end
+
+return uranium

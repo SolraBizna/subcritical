@@ -19,6 +19,8 @@
   Please see doc/license.html for clarifications.
 ]]
 
+local uranium = uranium
+local scui = require "scui"
 local field = {}
 uranium.field = field
 

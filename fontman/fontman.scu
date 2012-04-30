@@ -19,8 +19,7 @@
   Please see doc/license.html for clarifications.
 ]]
 
-fontman = {}
-local fontman = fontman
+local fontman = {}
 
 ttf = {}
 local ttf = ttf
@@ -61,3 +60,5 @@ function fontman.newfont(path)
    setmetatable(ret, numt)
    return ret
 end
+
+return fontman
