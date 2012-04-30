@@ -31,9 +31,13 @@ function fontman.newfont(path)
    local weird = {}
    function numt.__index(t, k)
       assert(not rawget(t, k), "Lua metatables are melting!")
-      if(type(k) ~= "number" or k < 1/64) then return nil end
+      --if(type(k) ~= "number" or k < 1/64) then return nil end
       local nufont = assert(SC.Construct("FreetypeFont", path))
-      nufont:SetSize(k)
+      if type(k) == "number" and k >= 1/64 then
+         nufont:SetSize(k)
+      else
+         -- caller is managing the size of this font
+      end
       rawset(t, k, nufont)
       return nufont
    end
