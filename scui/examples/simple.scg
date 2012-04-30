@@ -22,8 +22,8 @@
 gamelicense = "Compatible"
 
 require "subcritical"
-require "scui"
-require "uranium"
+local scui = require "scui"
+local uranium = require "uranium"
 
 screen = assert(SC.Construct("GraphicsDevice", 512, 384, {windowed=true,title="Simple Uranium Example"}))
 

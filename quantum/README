@@ -7,7 +7,7 @@ $ cp quantum.scu /usr/subcritical/lib/
 
 Invocation:
 
-require "quantum"
+local quantum = require "quantum"
 quantum.run(parameters)
 
 parameters is a table containing the following keys:

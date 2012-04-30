@@ -10,7 +10,7 @@ $ cp vectoracious /usr/subcritical/lib/
 
 Initialize the library:
 
-require "vectoracious"
+local vgl = require "vectoracious"
 
 Create a Vectoracious context:
 

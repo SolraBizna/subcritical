@@ -19,7 +19,8 @@
   Please see doc/license.html for clarifications.
 ]]
 
-libconfig = {}
+local libconfig = {}
+
 function libconfig.read(file)
    file = SCVar.Read(file)
    if(not file) then
@@ -52,3 +53,5 @@ function libconfig.write(file, config)
    assert(file:write(SCUtil.QuickChecksum(cel)..cel))
    file:close()
 end
+
+return libconfig

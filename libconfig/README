@@ -1,6 +1,6 @@
 libconfig is a simple library for saving and loading configuration files.
 
-require "libconfig"
+local libconfig = require "libconfig"
 config = libconfig.read("My Game's Configuration.celduin")
 ...
 libconfig.write("My Game's Configuration", config)

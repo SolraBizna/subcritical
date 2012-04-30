@@ -24,7 +24,7 @@
   information.
 ]]
 
-require "fontman"
+local fontman = require "fontman"
 
 TTF.Liberation = {}
 

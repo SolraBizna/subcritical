@@ -19,7 +19,7 @@
   Please see doc/license.html for clarifications.
 ]]
 
-celnet = {}
+local celnet = {}
 
 local celproto = {}
 local celmeta = {__index=celproto}
@@ -198,3 +198,5 @@ function celnet.new_client(sock)
    setmetatable(ret, celclientmeta)
    return ret
 end
+
+return celnet

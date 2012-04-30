@@ -1,7 +1,7 @@
 celnet is a package that takes a lot of the work out of making a client-server
 game.
 
-require "celnet"
+local celnet = require "celnet"
 
 Two objects are provided.
 

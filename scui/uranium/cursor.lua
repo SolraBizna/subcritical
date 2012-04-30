@@ -19,6 +19,7 @@
   Please see doc/license.html for clarifications.
 ]]
 
+local uranium = uranium
 local cursor
 function uranium.cursor()
    return cursor,1,2

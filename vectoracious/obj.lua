@@ -19,6 +19,7 @@
   Please see doc/license.html for clarifications.
 ]]
 
+local vgl = vgl
 function vgl.load_mtl(mtlpath)
    local materials = {}
    local f = assert(io.open(mtlpath, "r"))

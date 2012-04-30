@@ -19,7 +19,7 @@
   Please see doc/license.html for clarifications.
 ]]
 
-quantum = {}
+local quantum = {}
 
 function quantum.run(params)
    -- tickrate: the number of ticks per second
@@ -138,3 +138,5 @@ function quantum.run(params)
       end
    until false
 end
+
+return quantum

@@ -19,7 +19,7 @@
   Please see doc/license.html for clarifications.
 ]]
 
-garbage = {}
+local garbage = {}
 local manage_count = 0
 
 local debugging = not not os.getenv("GARBAGE_DEBUG")
@@ -58,9 +58,10 @@ if(debugging) then
       end
       local old = collectgarbage("count")
       collectgarbage("step")
-      if manage_count >= 1 then
-         collectgarbage("stop")
-      end
+      -- No longer needed in 5.2
+      --if manage_count >= 1 then
+      --   collectgarbage("stop")
+      --end
       local new = collectgarbage("count")
       if(old > new) then
 	 dprintf("Collect(): Collected %i bytes of (Lua-visible) garbage", (old - new) * 1024)
@@ -71,8 +72,11 @@ if(debugging) then
 else
    function garbage.Collect()
       collectgarbage("step")
-      if manage_count >= 1 then
-         collectgarbage("stop")
-      end
+      -- No longer needed in 5.2
+      --if manage_count >= 1 then
+      --   collectgarbage("stop")
+      --end
    end
 end
+
+return garbage

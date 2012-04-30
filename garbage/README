@@ -1,6 +1,6 @@
 garbage is a simple utility package centralizing and standardizing garbage collection.
 
-require "garbage"
+local garbage = require "garbage"
 ...
 function GameLoop()
   garbage.Manage() -- Suspend Lua's built-in automatic garbage collection

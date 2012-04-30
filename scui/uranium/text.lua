@@ -19,6 +19,7 @@
   Please see doc/license.html for clarifications.
 ]]
 
+local uranium = uranium
 uranium.text = {}
 
 function uranium.text:SetupText()
