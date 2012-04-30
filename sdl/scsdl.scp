@@ -1,5 +1,5 @@
 license Compatible
-version 0b6
+version 0b7
 
 class SDLGraphics : GraphicsDevice concrete @ 100000
 class SDLSound : SoundDevice concrete @ 100000

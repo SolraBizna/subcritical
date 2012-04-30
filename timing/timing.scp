@@ -1,5 +1,5 @@
 license Compatible
-version 0b6 core
+version 0b7 core
 utility GetWallTime
 utility GetTime
 utility Sleep

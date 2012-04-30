@@ -35,12 +35,18 @@ extern "C" {
 #include <assert.h>
 
 // This needs to be synced with core.h should either code change.
-#if HAVE_GCC_VISIBILITY
-#define EXPORT __attribute__ ((visibility("default")))
-#define LOCAL __attribute__ ((visibility("hidden")))
+#if defined(WIN32) || defined(_WIN32) || defined(HAVE_WINDOWS)
+# define EXPORT __declspec(dllexport)
+# define IMPORT __declspec(dllimport)
+# define LOCAL
+#elif HAVE_GCC_VISIBILITY
+# define EXPORT __attribute__ ((visibility("default")))
+# define IMPORT EXPORT
+# define LOCAL __attribute__ ((visibility("hidden")))
 #else
-#define EXPORT
-#define LOCAL
+# define EXPORT
+# define IMPORT
+# define LOCAL
 #endif
 #define LUA_EXPORT extern "C" EXPORT
 
@@ -52,6 +58,9 @@ extern "C" {
 # include <sys/stat.h>
 # include <unistd.h>
 # include <fcntl.h>
+# ifndef SO_EXTENSION
+#  define SO_EXTENSION ".dll"
+# endif
 #else
 # include <dlfcn.h>
 # include <dirent.h>
@@ -64,6 +73,9 @@ extern "C" {
 #  define OS "macosx"
 # else
 #  define OS "unix"
+#  ifndef SO_EXTENSION
+#   define SO_EXTENSION ".so"
+#  endif
 # endif
 #endif
 

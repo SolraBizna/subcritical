@@ -50,18 +50,18 @@ extern "C" {
 
 #include <stdint.h>
 
-#if HAVE_GCC_VISIBILITY
-#define EXPORT __attribute__ ((visibility("default")))
-#define IMPORT EXPORT
-#define LOCAL __attribute__ ((visibility("hidden")))
-#elif defined(WIN32) || defined(_WIN32)
-#define EXPORT __declspec(dllexport)
-#define IMPORT __declspec(dllimport)
-#define LOCAL
+#if defined(WIN32) || defined(_WIN32) || defined(HAVE_WINDOWS)
+# define EXPORT __declspec(dllexport)
+# define IMPORT __declspec(dllimport)
+# define LOCAL
+#elif HAVE_GCC_VISIBILITY
+# define EXPORT __attribute__ ((visibility("default")))
+# define IMPORT EXPORT
+# define LOCAL __attribute__ ((visibility("hidden")))
 #else
-#define EXPORT
-#define IMPORT
-#define LOCAL
+# define EXPORT
+# define IMPORT
+# define LOCAL
 #endif
 #define LUA_EXPORT extern "C" EXPORT
 

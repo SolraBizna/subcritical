@@ -1,7 +1,11 @@
 -- -*- lua -*-
+local havefreetypeconfig = os.execute[[which freetype-config]]
 local os = config_question("OS/COMPILER")
-if(os == "mingw") then
+
+if(os == "mingw" and not havefreetypeconfig) then
    append_cflags"-IC:\\MinGW\\include\\freetype2"
+elseif(not havefreetypeconfig) then
+   append_cflags"-I/usr/local/include/freetype2"
 else
    append_cflags"`freetype-config --cflags`"
 end
@@ -10,7 +14,7 @@ targets = {
    ["freetype"]={"freetype.cc", deps={"graphics","core"}},
 }
 
-if(os == "mingw") then
+if(not havefreetypeconfig) then
    targets.freetype.libflags="-lfreetype -lz"
 else
    targets.freetype.libflags="`freetype-config --libs`"

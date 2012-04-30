@@ -24,6 +24,21 @@
   Please see doc/license.html for clarifications.
 ]]
 
+-- simple os detection
+local onwindows = not not (os.getenv"SYSTEMROOT" or os.getenv"SCBUILD_WINDOWS")
+local oncygwin = not not (os.getenv"PATH" or ""):match"cygdrive"
+local onposix = not not (os.getenv"HOME" or oncygwin)
+local onpurewindows = onwindows and not onposix
+
+-- use sh to run posix commands under a lua built for pure windows
+if onwindows and onposix then
+   local oexecute = os.execute
+
+   function os.execute (cmd)
+      return oexecute(("sh -c %q"):format("exec "..cmd))
+   end
+end
+
 -- check version
 -- we're going to have to do an identical check in subcritical.lua
 do
@@ -52,15 +67,16 @@ end
 -- responsible for setting up a .scbuild with all needed information.
 local noprompt = not not os.getenv("SUBCRITICAL_AUTOMATIC_BUILD")
 local defpath
-local onwindows,home
-if(os.getenv("USERPROFILE") or os.getenv("SCBUILD_WINDOWS")) then
+local home
+
+if(onpurewindows or os.getenv("SCBUILD_WINDOWS")) then
    home = os.getenv("USERPROFILE") or "C:\\Documents and Settings\\User"
-   onwindows = true
    defpath = os.getenv("USERPROFILE").."\\scbuild.conf"
 else
    home = os.getenv("HOME") or "/home"
    defpath = ((os.getenv("HOME") or "") .. "/.scbuild")
 end
+
 local confpath = os.getenv("SUBCRITICAL_BUILD_CONFIG") or defpath
 
 local source,err = loadfile("build.scb")
@@ -164,13 +180,20 @@ else
    if os.getenv("HOME") then
       table.insert(searchpath,1,os.getenv("HOME"))
    end
-   local function exists(path)
-      local f = io.open(path,"r")
-      if f then
-         f:close()
-         return true
-      else
-         return false
+   local exists
+   if onwindows and onposix then
+      function exists(path)
+         return os.execute("ls " .. path .. " &> blah")
+      end
+   else
+      function exists(path)
+         local f = io.open(path,"r")
+         if f then
+            f:close()
+            return true
+         else
+            return false
+         end
       end
    end
    for n=1,#searchpath do
@@ -187,13 +210,16 @@ end
 
 local osc
 local cxx
+local cxx_incflags
 local ld
+local ld_libflags
 local soext
 osc = config_question("OS/COMPILER",
 		      "Select your OS/compiler combination from the list.",
 		      "list",
 		      "Generic UNIX with GCC (Linux, BSD)", "linux",
 		      "Cygwin", "cygwin",
+		      "MinGW on Cygwin", "cygwin_mingw",
 		      "MinGW on Windows", "mingw",
 		      "Darwin (Mac OS X)", "darwin",
 		      "Other (manual)", "other")
@@ -212,18 +238,29 @@ else
    local gld = os.getenv("LD") or os.getenv("CXX") or "g++"
    local platforms = {
       linux={cxx=gpp.." -Wall -Wno-pmf-conversions -fPIC -O2 "..lua_cflags.." -c", ld=gld.." -fPIC -O -shared", soext=".so"},
-      cygwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -c", ld=gld.." -O -shared", soext=".dll"},
-      mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 "..lua_cflags.." -c", ld=gld.." -O -shared", soext=".dll"},
+      --cygwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -c", ld=gld.." -O -shared", soext=".dll"},
+      --mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 "..lua_cflags.." -c", ld=gld.." -O -shared", soext=".dll"},
+      cygwin={cxx=gpp.." -g -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -c", ld=gld.." -O -shared", ld_libflags="-llua", soext=".scc"},
+      cygwin_mingw={cxx=gpp.." -mno-cygwin -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 "..lua_cflags.." -c", ld=gld.." -mno-cygwin -O -shared", ld_libflags="-llua", soext=".scc"},
+      mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O3 "..lua_cflags.." -c", ld=gld.." -O -L/usr/local/lib -shared -static-libgcc", ld_libflags="-llua", soext=".scc"},
       darwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" "..gld.." -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
    }
-   assert(platforms[osc])
-   cxx = platforms[osc].cxx
-   ld = platforms[osc].ld
-   soext = platforms[osc].soext
+   local platform = platforms[osc]
+   assert(platform)
+   cxx = platform.cxx
+   cxx_incflags = config.CXX_INCLUDE_FLAGS
+   ld = platform.ld
+   do local t = {}
+      table.insert(t, ld_libflags)
+      table.insert(t, config.LD_LIBRARY_FLAGS)
+      table.insert(t, platform.ld_libflags)
+      ld_libflags = table.concat(t, " ")
+   end
+   soext = platform.soext
 end
 
 local install_cmd
-if(onwindows) then install_cmd = "copy" else install_cmd = "install" end
+if(onpurewindows) then install_cmd = "copy" else install_cmd = "install" end
 install_cmd = os.getenv("INSTALL_CMD") or install_cmd
 
 if(cxx:match("g%+%+")) then
@@ -237,12 +274,16 @@ end
 
 local install_path
 
-if(onwindows) then
+if(onwindows and not oncygwin) then
+   local subcritical_path = "\\SubCritical\\"
+   if onposix then
+      subcritical_path = subcritical_path:gsub("\\", "/")
+   end
    install_path = config_question("INSTALL_PATH",
 				     "Where do you want SubCritical to live? You can always move it later.",
 				     "list",
-				     home.."\\SubCritical (default)", home.."\\SubCritical\\",
-				     "C:\\SubCritical", "C:\\SubCritical\\",
+				     home..subcritical_path.." (default)", home..subcritical_path,
+				     "C:"..subcritical_path, "C:"..subcritical_path,
 				     "Other", "")
 else
    install_path = config_question("INSTALL_PATH",
@@ -256,7 +297,7 @@ end
 if(install_path == "") then
    install_path = config_question("REAL_INSTALL_PATH", "Enter the full path to where you want SubCritical to live.", "freeform", home.."/.subcritical/")
 end
-if(onwindows) then
+if(onpurewindows) then
    function sanitize_path(path)
       return (path.."\\"):gsub("\\\\+", "\\")
    end
@@ -273,7 +314,7 @@ if(install_path:match("[ \"'!;]")) then
 end
 
 local include_path
-if(onwindows) then
+if(onpurewindows) then
    include_path = install_path.."include\\"
 else
    include_path = install_path.."include/"
@@ -281,7 +322,7 @@ end
 include_path = sanitize_path(include_path)
 
 local install_lib,install_c,install_lua
-if(onwindows) then
+if(onpurewindows) then
    install_lib = install_path.."lib\\"
 else
    install_lib = install_path.."lib/"
@@ -314,6 +355,7 @@ install_lua = config_question("INSTALL_LUA",
 install_lua = sanitize_path(install_lua)
 
 cxx = cxx .. " -I"..include_path
+if cxx_incflags then cxx = cxx .. " " .. cxx_incflags end
 cxx = cxx .. " -DSO_EXTENSION=\"\\\""..soext.."\\\"\""
 
 -- Try our best to find subcritical_helper
@@ -360,13 +402,16 @@ do
    local f = io.open(confpath, "w")
    if(f) then
       f:write(confcheck.."\n")
+      local t = {}
       for k,v in pairs(config) do
 	 if(type(v) == "string") then
-	    f:write(("%s=%s\n"):format(k, v))
+        table.insert(t, ("%s=%s\n"):format(k, v))
 	 else
-	    f:write(("%s=__%s\n"):format(k, tostring(v)))
+        table.insert(t, ("%s=__%s\n"):format(k, tostring(v)))
 	 end
       end
+      table.sort(t, function (a, b) return a < b end)
+      for i = 1, #t do f:write(t[i]) end
       f:close()
       --print("Remember, you can reconfigure the build by removing "..confpath)
    else
@@ -404,13 +449,15 @@ function fake_targets.install()
       end
    end
    assert(install, "build.scb did not provide an install table")
+   mkdir(install_path)
    if(install.headers) then
+      mkdir(include_path)
       mkdir(include_path.."subcritical")
       for i,header in pairs(install.headers) do
 	 print("(installing and converting "..header..")")
 	 local i = assert(io.open(header, "r"))
 	 local install_path
-	 if(onwindows) then
+	 if(onpurewindows) then
             install_path = include_path.."subcritical\\"..header
          else
             install_path = include_path.."subcritical/"..header
@@ -461,6 +508,7 @@ function fake_targets.install()
    return true
 end
 
+local hack_flags = os.getenv("STUPID_LINKER_HACK_FLAGS")
 for soname,target in pairs(targets) do
    local sofile = soname..soext
    virtual_targets[soname] = sofile
@@ -479,7 +527,9 @@ for soname,target in pairs(targets) do
       end
    end
    if(target.libflags) then full_ld = full_ld .. " " .. target.libflags end
-   real_target.commands = {full_ld..hack_flags}
+   if(ld_libflags) then full_ld = full_ld .. " " .. ld_libflags end
+   if(hack_flags) then full_ld = full_ld .. " " .. hack_flags end
+   real_target.commands = {full_ld}
    for i,source in ipairs(target) do
       local object = source_to_object(source)
       real_targets[object] = {deps={source}, commands={cxx.." -c -o "..object.." "..source}}

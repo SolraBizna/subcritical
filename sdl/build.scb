@@ -1,21 +1,23 @@
 -- -*- lua -*-
-
+local havesdlconfig = os.execute[[which sdl-config]]
 local os = config_question("OS/COMPILER")
 
-if(os ~= "mingw") then
-   append_cflags"`sdl-config --cflags`"
-else
+if(os == "mingw" and not havesdlconfig) then
    append_cflags"-IC:\\MinGW\\include\\SDL"
+elseif(not havesdlconfig) then
+   append_cflags"-I/usr/local/include/SDL -Dmain=SDL_main"
+else
+   append_cflags"`sdl-config --cflags`"
 end
 
 targets = {
    ["scsdl"]={"sdlgraphics.cc","sdlman.cc","sdlsound.cc",deps={"graphics","sound","core"}},
 }
 
-if(os ~= "mingw") then
-   targets.scsdl.libflags = "`sdl-config --libs`"
-else
+if(not havesdlconfig) then
    targets.scsdl.libflags = "-lSDL"
+else
+   targets.scsdl.libflags = "`sdl-config --libs`"
 end
 
 if os ~= "darwin" and not config_question("ALLOW_OPENGL", "Compile OpenGL support? (Answer no only if you don't have OpenGL headers.)", "bool", true) then
