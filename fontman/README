@@ -16,6 +16,8 @@ Or:
 
 frisket = myfont(12, 18):RenderText("This is vertically stretched 12-point text!")
 
+If you want to manage font sizes on your own, you can obtain a unique FreetypeFont instance by specifying some non-numerical value for the size.
+
 Install by placing fontman.scu somewhere SubCritical can find it:
 
 $ mkdir -p /usr/subcritical/lib/
