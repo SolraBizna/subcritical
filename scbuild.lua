@@ -115,6 +115,7 @@ function config_question(cachename, prompt, type, ...)
 	 local choice = tonumber(assert(io.read("*l")))
 	 if(not choice or not arg[choice*2]) then
 	    if arg[1]:match("default") then
+               config[cachename] = arg[2]
 	       return arg[2]
 	    else
 	       print("Fatal: That's not a choice. Try again.")
