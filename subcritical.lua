@@ -707,7 +707,7 @@ function fpmt.__index:flush(...) return rawget(self,"file"):flush(...) end
 function fpmt.__index:close(...)
    local ret = {rawget(self,"file"):close(...)}
    helper.replace(rawget(self,"dname"),rawget(self,"sname"))
-   return unpack(ret)
+   return table.unpack(ret)
 end
 
 local function cproxy(t)
