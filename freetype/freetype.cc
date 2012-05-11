@@ -417,13 +417,13 @@ SUBCRITICAL_CONSTRUCTOR(FreetypeFont)(lua_State* L) {
   if(!ret->face) {
     delete ret;
     if(error == FT_Err_Unknown_File_Format)
-      return luaL_error(L, "Unknown font format: %s", lua_tostring(L, 1));
+      return luaL_error(L, "Unknown font format: %s", GetPath(L, 1));
     else
-      return luaL_error(L, "Could not load font: %s", lua_tostring(L, 1));
+      return luaL_error(L, "Could not load font: %s", GetPath(L, 1));
   }
   if(!(ret->face->face_flags & FT_FACE_FLAG_SCALABLE)) {
     delete ret;
-    return luaL_error(L, "Was not a scalable font: %s", lua_tostring(L, 1));
+    return luaL_error(L, "Was not a scalable font: %s", GetPath(L, 1));
   }
   ret->SetSize(12.0, 12.0);
   ret->Push(L);
