@@ -361,13 +361,13 @@ cxx = cxx .. " -DSO_EXTENSION=\"\\\""..soext.."\\\"\""
 -- Try our best to find subcritical_helper
 if(not onwindows) then
    package.cpath = "./?"..soext..";../?"..soext
-   if(install_lua) then
-      package.cpath = package.cpath..";"..install_lua.."/?"..soext
+   if(install_c) then
+      package.cpath = package.cpath..";"..install_c.."/?"..soext
    end
 else
    package.cpath = ".\\?"..soext..";../?"..soext
-   if(install_lua) then
-      package.cpath = package.cpath..";"..install_lua.."\\?"..soext
+   if(install_c) then
+      package.cpath = package.cpath..";"..install_c.."\\?"..soext
    end
 end
 
