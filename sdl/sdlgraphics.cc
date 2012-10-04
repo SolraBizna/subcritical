@@ -440,7 +440,7 @@ void SDLGraphics::Update(int x, int y, int w, int h) throw() {
   if(x == 0 && y == 0 && w == target->w && h == target->h) UpdateAll();
   else {
     if(screen != target) {
-      SDL_Rect a = {x, y, w, h};
+      SDL_Rect a = {(Sint16)x, (Sint16)y, (Uint16)w, (Uint16)h};
       SDL_Rect b;
       b.x = x * fake_rectangle.w / target->w;
       b.y = y * fake_rectangle.h / target->h;
@@ -461,7 +461,7 @@ void SDLGraphics::Update(int x, int y, int w, int h) throw() {
 void SDLGraphics::UpdateAll() throw() {
   //SDL_BlitSurface(shadow, NULL, screen, NULL);
   if(target != screen) {
-    SDL_Rect a = {0, 0, target->w, target->h};
+    SDL_Rect a = {0, 0, (Uint16)target->w, (Uint16)target->h};
     SDL_Rect b = fake_rectangle;
     indirect_update(target, a, screen, b);
   }

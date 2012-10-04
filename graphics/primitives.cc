@@ -953,10 +953,10 @@ inline void Drawable::DrawQuadLine(Fixed width, Fixed height, const Fixed*restri
   if(mag == 0) return;
   off[0] = off[0] * radx / mag;
   off[1] = off[1] * rady / mag;
-  Fixed a[2] = {top[0] - off[0], top[1] - off[1]};
-  Fixed b[2] = {top[0] + off[0], top[1] + off[1]};
-  Fixed c[2] = {bot[0] - off[0], bot[1] - off[1]};
-  Fixed d[2] = {bot[0] + off[0], bot[1] + off[1]};
+  Fixed a[2] = {(Fixed)(top[0] - off[0]), (Fixed)(top[1] - off[1])};
+  Fixed b[2] = {(Fixed)(top[0] + off[0]), (Fixed)(top[1] + off[1])};
+  Fixed c[2] = {(Fixed)(bot[0] - off[0]), (Fixed)(bot[1] - off[1])};
+  Fixed d[2] = {(Fixed)(bot[0] + off[0]), (Fixed)(bot[1] + off[1])};
   /*if(primitive_alpha) DrawQuadA(a, b, c, d);
     else DrawQuad(a, b, c, d);*/
   ClipNDrawTriangle(a, b, c);

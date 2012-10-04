@@ -66,7 +66,7 @@ class LOCAL SuperBuffer {
 static void WriteValue(lua_State* L, SuperBuffer& output, idmap& ids, uint32_t& id);
 
 static void WriteAtom(SuperBuffer& output, CelduinAtom atom) {
-  unsigned char out[1] = {atom};
+  unsigned char out[1] = {(unsigned char)atom};
   output.Write(out, 1);
 }
 
