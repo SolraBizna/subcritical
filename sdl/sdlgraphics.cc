@@ -205,11 +205,13 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
 doing_relmouse(false), doing_textok(false) {
   SDLMan::InitializeSubsystem(SDL_INIT_VIDEO);
   Uint32 initflags = windowed ? 0 : SDL_FULLSCREEN;
+  /* We will attempt upscaling only if requested. */
   bool tryFakeDoubling = false;
   if(((true_width != 0 && true_width != width) ||
       (true_height != 0 && true_height != height)))
     tryFakeDoubling = true;
 #if CAN_DO_OPENGL
+  /* Use OpenGL if upscaling is requested AND it is allowed. */
   if(tryFakeDoubling && !getenv("NO_OPENGL")) {
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
@@ -220,6 +222,12 @@ doing_relmouse(false), doing_textok(false) {
   }
 #endif
   screen = SDL_SetVideoMode(width, height, 32, initflags);
+  /* Try again without OpenGL IF:
+   * . Initializing with OpenGL failed.
+   *  OR
+   * . Initializing with OpenGL succeeded, but this OpenGL implementation does
+   *   not support rectangular textures.
+   */
   if((!screen && (initflags & SDL_OPENGL))
 #if CAN_DO_OPENGL
      || ((initflags & SDL_OPENGL) && !haveRectTexture())
@@ -228,19 +236,26 @@ doing_relmouse(false), doing_textok(false) {
     initflags &= ~SDL_OPENGL;
     screen = SDL_SetVideoMode(width, height, 32, initflags);
   }
+  /* Try again without hardware surfaces, if necessary. Currently, hardware
+     surfaces are never requested. */
   if(!screen && (initflags & SDL_HWSURFACE)) {
     /* NOTREACHED */
     initflags &= ~SDL_HWSURFACE;
     screen = SDL_SetVideoMode(width, height, 32, initflags);
   }
+  /* Try again in windowed mode if we were attempting fullscreen. */
   if(!screen && (initflags & SDL_FULLSCREEN)) {
     initflags &= ~SDL_FULLSCREEN;
     screen = SDL_SetVideoMode(width, height, 32, initflags);
   }
+  /* If we still haven't gotten a screen, give up. */
   if(!screen) {
     SDLMan::QuitSubsystem(SDL_INIT_VIDEO);
     throw (const char*)SDL_GetError();
   }
+  /* twm on X11 allows us to set the title before creating the window; indeed,
+     this is actually helpful. However, on other platforms, setting the title
+     first causes a crash. */
   SDL_WM_SetCaption(title, title);
   // Determine the best layout to use.
   if(screen->format->BytesPerPixel != 4) throw (const char*)"Non-32-bit mode given";
