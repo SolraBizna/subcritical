@@ -1,5 +1,5 @@
 -- -*- lua -*-
-local havesdlconfig = os.execute[[which sdl-config]]
+local havesdlconfig = os.execute[[which sdl-config >/dev/null 2>&1]]
 local os = config_question("OS/COMPILER")
 
 if(os == "mingw" and not havesdlconfig) then
