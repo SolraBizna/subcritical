@@ -132,6 +132,7 @@ end</pre></dd>
 <dt class="code">borderless = true</dt>
 <dd>If you are requesting a windowed <tt>GraphicsDevice</tt>, center the window on the screen and do not draw window decorations for it (if supported by the driver). This is intended for transient splash screens, and should not be used for anything else.</dd>
 </dl>
+<dd>Attempting to construct a new <tt>GraphicsDevice</tt> renders all previous ones unusable, even if the attempt fails. As of SubCritical version 0c1, you do not need to ensure that any previous ones are garbage collected before constructing a new one; however, be aware that any method calls on a previous <tt>GraphicsDevice</tt> will definitely crash.</dd>
 </dd>
 <dt class="code"><a name="GraphicsDevice:Update" /><i>device</i>:Update()
 <i>device</i>:Update(<i>x</i>, <i>y</i>, <i>width</i>, <i>height</i>)</dt>
