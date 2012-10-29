@@ -137,6 +137,8 @@ end</pre></dd>
 <dt class="code"><a name="GraphicsDevice:Update" /><i>device</i>:Update()
 <i>device</i>:Update(<i>x</i>, <i>y</i>, <i>width</i>, <i>height</i>)</dt>
 <dd>Copies the pixels inside the given rectangle (or, if none is specified, all pixels) to the screen, where the user can get at them. A common mistake is to forget to call this after you're finished blitting.</dd>
+<dd>Note: A larger region of the screen may be updated than you specify here. Some drivers always update the entire screen.</dd>
+<dd>Note 2: If your state changes in response to user events, don't just redraw and call <tt>Update</tt>() every time; handle events until no more are available, <i>then</i> call it. Otherwise, your code may go into slow-motion if the user is faster than their computer.</dd>
 <dt class="code"><a name="GraphicsDevice:GetMousePos" /><i>x</i>,<i>y</i> = <i>device</i>:GetMousePos()</dt>
 <dd>Returns the current mouse position, in pixels.</dd>
 <dd>This should only be used if you need to know where the mouse is <b>right now</b> and someone else was handling events immediately prior.</dd>
@@ -152,6 +154,11 @@ end</pre></dd>
 <dd>This will be a table like {<i class="code">width</i>, <i class="code">height</i>} containing the user's desktop resolution, if this information is available, or <tt>nil</tt> otherwise. This will likely also be the monitor's native resolution.</dd>
 </dl></dd>
 <dd>If your game wants to get this information without going into fullscreen, you might do so by having a windowed, <tt>borderless</tt> "splash screen" at a small, known resolution, and calling <tt>ListModes</tt> on that <tt>GraphicsDevice</tt> before going fullscreen.</dd>
+<dt class="code"><a name="GraphicsDevice:SetCursor" /><i>device</i>:SetCursor(nil)
+<i>device</i>:SetCursor(<i>graphic</i>[, <i>hot_x</i>, <i>hot_y</i>])</dt>
+<dd>Display the given <a href="#Graphic" class="code">Graphic</a> at the position of the cursor. If <i class="code">hot_x</i>/<i class="code">y</i> are given, they are the position of the cursor "hot pixel;" it is this pixel which will be centered on the cursor position. If either are unspecified, 0 is used.</dd>
+<dd>Setting the cursor to nil disables display of the cursor. (This is the default state.)</dd>
+<dd>Under most circumstances, the cursor will only be updated when <a href="#GraphicsDevice:Update" class="code">Update</a> is called. If you want the cursor to be smoothly updated even when you're not doing any other drawing, try calling <tt><i>device</i>:Update(0,0,0,0)</tt> whenever you receive a <tt>"mousemove"</tt>, <tt>"mousedown"</tt>, or <tt>"mouseup"</tt> event.</dd>
 </dl>
 <h3 class="code"><a name="GraphicLoader" />GraphicLoader</h3>
 <p>An instance of <tt>GraphicLoader</tt> is poised to read from image files and give you nice, juicy <a href="#Graphic">Graphic</a>s to use in your game.</p>

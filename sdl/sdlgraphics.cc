@@ -30,11 +30,11 @@
 
 using namespace SubCritical;
 
-#if !NO_OPENGL
+#if NO_OPENGL
+#define CAN_DO_OPENGL 0
+#else
 #define CAN_DO_OPENGL 1
 #include "SDL_opengl.h"
-#else
-#define CAN_DO_OPENGL 0
 #endif
 
 #if SHOULD_DO_SOFTSTRETCH // Don't enable this!
@@ -129,6 +129,39 @@ static void HardCoreSoftStretch(SDL_Surface* source, SDL_Rect* srcrect,
 }
 #endif
 
+// This class is ugly.
+// One dirty rect for the update rectangle, one for the cursor, and one for
+// what was behind the cursor last update.
+#define MAX_DIRTY_RECTS 3
+struct LOCAL DirtyRects {
+  static inline bool RectEatsWhole(const SDL_Rect& a, const SDL_Rect& b) {
+    return b.x > a.x && b.y > a.y &&
+      b.x + b.w <= a.x + a.w && b.y + b.h <= a.y + a.h;
+  }
+  inline DirtyRects() : count(0) {}
+  inline void AddRect(int x, int y, int w, int h, SDL_Surface* who) {
+    if(count >= MAX_DIRTY_RECTS) return; // silently drop!?
+    if(x < 0) { w += x; x = 0; }
+    if(y < 0) { h += y; y = 0; }
+    if(x + w > who->w) w = who->w - x;
+    if(y + h > who->h) h = who->h - y;
+    if(w == 0 || h == 0) return;
+    rects[count].x = x;
+    rects[count].y = y;
+    rects[count].w = w;
+    rects[count].h = h;
+    // if the sub-update falls entirely within the first update, do not waste
+    // time updating any part of the screen twice
+    // there are more cases of overdraw, but this one is the lowest-hanging
+    // fruit
+    if(count > 0 && RectEatsWhole(rects[0], rects[count])) return;
+    ++count;
+  }
+  inline void Clear() { count = 0; }
+  SDL_Rect rects[MAX_DIRTY_RECTS];
+  int count;
+};
+
 class EXPORT SDLGraphics : public GraphicsDevice {
  public:
   SDLGraphics(int width, int height, bool windowed, const char* title,
@@ -139,8 +172,13 @@ class EXPORT SDLGraphics : public GraphicsDevice {
   virtual int Lua_GetEvent(lua_State* L) throw();
   virtual int Lua_GetMousePos(lua_State* L) throw();
   virtual int Lua_GetScreenModes(lua_State* L) throw();
+  virtual void SetCursor(Graphic* cursor, int hx, int hy) throw();
   PROTOCOL_PROTOTYPE();
  private:
+#if CAN_DO_OPENGL
+  void GL_Update() throw() LOCAL;
+#endif
+  void UpdateOneRect(int x, int y, int w, int h) throw() LOCAL;
   void indirect_update(SDL_Surface* source, SDL_Rect& a,
                        SDL_Surface* dest, SDL_Rect& b) throw() LOCAL;
   int RealGetEvent(lua_State* L, bool wait, bool relmouse, bool textok) throw() LOCAL;
@@ -153,6 +191,10 @@ class EXPORT SDLGraphics : public GraphicsDevice {
   GLenum glformat, gltype;
   int clear_count;
 #endif
+  DirtyRects target_dirty, screen_dirty;
+  Graphic* cursor, *cbak, *old_cursor;
+  int cursor_hx, cursor_hy;
+  int cx, cy, old_cx, old_cy, old_cw, old_ch;
   static LOCAL Uint32 desktop_w, desktop_h;
   static LOCAL SDL_Surface* current_screen;
 };
@@ -287,7 +329,7 @@ static void _assertgl(const char* file, int line) {
 #endif
 
 SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title, int true_width, int true_height, bool keep_aspect, bool smooth_filter, bool borderless) :
-doing_relmouse(false), doing_textok(false) {
+  doing_relmouse(false), doing_textok(false), cursor(NULL), cbak(NULL), old_cursor(NULL), cx(0), cy(0) {
   current_screen = NULL;
   if(borderless) {
     // This is a destructive operation! Further windows will also be centered!
@@ -495,7 +537,24 @@ doing_relmouse(false), doing_textok(false) {
 #else
   TryGammaCorrection();
 #endif
+#if CAN_DO_OPENGL
+  if(screen->flags & SDL_OPENGL) {
+    glViewport(0, 0, screen->w, screen->h);
+  }
+#endif
   current_screen = screen;
+}
+
+void SDLGraphics::SetCursor(Graphic* cursor, int hx, int hy) throw() {
+  if(this->cbak) {
+    delete this->cbak;
+    this->cbak = NULL;
+  }
+  this->cursor = cursor;
+  if(cursor)
+    this->cbak = new Graphic(cursor->width, cursor->height, layout);
+  this->cursor_hx = hx;
+  this->cursor_hy = hy;
 }
 
 int SDLGraphics::Lua_GetScreenModes(lua_State* L) throw() {
@@ -527,12 +586,31 @@ int SDLGraphics::Lua_GetScreenModes(lua_State* L) throw() {
   return 2;
 }
 
+#if CAN_DO_OPENGL
+void SDLGraphics::GL_Update() throw() {
+  // inefficient, whole-screen update; necessary because some hardware isn't
+  // precise enough to get things right, and some drivers LIE about the number
+  // of buffers they provide
+  GLushort rect[8] = {
+    fake_rectangle.x, fake_rectangle.y,
+    fake_rectangle.x+fake_rectangle.w, fake_rectangle.y,
+    fake_rectangle.x+fake_rectangle.w, fake_rectangle.y+fake_rectangle.h,
+    fake_rectangle.x, fake_rectangle.y+fake_rectangle.h,
+  };
+  glVertexPointer(2, GL_SHORT, 0, rect);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+  SDL_GL_SwapBuffers();
+  assertgl();
+}
+#endif
+
 void SDLGraphics::indirect_update(SDL_Surface* target, SDL_Rect& a,
                                   SDL_Surface* screen, SDL_Rect& b) throw() {
   if(false) {/* NOTREACHED */}
 #if CAN_DO_OPENGL
   else if(screen->flags & SDL_OPENGL) {
-    glFinish();
+    // Do this elsewhere.
+    //glFinish();
     if(fake_rectangle.x != 0 || fake_rectangle.y != 0 ||
        fake_rectangle.w != screen->w || fake_rectangle.h != screen->h) {
       if(clear_count <= 0) {
@@ -554,16 +632,6 @@ void SDLGraphics::indirect_update(SDL_Surface* target, SDL_Rect& a,
       glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, a.x, a.y, a.w, a.h,
                       glformat, gltype, rows[a.y] + a.x);
     assertgl();
-    GLushort rect[8] = {
-      fake_rectangle.x, fake_rectangle.y,
-      fake_rectangle.x+fake_rectangle.w, fake_rectangle.y,
-      fake_rectangle.x+fake_rectangle.w, fake_rectangle.y+fake_rectangle.h,
-      fake_rectangle.x, fake_rectangle.y+fake_rectangle.h,
-    };
-    glVertexPointer(2, GL_SHORT, 0, rect);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    SDL_GL_SwapBuffers();
-    assertgl();
   }
 #endif
 #if CAN_DO_SOFTSTRETCH
@@ -575,43 +643,108 @@ void SDLGraphics::indirect_update(SDL_Surface* target, SDL_Rect& a,
        I'll fix it. */
     /* Update: Someone did. So I did. */
     SDL_SoftStretch(target, &a, screen, &b);
-    SDL_UpdateRect(screen, b.x, b.y, b.w, b.h);
+    screen_dirty.AddRect(b.x, b.y, b.w, b.h, screen);
   }
 #else
   else {
     HardCoreSoftStretch(target, &a, screen, &b);
-    SDL_UpdateRect(screen, b.x, b.y, b.w, b.h);
+    screen_dirty.AddRect(b.x, b.y, b.w, b.h, screen);
   }
 #endif
 }
 
+void SDLGraphics::UpdateOneRect(int x, int y, int w, int h) throw() {
+  if(screen != target) {
+    SDL_Rect a = {(Sint16)x, (Sint16)y, (Uint16)w, (Uint16)h};
+    SDL_Rect b;
+    b.x = x * fake_rectangle.w / target->w;
+    b.y = y * fake_rectangle.h / target->h;
+    b.w = (x+w) * fake_rectangle.w / target->w - b.x;
+    b.h = (y+h) * fake_rectangle.h / target->h - b.y;
+    b.x += fake_rectangle.x;
+    b.y += fake_rectangle.y;
+    indirect_update(target, a, screen, b);
+  }
+  else screen_dirty.AddRect(x, y, w, h, screen);
+}
+
 void SDLGraphics::Update(int x, int y, int w, int h) throw() {
+#if CAN_DO_OPENGL
+  if(screen->flags & SDL_OPENGL) {
+    // don't let the GL buffer more than one frame! (but allow it that much)
+    glFinish();
+    assertgl();
+  }
+#endif
   if(x < 0) { w += x; x = 0; }
   if(y < 0) { h += y; y = 0; }
   if(w + x > target->w) w = target->w - x;
   if(h + y > target->h) h = target->h - y;
+  target_dirty.Clear();
+  screen_dirty.Clear();
+  if(w > 0 || h > 0)
+    target_dirty.AddRect(x,y,w,h,target);
+  int clip_l, clip_t, clip_r, clip_b, cbx = 0, cby = 0, cbw = 0, cbh = 0;
+  if(cursor || old_cursor) {
+    GetClipRect(clip_l, clip_t, clip_r, clip_b);
+    SetClipRect(0, 0, width-1, height-1);
+    if(cursor) {
+      cbx = cx-cursor_hx; cby = cy-cursor_hy;
+      cbw = cursor->width; cbh = cursor->height;
+      cbak->CopyRect(this, cbx, cby, cbw, cbh, 0, 0);
+      if(cursor->layout != layout) cursor->ChangeLayout(layout);
+      Blit(cursor, cbx, cby);
+      target_dirty.AddRect(cbx, cby, cbw, cbh, target);
+    }
+    if(old_cursor) {
+      target_dirty.AddRect(old_cx, old_cy, old_cw, old_ch, target);
+    }
+  }
+  if(target_dirty.count == 0) {
+    // Nothing to update.
+    goto skip_update;
+  }
+#if 0
   if(x == 0 && y == 0 && w == target->w && h == target->h) UpdateAll();
   else {
-    if(screen != target) {
-      SDL_Rect a = {(Sint16)x, (Sint16)y, (Uint16)w, (Uint16)h};
-      SDL_Rect b;
-      b.x = x * fake_rectangle.w / target->w;
-      b.y = y * fake_rectangle.h / target->h;
-      b.w = (x+w) * fake_rectangle.w / target->w - b.x;
-      b.h = (y+h) * fake_rectangle.h / target->h - b.y;
-      b.x += fake_rectangle.x;
-      b.y += fake_rectangle.y;
-      indirect_update(target, a, screen, b);
+#endif
+    for(int n = 0; n < target_dirty.count; ++n) {
+      UpdateOneRect(target_dirty.rects[n].x, target_dirty.rects[n].y,
+                    target_dirty.rects[n].w, target_dirty.rects[n].h);
     }
-    else SDL_UpdateRect(screen, x, y, w, h);
-    // prevent asynchronous blitting as well as we can... this is needed on at
-    // least one platform
-    SDL_LockSurface(screen);
-    SDL_UnlockSurface(screen);
+#if CAN_DO_OPENGL
+    if(screen->flags & SDL_OPENGL)
+      GL_Update();
+    else
+#endif
+      if(screen_dirty.count > 0) {
+      SDL_UpdateRects(screen, screen_dirty.count, screen_dirty.rects);
+      // prevent asynchronous blitting as well as we can... this is needed on
+      // at least one platform
+      SDL_LockSurface(screen);
+      SDL_UnlockSurface(screen);
+    }
+#if 0
+  }
+#endif
+ skip_update:
+  if(cursor || old_cursor) {
+    SetClipRect(clip_l, clip_t, clip_r, clip_b);
+    if(cursor) {
+      Copy(cbak, cbx, cby);
+      old_cx = cbx;
+      old_cy = cby;
+      old_cw = cbw;
+      old_ch = cbh;
+    }
+    old_cursor = cursor;
   }
 }
 
 void SDLGraphics::UpdateAll() throw() {
+#if 0
+  // We used to have special code for this, for no particular performance gain,
+  // but as Update() got more complicated, I decided to do away with this.
   //SDL_BlitSurface(shadow, NULL, screen, NULL);
   if(target != screen) {
     SDL_Rect a = {0, 0, (Uint16)target->w, (Uint16)target->h};
@@ -622,6 +755,9 @@ void SDLGraphics::UpdateAll() throw() {
     SDL_Flip(screen);
   SDL_LockSurface(screen);
   SDL_UnlockSurface(screen);
+#else
+  Update(0, 0, width, height);
+#endif
 }
 
 static const struct kmodpair {
@@ -704,22 +840,31 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
     lua_createtable(L, 0, 3);
     lua_pushliteral(L, "mousemove");
     lua_setfield(L, -2, "type");
-    if(relmouse) {
-      lua_pushnumber(L, evt.motion.xrel);
+    {
+      int report_x, report_y;
+      if(relmouse) {
+        report_x = evt.motion.xrel;
+        report_y = evt.motion.yrel;
+      }
+      else if(target != screen) {
+        report_x = (evt.motion.x-fake_rectangle.x)*target->w/screen->w;
+        report_y = (evt.motion.y-fake_rectangle.y)*target->h/screen->h;
+      }
+      else {
+        report_x = evt.motion.x;
+        report_y = evt.motion.y;
+      }
+      if(relmouse) {
+        cx += report_x;
+        cy += report_y;
+      }
+      else {
+        cx = report_x;
+        cy = report_y;
+      }
+      lua_pushnumber(L, report_x);
       lua_setfield(L, -2, "x");
-      lua_pushnumber(L, evt.motion.yrel);
-      lua_setfield(L, -2, "y");
-    }
-    else if(target != screen) {
-      lua_pushnumber(L, (evt.motion.x-fake_rectangle.x)*target->w/screen->w);
-      lua_setfield(L, -2, "x");
-      lua_pushnumber(L, (evt.motion.y-fake_rectangle.y)*target->h/screen->h);
-      lua_setfield(L, -2, "y");
-    }
-    else {
-      lua_pushnumber(L, evt.motion.x);
-      lua_setfield(L, -2, "x");
-      lua_pushnumber(L, evt.motion.y);
+      lua_pushnumber(L, report_y);
       lua_setfield(L, -2, "y");
     }
     break;
@@ -731,18 +876,21 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
     lua_pushnumber(L, evt.button.button);
     lua_setfield(L, -2, "button");
     if(!relmouse) {
+      int report_x, report_y;
       if(target != screen) {
-        lua_pushnumber(L, (evt.button.x-fake_rectangle.x)*target->w/screen->w);
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, (evt.button.y-fake_rectangle.y)*target->h/screen->h);
-        lua_setfield(L, -2, "y");
+        report_x = (evt.button.x-fake_rectangle.x)*target->w/screen->w;
+        report_y = (evt.button.y-fake_rectangle.y)*target->h/screen->h;
       }
       else {
-        lua_pushnumber(L, evt.button.x);
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, evt.button.y);
-        lua_setfield(L, -2, "y");
+        report_x = evt.button.x;
+        report_y = evt.button.y;
       }
+      cx = report_x;
+      cy = report_y;
+      lua_pushnumber(L, report_x);
+      lua_setfield(L, -2, "x");
+      lua_pushnumber(L, report_y);
+      lua_setfield(L, -2, "y");
     }
     break;
     // TODO: joysticks
@@ -817,14 +965,19 @@ int SDLGraphics::Lua_GetEvent(lua_State* L) throw() {
 int SDLGraphics::Lua_GetMousePos(lua_State* L) throw() {
   int x, y;
   SDL_GetMouseState(&x, &y);
+  int report_x, report_y;
   if(target != screen) {
-    lua_pushnumber(L, (x-fake_rectangle.x)*target->w/screen->w);
-    lua_pushnumber(L, (y-fake_rectangle.y)*target->h/screen->h);
+    report_x = (x-fake_rectangle.x)*target->w/screen->w;
+    report_y = (y-fake_rectangle.y)*target->h/screen->h;
   }
   else {
-    lua_pushnumber(L, x);
-    lua_pushnumber(L, y);
+    report_x = x;
+    report_y = y;
   }
+  cx = report_x;
+  cy = report_y;
+  lua_pushnumber(L, report_x);
+  lua_pushnumber(L, report_y);
   return 2;
 }
 

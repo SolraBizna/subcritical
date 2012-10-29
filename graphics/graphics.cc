@@ -325,7 +325,9 @@ int GraphicsDevice::Lua_Update(lua_State* L) throw() {
     if(x + w > width) w = width - x;
     if(y < 0) { h += y; y = 0; }
     if(y + h > height) h = height - y;
-    if(w <= 0 || h <= 0) return 0;
+    // We now want to allow updating a zero-pixel region, so that the cursor
+    // can be updated.
+    //if(w <= 0 || h <= 0) return 0;
     Update(x, y, w, h);
   }
   return 0;
@@ -1176,6 +1178,12 @@ int GraphicsDevice::Lua_GetScreenModes(lua_State* L) throw() {
   return 2;
 }
 
+int GraphicsDevice::Lua_SetCursor(lua_State* L) throw() {
+  if(lua_isnil(L,1)) SetCursor(NULL, 0, 0);
+  else SetCursor(lua_toobject(L, 1, Graphic), luaL_optinteger(L,2,0), luaL_optinteger(L,3,0));
+  return 0;
+}
+
 static const struct ObjectMethod DMethods[] = {
   METHOD("GetSize", &Drawable::Lua_GetSize),
   METHOD("GetClipRect", &Drawable::Lua_GetClipRect),
@@ -1209,6 +1217,7 @@ static const struct ObjectMethod GDMethods[] = {
   METHOD("GetEvent", &GraphicsDevice::Lua_GetEvent),
   METHOD("GetMousePos", &GraphicsDevice::Lua_GetMousePos),
   METHOD("GetScreenModes", &GraphicsDevice::Lua_GetScreenModes),
+  METHOD("SetCursor", &GraphicsDevice::Lua_SetCursor),
   NOMOREMETHODS(),
 };
 PROTOCOL_IMP(GraphicsDevice, Drawable, GDMethods);
