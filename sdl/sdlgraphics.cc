@@ -37,6 +37,7 @@ using namespace SubCritical;
 #define CAN_DO_OPENGL 0
 #endif
 
+#if SHOULD_DO_SOFTSTRETCH // Don't enable this!
 #if SDL_MAJOR_VERSION == 1 && SDL_MINOR_VERSION == 2 && SDL_PATCHLEVEL >= 13
 #define CAN_DO_SOFTSTRETCH 1
 // OpenGL will always be preferred if available
@@ -49,6 +50,83 @@ static bool ShouldDoSoftStretch() {
 // 1.3 doesn't have SoftStretch anymore, and it's not clear which version it
 // was added in
 #define CAN_DO_SOFTSTRETCH 0
+#endif
+#else
+#define CAN_DO_SOFTSTRETCH 0
+#endif
+
+#if !CAN_DO_SOFTSTRETCH
+class DDA;
+class DDAParams {
+public:
+  DDAParams(int num, int den) : num(num%den), den(den), out(num/den) {}
+private:
+  friend class DDA;
+  int num, den, out;
+};
+
+class DDA {
+public:
+  DDA(const DDAParams& src) : run(0),tot(0) {}
+  DDA(const DDA& src) : run(src.run),tot(src.tot) {}
+  inline int Step(const DDAParams& src) {
+    int ret = src.out;
+    run += src.num;
+    while(run >= src.den) {
+      run -= src.den;
+      ++ret;
+    }
+    tot += ret;
+    return ret;
+  }
+  inline int Prestep(const DDAParams& src, int count) {
+    run += count * src.num;
+    tot += count * src.out;
+    while(run >= src.den) {
+      run -= src.den;
+      ++tot;
+    }
+    return tot;
+  }
+  inline int GetTotal() { return tot; }
+private:
+  int run;
+  int tot;
+};
+
+static void HardCoreSoftStretch(SDL_Surface* source, SDL_Rect* srcrect,
+                                SDL_Surface* dest, SDL_Rect* dstrect) {
+  // Output dest->w/source->w columns for each source column
+  DDAParams out_x_params(dest->w, source->w);
+  // Output dest->h/source->h rows for each source row
+  DDAParams out_y_params(dest->h, source->h);
+
+  DDA out_x_base(out_x_params);
+  if(srcrect->x > 0) out_x_base.Prestep(out_x_params, srcrect->x);
+
+  DDA out_y(out_y_params);
+  if(srcrect->y > 0) out_y.Prestep(out_y_params, srcrect->y);
+
+  const Pixel* inpp = (Pixel*)((uint8_t*)source->pixels + srcrect->y * source->pitch) + srcrect->x;
+  Pixel* outpp = (Pixel*)((uint8_t*)dest->pixels + dstrect->y * dest->pitch) + dstrect->x;
+
+  for(int y = 0; y < srcrect->h; ++y) {
+    int outycount = out_y.Step(out_y_params);
+    for(int n = 0; n < outycount; ++n) {
+      const Pixel* inp = inpp;
+      Pixel* outp = outpp;
+      DDA out_x(out_x_base);
+      for(int x = 0; x < srcrect->w; ++x) {
+        int outxcount = out_x.Step(out_x_params);
+        UNROLL_MORE(outxcount,
+                    *outp++ = *inp;);
+        ++inp;
+      }
+      outpp = (Pixel*)((uint8_t*)outpp + dest->pitch);
+    }
+    inpp = (const Pixel*)((uint8_t*)inpp + source->pitch);
+  }
+}
 #endif
 
 class EXPORT SDLGraphics : public GraphicsDevice {
@@ -287,6 +365,8 @@ doing_relmouse(false), doing_textok(false) {
 #endif
 #if CAN_DO_SOFTSTRETCH
      || (tryFakeDoubling && ShouldDoSoftStretch())
+#else
+     || tryFakeDoubling
 #endif
        ) {
     shadow = SDL_CreateRGBSurface(0, true_width, true_height, 32, rmask, gmask, bmask, 0);
@@ -437,12 +517,14 @@ void SDLGraphics::indirect_update(SDL_Surface* target, SDL_Rect& a,
        scale factors AND no OpenGL AND partial updates, so I don't care about
        fixing it. If so much as a single person asks me to actually fix this,
        I'll fix it. */
+    /* Update: Someone did. So I did. */
     SDL_SoftStretch(target, &a, screen, &b);
     SDL_UpdateRect(screen, b.x, b.y, b.w, b.h);
   }
 #else
   else {
-    fprintf(stderr, "WARNING: target != screen and no suitable indirect update method is available! THIS SHOULD NEVER HAPPEN!\n");
+    HardCoreSoftStretch(target, &a, screen, &b);
+    SDL_UpdateRect(screen, b.x, b.y, b.w, b.h);
   }
 #endif
 }
