@@ -1170,6 +1170,12 @@ int Frisket::Lua_MaxFrisket(lua_State* L) restrict throw() {
   }
 }
 
+int GraphicsDevice::Lua_GetScreenModes(lua_State* L) throw() {
+  lua_pushnil(L);
+  lua_pushnil(L);
+  return 2;
+}
+
 static const struct ObjectMethod DMethods[] = {
   METHOD("GetSize", &Drawable::Lua_GetSize),
   METHOD("GetClipRect", &Drawable::Lua_GetClipRect),
@@ -1202,6 +1208,7 @@ static const struct ObjectMethod GDMethods[] = {
   METHOD("Update", &GraphicsDevice::Lua_Update),
   METHOD("GetEvent", &GraphicsDevice::Lua_GetEvent),
   METHOD("GetMousePos", &GraphicsDevice::Lua_GetMousePos),
+  METHOD("GetScreenModes", &GraphicsDevice::Lua_GetScreenModes),
   NOMOREMETHODS(),
 };
 PROTOCOL_IMP(GraphicsDevice, Drawable, GDMethods);

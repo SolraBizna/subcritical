@@ -197,6 +197,7 @@ namespace SubCritical {
     int Lua_Update(lua_State* L) throw();
     virtual int Lua_GetEvent(lua_State* L) throw() = 0;
     virtual int Lua_GetMousePos(lua_State* L) throw() = 0;
+    virtual int Lua_GetScreenModes(lua_State* L) throw();
     PROTOCOL_PROTOTYPE();
   };
   class EXPORT GraphicLoader : public Object {

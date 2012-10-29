@@ -132,12 +132,13 @@ static void HardCoreSoftStretch(SDL_Surface* source, SDL_Rect* srcrect,
 class EXPORT SDLGraphics : public GraphicsDevice {
  public:
   SDLGraphics(int width, int height, bool windowed, const char* title,
-              int true_width, int true_height, bool keep_aspect, bool smooth_filter);
+              int true_width, int true_height, bool keep_aspect, bool smooth_filter, bool borderless);
   virtual ~SDLGraphics();
   virtual void Update(int x, int y, int w, int h) throw();
   virtual void UpdateAll() throw();
   virtual int Lua_GetEvent(lua_State* L) throw();
   virtual int Lua_GetMousePos(lua_State* L) throw();
+  virtual int Lua_GetScreenModes(lua_State* L) throw();
   PROTOCOL_PROTOTYPE();
  private:
   void indirect_update(SDL_Surface* source, SDL_Rect& a,
@@ -152,7 +153,11 @@ class EXPORT SDLGraphics : public GraphicsDevice {
   GLenum glformat, gltype;
   int clear_count;
 #endif
+  static LOCAL Uint32 desktop_w, desktop_h;
 };
+
+LOCAL Uint32 SDLGraphics::desktop_w = 0;
+LOCAL Uint32 SDLGraphics::desktop_h = 0;
 
 struct LOCAL gamma_frob {
   Uint16 old_ramp[256], new_ramp[256];
@@ -272,17 +277,35 @@ static void _assertgl(const char* file, int line) {
   }
   if(errored) {
     fprintf(stderr, "Fatal GL errors detected at: %s:%i\n", file, line);
-    fprintf(stderr, "We could try to recover, but we won't.\n");
+    //fprintf(stderr, "We could try to recover, but we won't.\n");
     exit(1);
   }
 }
 #define assertgl() _assertgl(__FILE__, __LINE__)
 #endif
 
-SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title, int true_width, int true_height, bool keep_aspect, bool smooth_filter) :
+SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title, int true_width, int true_height, bool keep_aspect, bool smooth_filter, bool borderless) :
 doing_relmouse(false), doing_textok(false) {
+  if(borderless) {
+    // This is a destructive operation! Further windows will also be centered!
+    // Unfortunately there is no SDL_unsetenv
+    // This also potentially leaks a little memory...
+    SDL_putenv(strdup("SDL_VIDEO_CENTERED=1"));
+  }
   SDLMan::InitializeSubsystem(SDL_INIT_VIDEO);
-  Uint32 initflags = windowed ? 0 : SDL_FULLSCREEN;
+  if(!desktop_w || !desktop_h) {
+    const SDL_version* version = SDL_Linked_Version();
+    if(version->major > 1 || (version->major == 1 && version->minor > 2) || (version->major == 1 && version->minor == 2 && version->patch >= 11)) {
+      const SDL_VideoInfo* vi = SDL_GetVideoInfo();
+      if(vi) {
+        desktop_w = vi->current_w;
+        desktop_h = vi->current_h;
+      }
+    }
+  }
+  if(width == 0) width = desktop_w ? desktop_w : 640;
+  if(height == 0) height = desktop_h ? desktop_h : 480;
+  Uint32 initflags = (windowed ? 0 : SDL_FULLSCREEN) | (borderless ? SDL_NOFRAME : 0);
   /* We will attempt upscaling only if requested. */
   bool tryFakeDoubling = false;
   if(((true_width != 0 && true_width != width) ||
@@ -469,6 +492,35 @@ doing_relmouse(false), doing_textok(false) {
 #else
   TryGammaCorrection();
 #endif
+}
+
+int SDLGraphics::Lua_GetScreenModes(lua_State* L) throw() {
+  SDL_Rect** modes = SDL_ListModes(NULL, screen->flags | SDL_FULLSCREEN);
+  if(modes == (SDL_Rect**)0 || modes == (SDL_Rect**)-1)
+    lua_pushnil(L);
+  else {
+    lua_newtable(L);
+    for(int n = 0; modes[n]; ++n) {
+      lua_newtable(L);
+      lua_pushinteger(L, modes[n]->w);
+      lua_rawseti(L, -2, 1);
+      lua_pushinteger(L, modes[n]->h);
+      lua_rawseti(L, -2, 2);
+      lua_rawseti(L, -2, n+1);
+    }
+  }
+#if (SDL_MAJOR_VERSION == 1 && SDL_MINOR_VERSION == 2 && SDL_PATCHLEVEL >= 11) || (SDL_MAJOR_VERSION == 1 && SDL_MINOR_VERSION > 2) || (SDL_MAJOR_VERSION > 1)
+  if(desktop_w && desktop_h) {
+    lua_newtable(L);
+    lua_pushinteger(L, desktop_w);
+    lua_rawseti(L, -2, 1);
+    lua_pushinteger(L, desktop_h);
+    lua_rawseti(L, -2, 2);
+  }
+  else
+#endif
+    lua_pushnil(L);
+  return 2;
 }
 
 void SDLGraphics::indirect_update(SDL_Surface* target, SDL_Rect& a,
@@ -782,7 +834,7 @@ PROTOCOL_IMP_PLAIN(SDLGraphics, GraphicsDevice);
 SUBCRITICAL_CONSTRUCTOR(SDLGraphics)(lua_State* L) {
   int width, height;
   int true_width = 0, true_height = 0;
-  bool windowed = false, keep_aspect = false, smooth_filter = false;
+  bool windowed = false, keep_aspect = false, smooth_filter = false, borderless = false;
   const char* title = NULL;
   width = (int)luaL_checknumber(L, 1);
   height = (int)luaL_checknumber(L, 2);
@@ -799,12 +851,14 @@ SUBCRITICAL_CONSTRUCTOR(SDLGraphics)(lua_State* L) {
     keep_aspect = lua_toboolean(L,-1);
     lua_getfield(L, 3, "smooth_filter");
     smooth_filter = lua_toboolean(L,-1);
-    lua_pop(L, 6);
+    lua_getfield(L, 3, "borderless");
+    borderless = lua_toboolean(L,-1);
+    lua_pop(L, 7);
   }
   try {
     SDLGraphics* ret = new SDLGraphics(width, height, windowed, title,
                                        true_width, true_height,
-                                       keep_aspect, smooth_filter);
+                                       keep_aspect, smooth_filter, borderless);
     ret->Push(L);
     return 1;
   }
