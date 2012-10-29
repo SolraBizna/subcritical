@@ -20,7 +20,7 @@ else
    targets.scsdl.libflags = "`sdl-config --libs`"
 end
 
-if os ~= "darwin" and not config_question("ALLOW_OPENGL", "Compile OpenGL support? (Answer no only if you don't have OpenGL headers.)", "bool", true) then
+if os == "darwin" or config_question("ALLOW_OPENGL", "Compile OpenGL support? (Answer no only if you don't have OpenGL headers.)", "bool", true) then
    if(os == "darwin") then
       targets.scsdl.libflags = targets.scsdl.libflags .. " -framework OpenGL"
    else
