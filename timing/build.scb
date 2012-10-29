@@ -5,7 +5,7 @@
 --local f = io.open("/usr/lib/librt.a", "r") or io.open("/lib/librt.a", "r") or
 --   io.open("/usr/lib/librt.so", "r") or io.open("/lib/librt.so", "r")
 local libflags
-if(config_question("LINK_LIBRT", "Does your C compiler require you to link with -lrt to get clock_gettime?", "bool")) then
+if(config_question("LINK_LIBRT", "Does your C compiler require you to link with -lrt to get clock_gettime? If you are on Linux, the answer is YES. If you're on OSX or Windows, the answer is NO. For other OSes, try YES before NO.", "bool")) then
    libflags = "-lrt"
    --f:close()
 end
