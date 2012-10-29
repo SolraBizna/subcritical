@@ -1,5 +1,5 @@
 license Compatible
-version 0b7
+version 0c1
 
 class VorbisLoader : SoundLoader concrete
 class VorbisStream : SoundStream concrete
