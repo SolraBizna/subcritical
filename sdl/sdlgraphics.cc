@@ -546,12 +546,12 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
 }
 
 void SDLGraphics::SetCursor(Graphic* cursor, int hx, int hy) throw() {
-  if(this->cbak) {
+  if(this->cbak && (!cursor || cursor->width != cbak->width || cursor->height != cbak->height)) {
     delete this->cbak;
     this->cbak = NULL;
   }
   this->cursor = cursor;
-  if(cursor)
+  if(cursor && !this->cbak)
     this->cbak = new Graphic(cursor->width, cursor->height, layout);
   this->cursor_hx = hx;
   this->cursor_hy = hy;
