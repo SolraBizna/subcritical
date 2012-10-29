@@ -69,9 +69,10 @@ static inline float l3(float x) {
   else return (sinf(FPI * x) / (FPI * x)) * (sinf(FPI * x / 3.f) / (FPI * x / 3.f));
 }
 
-#define L3SINC_TABLE_SIZE 65
-#define L3SINC_TABLE_CENTER 32
-#define L3SINC_TABLE_EDGE 33
+#define L3SINC_BITS 9
+#define L3SINC_TABLE_CENTER (1<<L3SINC_BITS)
+#define L3SINC_TABLE_SIZE (L3SINC_TABLE_CENTER*2+1)
+#define L3SINC_TABLE_EDGE (L3SINC_TABLE_CENTER+1)
 #define L3SINC_TABLE_DIV ((L3SINC_TABLE_CENTER+1)/3.f)
 static float l3sincf_table[L3SINC_TABLE_SIZE];
 LUA_EXPORT int Init_effects(lua_State* L) {
@@ -123,26 +124,27 @@ SUBCRITICAL_UTILITY(ScaleBest)(lua_State* L) {
   rxwind = 1.f / xwind;
   rywind = 1.f / ywind;
   if(source->has_alpha) {
+    // this is a copy of the below with slight changes
     dest->has_alpha = true;
     dest->simple_alpha = false; // if it was simple before, it won't be soon
     for(int y = 0; y < dest->height; ++y) {
       Pixel*restrict d = dest->rows[y];
       int x = 0;
-      float ycenter = (float)(y + 0.5f) * yfact;
+      float ycenter = (float)(FastFloat(y) + 0.5f) * yfact;
       int uy = (int)(ycenter - (2.5f * ywind));
       if(uy < 0) uy = 0;
       int dy = (int)(ycenter + (3.5f * ywind));
       if(dy > source->height) dy = source->height;
-      float ys = (uy - ycenter + 0.5f) * rywind;
+      float ys = (FastFloat(uy) - ycenter + 0.5f) * rywind;
       int rem = dest->width;
       while(rem--) {
 	float rs = 0.f, gs = 0.f, bs = 0.f, as = 0.f, ts = 0.f, ta = 0.f, s;
-	float xcenter = (float)(x + 0.5f) * xfact;
+	float xcenter = (float)(FastFloat(x) + 0.5f) * xfact;
 	int lx = (int)(xcenter - (2.5f * xwind));
 	if(lx < 0) lx = 0;
 	int rx = (int)(xcenter + (3.5f * xwind));
 	if(rx > source->width) rx = source->width;
-	float xs = (lx - xcenter + 0.5f) * rxwind;
+	float xs = (FastFloat(lx) - xcenter + 0.5f) * rxwind;
 	int sub_x, sub_y;
 	float x_sinc, y_sinc;
 	for(sub_y = uy, y_sinc = ys; sub_y < dy; ++sub_y, y_sinc += rywind) {
@@ -154,9 +156,9 @@ SUBCRITICAL_UTILITY(ScaleBest)(lua_State* L) {
 	    s = sincy * L3(x_sinc);
 	    float af = ((*src >> ash) & 255) * s;
 	    as += af;
-	    rs += SrgbToLinear[(*src >> rsh) & 255] * af;
-	    gs += SrgbToLinear[(*src >> gsh) & 255] * af;
-	    bs += SrgbToLinear[(*src >> bsh) & 255] * af;
+	    rs += FastFloat(SrgbToLinear[(*src >> rsh) & 255]) * af;
+            gs += FastFloat(SrgbToLinear[(*src >> gsh) & 255]) * af;
+	    bs += FastFloat(SrgbToLinear[(*src >> bsh) & 255]) * af;
 	    ++src;
 	    ts += s;
 	    ta += af;
@@ -193,21 +195,22 @@ SUBCRITICAL_UTILITY(ScaleBest)(lua_State* L) {
     for(int y = 0; y < dest->height; ++y) {
       Pixel*restrict d = dest->rows[y];
       int x = 0;
-      float ycenter = (float)(y + 0.5f) * yfact;
+      float ycenter = (float)(FastFloat(y) + 0.5f) * yfact;
+      // start at 3.f and add half a pixel
       int uy = (int)(ycenter - (2.5f * ywind));
       if(uy < 0) uy = 0;
       int dy = (int)(ycenter + (3.5f * ywind));
       if(dy > source->height) dy = source->height;
-      float ys = (uy - ycenter + 0.5f) * rywind;
+      float ys = (FastFloat(uy) - ycenter + 0.5f) * rywind;
       int rem = dest->width;
       while(rem--) {
 	float rs = 0.f, gs = 0.f, bs = 0.f, ts = 0.f, s;
-	float xcenter = (float)(x + 0.5f) * xfact;
+	float xcenter = (float)(FastFloat(x) + 0.5f) * xfact;
 	int lx = (int)(xcenter - (2.5f * xwind));
 	if(lx < 0) lx = 0;
 	int rx = (int)(xcenter + (3.5f * xwind));
 	if(rx > source->width) rx = source->width;
-	float xs = (lx - xcenter + 0.5f) * rxwind;
+	float xs = (FastFloat(lx) - xcenter + 0.5f) * rxwind;
 	int sub_x, sub_y;
 	float x_sinc, y_sinc;
 	for(sub_y = uy, y_sinc = ys; sub_y < dy; ++sub_y, y_sinc += rywind) {
