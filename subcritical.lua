@@ -537,6 +537,14 @@ local scutil_mt = {
 setmetatable(scutil, scutil_mt)
 
 function subcritical.Construct(class, ...)
+   local override = os.getenv("SC_Override_"..class)
+   if override and #override > 0 then
+      if classes[override] then
+         return construct(classes[override], ...)
+      else
+         error("Environment-specified override for "..class.." references a class ("..override..") that doesn't exist!")
+      end
+   end
    if(not classes[class]) then error("Unknown class: "..class, 2) end
    if(not classes[class].tangible) then error("Class "..class.." is not tangible") end
    if(not classes[class].imps) then error("Class "..class.." has no available implementations.") end
