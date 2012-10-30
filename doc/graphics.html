@@ -125,12 +125,16 @@ end</pre></dd>
 <dl>
 <dt class="code">true_width, true_height = <i>some_width</i>, <i>some_height</i></dt>
 <dd>If specified, the GraphicsDevice will simulate a framebuffer of these dimensions, scaling up or down as needed for display. A retro-style game might set a true_width of 256 and a true_height of 224 for a Super Nintendo screen, for instance.</dd>
+<dd>All GraphicsDevice implementations that ship with SubCritical support this extension.</dd>
 <dt class="code">keep_aspect = true</dt>
 <dd>If true, and a <i class="code">true_width</i> and/or <i class="code">true_height</i> are specified, black borders may be added to avoid "squishing" of the video. You probably want to specify this, especially if the display <i class="code">width</i> and <i class="code">height</i> are zero.</dd>
+<dd>All GraphicsDevice implementations that ship with SubCritical support this extension.</dd>
 <dt class="code">smooth_filter = true</dt>
 <dd>If true, and a <i class="code">true_width</i> and/or <i class="code">true_height</i> are specified, try to use a smoother filter for magnification. If you are not dealing with a display <i class="code">width</i> and <i class="code">height</i> that are an integer multiple of the <i class="code">true_width</i> and <i class="code">true_height</i>, you probably want this.</dd>
+<dd>Under some circumstances, even with drivers that normally support it, <tt>smooth_filter</tt> can be ignored. Whether this means a "blocky" filter will always be used is driver-dependent. In summary, even in the presence of a specific value for this option, you never know exactly what filter is being used.</dd>
 <dt class="code">borderless = true</dt>
-<dd>If you are requesting a windowed <tt>GraphicsDevice</tt>, center the window on the screen and do not draw window decorations for it (if supported by the driver). This is intended for transient splash screens, and should not be used for anything else.</dd>
+<dd>If you are requesting a windowed <tt>GraphicsDevice</tt>, center the window on the screen and do not draw window decorations for it. This is intended for transient splash screens, and should not be used for anything else.</dd>
+<dd>All GraphicsDevice implementations that ship with SubCritical support this extension.</dd>
 </dl>
 <dd>Attempting to construct a new <tt>GraphicsDevice</tt> renders all previous ones unusable, even if the attempt fails. As of SubCritical version 0c1, you do not need to ensure that any previous ones are garbage collected before constructing a new one; however, be aware that any method calls on a previous <tt>GraphicsDevice</tt> will definitely crash.</dd>
 </dd>
