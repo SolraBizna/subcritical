@@ -196,12 +196,10 @@ class EXPORT SDLGraphics : public GraphicsDevice {
   int cursor_hx, cursor_hy;
   int cx, cy, old_cx, old_cy, old_cw, old_ch;
   static LOCAL Uint32 desktop_w, desktop_h;
-  static LOCAL SDL_Surface* current_screen;
 };
 
 LOCAL Uint32 SDLGraphics::desktop_w = 0;
 LOCAL Uint32 SDLGraphics::desktop_h = 0;
-LOCAL SDL_Surface* SDLGraphics::current_screen = NULL;
 
 struct LOCAL gamma_frob {
   Uint16 old_ramp[256], new_ramp[256];
@@ -330,7 +328,7 @@ static void _assertgl(const char* file, int line) {
 
 SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title, int true_width, int true_height, bool keep_aspect, bool smooth_filter, bool borderless) :
   doing_relmouse(false), doing_textok(false), cursor(NULL), cbak(NULL), old_cursor(NULL), cx(0), cy(0) {
-  current_screen = NULL;
+  SDLMan::current_screen = NULL;
   if(borderless) {
     // This is a destructive operation! Further windows will also be centered!
     // Unfortunately there is no SDL_unsetenv
@@ -542,7 +540,7 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
     glViewport(0, 0, screen->w, screen->h);
   }
 #endif
-  current_screen = screen;
+  SDLMan::current_screen = screen;
 }
 
 void SDLGraphics::SetCursor(Graphic* cursor, int hx, int hy) throw() {
@@ -986,7 +984,7 @@ SDLGraphics::~SDLGraphics() {
   if(target != screen)
     SDL_FreeSurface(target);
   // if SDLMan is ever made stackable, remove the following line
-  if(screen == current_screen)
+  if(screen == SDLMan::current_screen)
     SDLMan::QuitSubsystem(SDL_INIT_VIDEO);
 }
 

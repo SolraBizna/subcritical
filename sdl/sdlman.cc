@@ -24,6 +24,8 @@ static bool init_failed = false;
 static Uint32 init_systems = 0;
 static bool inited = false;
 
+SDL_Surface* SDLMan::current_screen = NULL;
+
 void SDLMan::InitializeSubsystem(Uint32 system) {
   if(init_failed) throw (const char*)"Initialization already failed once";
   if(!inited) {
@@ -42,6 +44,9 @@ void SDLMan::InitializeSubsystem(Uint32 system) {
 void SDLMan::QuitSubsystem(Uint32 system) {
   if(init_failed) throw (const char*)"Initialization already failed once";
   if(!inited) throw (const char*)"Not initialized in the first place";
+  if(system & SDL_INIT_VIDEO) {
+    current_screen = NULL;
+  }
   if(init_systems & system) {
     init_systems &= ~system;
     SDL_QuitSubSystem(system);
