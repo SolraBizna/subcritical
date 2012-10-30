@@ -392,6 +392,12 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
     initflags &= ~SDL_FULLSCREEN;
     screen = SDL_SetVideoMode(width, height, 32, initflags);
   }
+  /* Try again in with a frame if we were going without. (This is unlikely to
+     work, but it's worth trying.) */
+  if(!screen && (initflags & SDL_NOFRAME)) {
+    initflags &= ~SDL_NOFRAME;
+    screen = SDL_SetVideoMode(width, height, 32, initflags);
+  }
   /* If we still haven't gotten a screen, give up. */
   if(!screen) {
     SDLMan::QuitSubsystem(SDL_INIT_VIDEO);
