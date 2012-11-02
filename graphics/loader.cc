@@ -23,11 +23,31 @@
 using namespace SubCritical;
 
 int GraphicLoader::Lua_Load(lua_State* L) throw() {
-  int n, top = lua_gettop(L);
-  for(n = 1; n <= top; ++n) {
-    Load(GetPath(L, n))->Push(L);
+  int top = lua_gettop(L);
+  if(top > 1) {
+    static bool warned = false;
+    if(!warned) {
+      fprintf(stderr, "This game loads multiple graphics with the same Load call. This feature is deprecated and will be removed in a future version.\n");
+      warned = true;
+    }
+    for(int n = 1; n <= top; ++n) {
+      Load(GetPath(L, n))->Push(L);
+    }
+    return top;
   }
-  return top;
+  else {
+    const char* path = GetPath(L, 1);
+    Graphic* ret = Load(path);
+    if(!ret) {
+      lua_pushnil(L);
+      lua_pushfstring(L, "Unable to load graphic: %s", path);
+      return 2;
+    }
+    else {
+      ret->Push(L);
+      return 1;
+    }
+  }
 }
 
 static const struct ObjectMethod GLMethods[] = {

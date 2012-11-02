@@ -166,12 +166,11 @@ end</pre></dd>
 </dl>
 <h3 class="code"><a name="GraphicLoader" />GraphicLoader</h3>
 <p>An instance of <tt>GraphicLoader</tt> is poised to read from image files and give you nice, juicy <a href="#Graphic">Graphic</a>s to use in your game.</p>
-<p>You cannot instantiate a <tt>GraphicLoader</tt> directly, and should not try to <a href="subcritical.html#Construct">Construct</a> one, since you won't know what formats the returned GraphicLoader can load. Instead, you should <a href="subcritical.html#Construct">Construct</a> a specific loader (such as <a href="png.html#PNGLoader">PNGLoader</a>) and use that.</p>
+<p>You cannot instantiate a <tt>GraphicLoader</tt> directly, and should not try to <a class="code" href="subcritical.html#Construct">Construct</a> one, since you won't know what format(s) the returned GraphicLoader can load. Instead, you should <a class="code" href="subcritical.html#Construct">Construct</a> a specific loader (such as <a class="code" href="png.html#PNGLoader">PNGLoader</a>, <a class="code" href="jpeg.html#JPEGLoader">JPEGLoader</a>, or <a class="code" href="gif.html#GIFLoader">GIFLoader</a>) and use that.</p>
 <dl>
-<dt class="code"><a name="GraphicLoader:Load" /><i>graphic</i> = <i>loader</i>:Load(<i>path</i>)
-<i>graphic</i>,<i>othergraphic</i>,... = <i>loader</i>:Load(<i>path</i>, <i>otherpath</i>, ...)
-<i>graphic</i> = assert(<i>loader</i>:Load(<i>path</i>))</dt>
-<dd>Tries to load the graphic located at <i>path</i> (see <a href="subcritical.html#ConstructPath">SCPath</a>) in a format this GraphicLoader understands. If this graphic is important, you may want to assert it (as shown above).</dd>
+<dt class="code"><a name="GraphicLoader:Load" /><i>graphic</i>,<i>error</i> = <i>loader</i>:Load(<i>path</i>)
+<i>graphic</i>,<i>error</i> = assert(<i>loader</i>:Load(<i>path</i>))</dt>
+<dd>Tries to load the graphic located at <i class="code">path</i> (see <a class="code" href="subcritical.html#ConstructPath">SCPath</a>) in a format this GraphicLoader understands. If the graphic could not be loaded, returns <tt>nil</tt> and an <i class="code">error</i> message. The easiest way to handle this error is to assert it (as shown above).</dd>
 </dl>
 <h3 class="code"><a name="GraphicDumper" />GraphicDumper</h3>
 <p>An instance of <tt>GraphicDumper</tt> is poised to save the contents of your <a href="#Drawable">Drawable</a>s in some wild new image format.</p>

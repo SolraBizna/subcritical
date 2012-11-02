@@ -9,7 +9,7 @@
 <h1><tt>sound</tt> package</h1>
 <h2>License</h2>
 <p>The <tt>sound</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
-<p>A word on garbage collection: SubCritical sound devices are expected to do audio processing in a separate thread from the main thread. However, SubCritical (by design) does not provide thread synchronization primitives. Among other things, that means that the audio processing thread can not communicate with the Lua script or manipulate Lua objects. That includes keeping around references for sound buffers and the like. <b>You are responsible for not allowing sound effects, sound streams, etc. that are "in use" to be garbage collected.</b> This is as simple as keeping references around.</p>
+<p>A word on garbage collection: SubCritical sound devices are expected to do audio processing in a separate thread from the main thread. However, SubCritical (by design) does not provide thread synchronization primitives. Among other things, that means that the audio processing thread can not communicate with the Lua script or manipulate Lua objects. That includes keeping around references for sound buffers and the like. <b>You are responsible for not allowing sound effects, sound streams, etc. that are "in use" to be garbage collected.</b> This is as simple as keeping references around, such as in a global table.</p>
 <h2>Classes</h2>
 <h3 class="code"><a name="SoundBuffer" />SoundBuffer</h3>
 <p>An instance of <tt>SoundBuffer</tt> contains a snippet of audio data&mdash;usually a single sound effect.</p>
@@ -22,12 +22,11 @@
 <p><tt>MonoSoundBuffer</tt> and <tt>StereoSoundBuffer</tt> are <tt>SoundBuffer</tt>s containing single-channel and dual-channel audio data, respectively. (The distinction only exists to simplify some sound handling code. Lua code should never need to distinguish between them&mdash;they are interchangeable.)</p>
 <h3 class="code"><a name="SoundLoader" />SoundLoader</h3>
 <p><tt>SoundLoader</tt> is the audio analog of <a href="graphics.html#GraphicLoader" class="code">GraphicLoader</a>&mdash;it reads from audio files of various formats and transforms them into <a href="#SoundBuffer" class="code">SoundBuffer</a>s for your game's consumption.</p>
-<p>You cannot instantiate a <tt>SoundLoader</tt> directly, and should not try to <a href="subcritical.html#Construct">Construct</a> one, since you won't know what formats the returned SoundLoader can load. Instead, you should <a href="subcritical.html#Construct">Construct</a> a specific loader (such as <a href="vorbis.html#VorbisLoader">VorbisLoader</a>) and use that.</p>
+<p>You cannot instantiate a <tt>SoundLoader</tt> directly, and should not try to <a class="code" href="subcritical.html#Construct">Construct</a> one, since you won't know what formats the returned SoundLoader can load. Instead, you should <a class="code" href="subcritical.html#Construct">Construct</a> a specific loader (such as <a class="code" href="vorbis.html#VorbisLoader">VorbisLoader</a> or <a class="code" href="flac.html#FLACLoader">FLACLoader</a>) and use that.</p>
 <dl>
-<dt class="code"><a name="SoundLoader:Load" /><i>sound</i> = <i>loader</i>:Load(<i>path</i>)
-<i>sound</i>,<i>othersound</i>,... = <i>loader</i>:Load(<i>path</i>, <i>otherpath</i>, ...)
-<i>sound</i> = assert(<i>loader</i>:Load(<i>path</i>))</dt>
-<dd>Tries to load the sound located at <i>path</i> (see <a href="subcritical.html#ConstructPath">SCPath</a>) in a format this <tt>SoundLoader</tt> understands. If this sound is important, you may want to assert it as shown above, but a little fault tolerance here is probably in order. (Sound can add to a game's atmosphere greatly, but should lack thereof break the game?)</dd>
+<dt class="code"><a name="SoundLoader:Load" /><i>sound</i>,<i>error</i> = <i>loader</i>:Load(<i>path</i>)
+<i>sound</i>,<i>error</i> = assert(<i>loader</i>:Load(<i>path</i>))</dt>
+<dd>Tries to load the sound file located at <i class="code">path</i> (see <a class="code" href="subcritical.html#ConstructPath">SCPath</a>) in a format this SoundLoader understands. If the sound could not be loaded, returns <tt>nil</tt> and an <i class="code">error</i> message. The easiest way to handle this error is to assert it as shown above, but a little fault tolerance here is probably in order. (Sound can add to a game's atmosphere greatly, but should lack thereof break the game?)</dd>
 </dl>
 <h3 class="code"><a name="SoundMaster" />SoundMaster</h3>
 <p>A <tt>SoundMaster</tt> is a category of object that attaches to a slave <a href="#SoundStream" class="code">SoundStream</a> at construction time and... does something with it. What it does is specific to the implementing object.</p>
