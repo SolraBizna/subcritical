@@ -84,6 +84,18 @@ SubCritical,SC,sc = subcritical,subcritical,subcritical
 
 dprintf("SubCritical %03x is being loaded.", subcritical.version)
 
+if arg and not gamelicense then
+   local n = 0
+   while arg[n] do
+      if arg[n] == "-lsubcritical" then
+         printf("REPL mode activated, defaulting to Compatible license")
+         gamelicense = "Compatible"
+         break
+      end
+      n = n - 1
+   end
+end
+
 if(not gamelicense) then
    printf("WARNING: Game license not specified!\nAdd gamelicense = \"Compatible\", gamelicense = \"GPL\", or gamelicense = \"Incompatible\" to the top of your SCG file.")
 end
