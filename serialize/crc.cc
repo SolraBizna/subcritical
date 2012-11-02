@@ -52,7 +52,7 @@ SUBCRITICAL_UTILITY(QuickChecksum)(lua_State* L) {
     size_t len;
     const unsigned char* str = (const unsigned char*)luaL_checklstring(L, n, &len);
     uint32_t crc = update_crc(0, str, len);
-    unsigned char buf[4] = {crc >> 24, crc >> 16, crc >> 8, crc};
+    unsigned char buf[4] = {(unsigned char)(crc >> 24), (unsigned char)(crc >> 16), (unsigned char)(crc >> 8), (unsigned char)(crc)};
     lua_pushlstring(L, (char*)buf, 4);
   }
   return top;

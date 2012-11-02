@@ -596,10 +596,10 @@ void SDLGraphics::GL_Update() throw() {
   // precise enough to get things right, and some drivers LIE about the number
   // of buffers they provide
   GLushort rect[8] = {
-    fake_rectangle.x, fake_rectangle.y,
-    fake_rectangle.x+fake_rectangle.w, fake_rectangle.y,
-    fake_rectangle.x+fake_rectangle.w, fake_rectangle.y+fake_rectangle.h,
-    fake_rectangle.x, fake_rectangle.y+fake_rectangle.h,
+    (GLushort)(fake_rectangle.x), (GLushort)(fake_rectangle.y),
+    (GLushort)(fake_rectangle.x+fake_rectangle.w), (GLushort)(fake_rectangle.y),
+    (GLushort)(fake_rectangle.x+fake_rectangle.w), (GLushort)(fake_rectangle.y+fake_rectangle.h),
+    (GLushort)(fake_rectangle.x), (GLushort)(fake_rectangle.y+fake_rectangle.h),
   };
   glVertexPointer(2, GL_SHORT, 0, rect);
   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
