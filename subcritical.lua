@@ -470,10 +470,16 @@ do
       t[#t+1] = target.."?.lua"
       t[#t+1] = target.."?.scu"
       t[#t+1] = target.."?"..dirsep.."package.scu"
+      t[#t+1] = target.."lib"..dirsep.."?.lua"
+      t[#t+1] = target.."lib"..dirsep.."?.scu"
+      t[#t+1] = target.."lib"..dirsep.."?"..dirsep.."package.scu"
    else
       t[#t+1] = "?.lua"
       t[#t+1] = "?.scu"
       t[#t+1] = "?"..dirsep.."package.scu"
+      t[#t+1] = "lib"..dirsep.."?.lua"
+      t[#t+1] = "lib"..dirsep.."?.scu"
+      t[#t+1] = "lib"..dirsep.."?"..dirsep.."package.scu"
    end
    for dir in exec_path:gmatch("[^;]+") do
       if(dir:sub(-1,-1) ~= dirsep) then
