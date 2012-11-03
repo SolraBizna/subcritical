@@ -483,19 +483,19 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
     glEnable(GL_TEXTURE_RECTANGLE_ARB);
     switch(this->layout) {
     case FB_xRGB:
-      gltype = little_endian ? GL_UNSIGNED_INT_8_8_8_8 : GL_UNSIGNED_INT_8_8_8_8_REV;
+      gltype = GL_UNSIGNED_INT_8_8_8_8_REV;
       glformat = GL_BGRA;
       break;
     case FB_BGRx:
-      gltype = little_endian ? GL_UNSIGNED_INT_8_8_8_8_REV : GL_UNSIGNED_INT_8_8_8_8;
+      gltype = GL_UNSIGNED_INT_8_8_8_8;
       glformat = GL_BGRA;
       break;
     case FB_xBGR:
-      gltype = little_endian ? GL_UNSIGNED_INT_8_8_8_8 : GL_UNSIGNED_INT_8_8_8_8_REV;
+      gltype = GL_UNSIGNED_INT_8_8_8_8_REV;
       glformat = GL_RGBA;
       break;
     case FB_RGBx:
-      gltype = little_endian ? GL_UNSIGNED_INT_8_8_8_8_REV : GL_UNSIGNED_INT_8_8_8_8;
+      gltype = GL_UNSIGNED_INT_8_8_8_8;
       glformat = GL_RGBA;
       break;
     }
