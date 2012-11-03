@@ -706,7 +706,9 @@ static const struct ObjectMethod GDMethods[] = {
 PROTOCOL_IMP(GraphicsDevice, Drawable, GDMethods);
 
 SUBCRITICAL_CONSTRUCTOR(Graphic)(lua_State* L) {
-  Graphic* p = new Graphic(luaL_checkinteger(L,1), luaL_checkinteger(L, 2), FB_RGBx);
+  Drawable* d = NULL;
+  if(lua_gettop(L) >= 3) { d = lua_toobject(L, 3, Drawable); }
+  Graphic* p = new Graphic(luaL_checkinteger(L,1), luaL_checkinteger(L, 2), d ? d->layout : FB_RGBx);
   p->has_alpha = false;
   p->simple_alpha = true;
   p->Push(L);

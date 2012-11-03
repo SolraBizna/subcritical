@@ -114,8 +114,8 @@ end</pre></dd>
 <h3 class="code"><a name="Graphic" />Graphic : <a href="#Drawable">Drawable</a></h3>
 <p>A <tt>Graphic</tt> is a <a href="#Drawable" class="code">Drawable</a> whose lot in life is to eventually be blitted to other <a href="#Drawable" class="code">Drawable</a>s. See <a href="#Drawable:Blit" class="code">Drawable:Blit</a>.</p>
 <dl>
-<dt class="code"><i>graphic</i> = SubCritical.Construct("Graphic", <i>width</i>, <i>height</i>)</dt>
-<dd>Creates a new graphic with no alpha channel (but undefined data).</dd>
+<dt class="code"><i>graphic</i> = SubCritical.Construct("Graphic", <i>width</i>, <i>height</i>[, <i>drawable</i>])</dt>
+<dd>Creates a new graphic with no alpha channel (but undefined data). If a <a href="#Drawable" class="code">Drawable</a> is provided, the returned graphic will be optimized for blitting to/from that <a href="#Drawable" class="code">Drawable</a>. (This optimization happens automatically if needed, but it's faster if it's done at this step.)</dd>
 <dt class="code"><a name="Graphic:OptimizeFor" /><i>graphic</i>:OptimizeFor(<i>drawable</i>)</dt>
 <dd>If necessary, converts <i class="code">graphic</i>'s internal pixel format for fast blitting to <i class="code">drawable</i>. This is normally done automatically, but you can do the work ahead of time with this function if you so choose. (It's not worth it.)</dd>
 </dl>
