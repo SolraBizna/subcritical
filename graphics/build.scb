@@ -1,7 +1,7 @@
 -- -*- lua -*-
 
 targets = {
-   ["graphics"]={"graphics.cc","tables.cc","sci.cc","loader.cc","dumper.cc","primitives.cc","culling.cc",deps={"core"}},
+   ["graphics"]={"graphics.cc","tables.cc","sci.cc","loader.cc","dumper.cc","primitives.cc","culling.cc","blits.cc",deps={"core"}},
 }
 
 install = {

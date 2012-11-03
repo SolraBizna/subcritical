@@ -111,6 +111,13 @@ namespace SubCritical {
     void BlitT(const Drawable*restrict, int dx, int dy, lua_Number a) restrict throw();
     int Lua_Copy(lua_State* L) restrict throw();
     int Lua_Blit(lua_State* L) restrict throw();
+    void ModulateRect(const Drawable*restrict, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw();
+    void Modulate(const Drawable*restrict, int dx, int dy) restrict throw();
+    void ModulateRect2(const Drawable*restrict, int sx, int sy, int sw, int sh, int dx, int dy) restrict throw();
+    void Modulate2(const Drawable*restrict, int dx, int dy) restrict throw();
+    void ModulateRectF(const Drawable*restrict, int sx, int sy, int sw, int sh, int dx, int dy, lua_Number f) restrict throw();
+    void ModulateF(const Drawable*restrict, int dx, int dy, lua_Number f) restrict throw();
+    int Lua_Modulate(lua_State* L) restrict throw();
     void BlitFrisketRect(const Frisket*, int sx, int sy, int sw, int sh, int dx, int dy) throw();
     void BlitFrisket(const Frisket*, int dx, int dy) throw();
     int Lua_BlitFrisket(lua_State* L) throw();
