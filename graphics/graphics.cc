@@ -40,6 +40,8 @@ PROTOCOL_IMP(CoordArray, Object, CAMethods);
 static const struct ObjectMethod IAMethods[] = {
   METHOD("GetCount", &IndexArray::Lua_GetCount),
   METHOD("GetIndex", &IndexArray::Lua_GetIndex),
+  METHOD("GetRealCount", &IndexArray::Lua_GetRealCount),
+  METHOD("SetActiveRange", &IndexArray::Lua_SetActiveRange),
   NOMOREMETHODS(),
 };
 PROTOCOL_IMP(IndexArray, Object, IAMethods);
@@ -595,13 +597,27 @@ CoordArray::~CoordArray() {
   free((void*)coords);
 }
 
-IndexArray::IndexArray(size_t count) : count(count) {
+IndexArray::IndexArray(size_t count) : count(count), real_count(count) {
   indices = (Index*)calloc(sizeof(Index), count);
+  real_indices = indices;
 }
 
 int IndexArray::Lua_GetCount(lua_State* L) const throw() {
   lua_pushnumber(L, count);
   return 1;
+}
+
+int IndexArray::Lua_GetRealCount(lua_State* L) const throw() {
+  lua_pushnumber(L, real_count);
+  return 1;
+}
+
+int IndexArray::Lua_SetActiveRange(lua_State* L) throw() {
+  lua_Integer first = luaL_checkinteger(L, 1);
+  lua_Integer count = luaL_checkinteger(L, 2);
+  if(first < 0 || count < 0) return luaL_error(L, "both parameters to SetActiveRange must be positive");
+  SetActiveRange(first, count);
+  return 0;
 }
 
 int IndexArray::Lua_GetIndex(lua_State* L) const throw() {

@@ -52,9 +52,21 @@ namespace SubCritical {
     virtual ~IndexArray();
     int Lua_GetCount(lua_State* L) const throw();
     int Lua_GetIndex(lua_State* L) const throw();
+    inline size_t GetRealCount() const throw() { return real_count; }
+    int Lua_GetRealCount(lua_State* L) const throw();
+    inline void SetActiveRange(size_t first, size_t count) throw() {
+      if(first >= real_count) first = real_count; // count will be 0
+      if(count + first > real_count) count = real_count - first;
+      this->count = count;
+      this->indices = real_indices + first;
+    }
+    int Lua_SetActiveRange(lua_State* L) throw();
     PROTOCOL_PROTOTYPE();
     size_t count;
     Index* indices;
+  private:
+    size_t real_count;
+    Index* real_indices;
   };
   // Drivers are likely to be dependent on the exact order of members of this
   // enumeration.
