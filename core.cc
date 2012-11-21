@@ -200,6 +200,8 @@ void ObjectProtocol::GetMetatable(lua_State* L, Object* object) const throw() {
     lua_setfield(L, -2, "__index");
     lua_pushcfunction(L, FryObject);
     lua_setfield(L, -2, "__gc");
+    lua_pushstring(L, name);
+    lua_setfield(L, -2, "_type");
   }
 }
 
