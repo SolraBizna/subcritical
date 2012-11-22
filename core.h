@@ -27,6 +27,8 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#include <pthread.h>
+
 /* exactly the same as the check in helper.cc */
 #if LUA_VERSION_NUM < 502
 #error Lua version too old. Please install Lua 5.2 and make sure scbuild can find your headers.
@@ -66,6 +68,30 @@ extern "C" {
 #define LUA_EXPORT extern "C" EXPORT
 
 namespace SubCritical {
+  /* Don't use this unless you know you need it. If you don't KNOW you need it,
+     YOU DON'T NEED IT. */
+  /* TODO: Windows version of this class? */
+  class Mutex {
+  public:
+    inline Mutex() throw() {
+      pthread_mutex_init(&mutex, NULL);
+      /* Grrr... */
+      int oldprio;
+      pthread_mutex_setprioceiling(&mutex, 0, &oldprio);
+    }
+    inline ~Mutex() throw() {
+      pthread_mutex_destroy(&mutex);
+    }
+    inline void Lock() throw() {
+      /* We don't check errors, so this is not a kid's toy. */
+      pthread_mutex_lock(&mutex);
+    }
+    inline void Unlock() throw() {
+      pthread_mutex_unlock(&mutex);
+    }
+  private:
+    pthread_mutex_t mutex;
+  };
   extern EXPORT bool little_endian;
   EXPORT uint32_t Swap32(uint32_t);
   EXPORT uint32_t Swap32_BE(uint32_t); // won't swap if we're big-endian

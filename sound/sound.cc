@@ -102,14 +102,15 @@ struct SoundCommand {
 class LOCAL SubCritical::SoundChannel {
 public:
   inline bool QueueCommand(const struct SoundCommand& command) {
-    if(((back+1)&qmask) == front) return false;
-    q[back] = command;
+    if(((transact_back+1)&qmask) == front) return false;
+    q[transact_back] = command;
 #if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)
     __sync_synchronize();
 #else
 #warning There may be a tiny, tiny, tiny chance (roughly 200,000,000,000,000 to one) that attempting to queue a SoundCommand will crash. Add fence code here. If your compiler supports "Intel Itanium Processor-specific Application Binary Interface" section 7.4 (which can apply on all platforms, not just Itanium), just enable the code above this warning.
 #endif
-    back = (back + 1) & qmask;
+    transact_back = (transact_back + 1) & qmask;
+    if(!transacting) back = transact_back;
     return true;
   }
   inline void HandleNextCommand() {
@@ -318,14 +319,15 @@ public:
       MixOut(buffer, aux, frames);
     }
   }
-  SoundChannel(size_t qlen, uint32_t out_rate) throw(std::bad_alloc) : q((SoundCommand*)malloc(sizeof(SoundCommand)*qlen)),qlen(qlen),front(0),back(0),qmask(qlen-1),delay(-1),delay_error(0),out_rate(out_rate),target(NULL),target_type(SoundOpcode::Nop) {
+  SoundChannel(size_t qlen, uint32_t out_rate) throw(std::bad_alloc) : q((SoundCommand*)malloc(sizeof(SoundCommand)*qlen)),qlen(qlen),front(0),back(0),transact_back(0),qmask(qlen-1),transacting(false),delay(-1),delay_error(0),out_rate(out_rate),target(NULL),target_type(SoundOpcode::Nop) {
     for(int n = 0; n < NUM_CHANNEL_FLAGS; ++n) flags[n] = false;
     pan[0] = pan[3] = 4096;
     pan[1] = pan[2] = 0;
   }
   ~SoundChannel() { free((void*)q); }
   SoundCommand* q;
-  size_t qlen, front, back, qmask;
+  size_t qlen, front, back, transact_back, qmask;
+  bool transacting;
   PanMatrix pan;
   Frame irp_frame, tsugi_frame;
   uint32_t irp; // Q17.15
@@ -382,9 +384,11 @@ int SoundMixer::Lua_GetNumChannels(lua_State* L) throw() {
 void SoundMixer::Mix(Frame* buffer, size_t count) throw() {
   Frame aux[count];
   memset(buffer, count * sizeof(Frame), 0);
+  mutex.Lock();
   for(size_t ch = 0; ch < num_channels; ++ch) {
     channels[ch].MixOut(buffer, aux, count);
   }
+  mutex.Unlock();
 }
 
 static Pan ToPan(lua_State* L, int i) {
@@ -604,6 +608,45 @@ int SoundMixer::Lua_TestFlag(lua_State* L) {
   return 1;
 }
 
+void SoundMixer::BeginTransaction() throw() {
+  for(size_t ch = 0; ch < num_channels; ++ch) {
+    channels[ch].transacting = true;
+  }
+}
+
+void SoundMixer::CommitTransaction() throw() {
+  mutex.Lock();
+  for(size_t ch = 0; ch < num_channels; ++ch) {
+    channels[ch].transacting = false;
+    channels[ch].back = channels[ch].transact_back;
+  }
+  mutex.Unlock();
+}
+
+void SoundMixer::RollbackTransaction() throw() {
+  mutex.Lock();
+  for(size_t ch = 0; ch < num_channels; ++ch) {
+    channels[ch].transacting = false;
+    channels[ch].transact_back = channels[ch].back;
+  }
+  mutex.Unlock();
+}
+
+int SoundMixer::Lua_BeginTransaction(lua_State* L) {
+  BeginTransaction();
+  return 0;
+}
+
+int SoundMixer::Lua_CommitTransaction(lua_State* L) {
+  CommitTransaction();
+  return 0;
+}
+
+int SoundMixer::Lua_RollbackTransaction(lua_State* L) {
+  RollbackTransaction();
+  return 0;
+}
+
 SUBCRITICAL_CONSTRUCTOR(SoundMixer)(lua_State* L) {
   lua_Integer channels = luaL_checkinteger(L, 1);
   lua_Integer qlen = luaL_checkinteger(L, 2);
@@ -621,6 +664,9 @@ static const struct ObjectMethod SMMethods[] = {
   METHOD("Stop", &SoundMixer::Lua_Stop),
   METHOD("ClearQueue", &SoundMixer::Lua_ClearQueue),
   METHOD("TestFlag", &SoundMixer::Lua_TestFlag),
+  METHOD("BeginTransaction", &SoundMixer::Lua_BeginTransaction),
+  METHOD("CommitTransaction", &SoundMixer::Lua_CommitTransaction),
+  METHOD("RollbackTransaction", &SoundMixer::Lua_RollbackTransaction),
   NOMOREMETHODS(),
 };
 

@@ -89,6 +89,12 @@ flag4</dt>
 <dd>Note that this command can actually fail due to an overfull queue!</dd>
 <dt class="code"><i>flag</i> = <i>mixer</i>:TestFlag(<i>channel</i>, <i>flag</i>)</dt>
 <dd>Returns true if <i class="code">flag</i> is set in <i class="code">channel</i>, clearing it in the process.</dd>
+<dt class="code"><i>mixer</i>:BeginTransaction()
+<i>mixer</i>:CommitTransaction()
+<i>mixer</i>:RollbackTransaction()</dt>
+<dd>Call <tt>BeginTransaction</tt> and any subsequent <tt>ClearQueue</tt>, <tt>Play</tt>, or <tt>Stop</tt> calls will be deferred until a subsequent <tt>CommitTransaction</tt>, when they all apply as if they were called instantaneously (but in sequence). Use this when you need to apply multiple commands with very specific timing, especially when applying related commands to different channels.</dd>
+<dd><tt>RollbackTransaction</tt> discards all the <tt>ClearQueue</tt>, <tt>Play</tt>, and <tt>Stop</tt> calls that were made since the call <tt>BeginTransaction</tt>.</dd>
+<dd>Calling <tt>CommitTransaction</tt> or <tt>RollbackTransaction</tt> without a matching <tt>BeginTransaction</tt> has no effect. Calling <tt>BeginTransaction</tt> while a transaction is in progress has no effect.</dd>
 </dl>
 <h3 class="code"><a name="WAVLoader" />WAVLoader : <a href="#SoundLoader">SoundLoader</a></h3>
 <p><tt>WAVLoader</tt> reads Windows WAVE files. Only 1- and 2-channel 8- or 16-bit WAVEs are supported.</p>

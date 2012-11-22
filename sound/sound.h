@@ -81,10 +81,18 @@ namespace SubCritical {
     int Lua_Stop(lua_State* L);
     int Lua_ClearQueue(lua_State* L);
     int Lua_TestFlag(lua_State* L); // destructive test
+    void BeginTransaction() throw();
+    int Lua_BeginTransaction(lua_State* L);
+    void CommitTransaction() throw();
+    int Lua_CommitTransaction(lua_State* L);
+    void RollbackTransaction() throw();
+    int Lua_RollbackTransaction(lua_State* L);
   private:
     SoundChannel* channels;
     size_t num_channels;
     uint32_t rate;
+    /* ONLY locked during MixOut, CommitTransaction, and RollbackTransaction */
+    Mutex mutex;
   };
   class EXPORT SoundMaster : public Object {
   public:

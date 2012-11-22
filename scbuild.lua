@@ -237,13 +237,13 @@ else
    local gpp = os.getenv("CXX") or "g++"
    local gld = os.getenv("LD") or os.getenv("CXX") or "g++"
    local platforms = {
-      linux={cxx=gpp.." -Wall -Wno-pmf-conversions -fPIC -O2 "..lua_cflags.." -c", ld=gld.." -fPIC -O -shared", soext=".so"},
-      --cygwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -c", ld=gld.." -O -shared", soext=".dll"},
+      linux={cxx=gpp.." -pthread -Wall -Wno-pmf-conversions -fPIC -O2 "..lua_cflags.." -c", ld=gld.." -pthread -fPIC -O -shared", soext=".so"},
+      --cygwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -c", ld=gld.." -pthread -O -shared", soext=".dll"},
       --mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 "..lua_cflags.." -c", ld=gld.." -O -shared", soext=".dll"},
-      cygwin={cxx=gpp.." -g -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -c", ld=gld.." -O -shared", ld_libflags="-llua", soext=".scc"},
-      cygwin_mingw={cxx=gpp.." -mno-cygwin -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 "..lua_cflags.." -c", ld=gld.." -mno-cygwin -O -shared", ld_libflags="-llua", soext=".scc"},
-      mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O3 "..lua_cflags.." -c", ld=gld.." -O -L/usr/local/lib -shared -static-libgcc", ld_libflags="-llua", soext=".scc"},
-      darwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" "..gld.." -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
+      cygwin={cxx=gpp.." -pthread -g -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -c", ld=gld.." -pthread -O -shared", ld_libflags="-llua", soext=".scc"},
+      cygwin_mingw={cxx=gpp.." -pthread -mno-cygwin -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 "..lua_cflags.." -c", ld=gld.." -pthread -mno-cygwin -O -shared", ld_libflags="-llua", soext=".scc"},
+      mingw={cxx=gpp.." -pthread -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O3 "..lua_cflags.." -c", ld=gld.." -pthread -O -L/usr/local/lib -shared -static-libgcc", ld_libflags="-llua", soext=".scc"},
+      darwin={cxx=gpp.." -pthread -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" "..gld.." -pthread -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
    }
    local platform = platforms[osc]
    assert(platform)
