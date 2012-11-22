@@ -22,6 +22,7 @@
 #include "subcritical/graphics.h"
 
 #include <math.h>
+#include <stdlib.h>
 
 using namespace SubCritical;
 
@@ -62,7 +63,8 @@ SUBCRITICAL_UTILITY(ScaleFast)(lua_State* L) {
   return 1;
 }
 
-// ScaleBest was repurposed from sis4
+// ScaleBest was originally repurposed from sis4, but has nothing in common
+// with the old code now
 #define FPI 3.141592653589793f
 static inline float l3(float x) {
   if(x == 0.f) return 1.f;
@@ -84,8 +86,15 @@ LUA_EXPORT int Init_effects(lua_State* L) {
 //#define L3(x) l3sincf_table[(int)(x * L3SINC_TABLE_DIV + L3SINC_TABLE_CENTER)];
 static float L3(float x) {
   int y = (int)(x * L3SINC_TABLE_DIV + L3SINC_TABLE_CENTER);
-  // I don't understand why this was needed in SubCritical but not sis4.
-  return y >= L3SINC_TABLE_SIZE ? 0.f : l3sincf_table[y];
+  if(y >= L3SINC_TABLE_SIZE) {
+    fprintf(stderr, "L3 out of range (too high)\n");
+    abort();
+  }
+  else if(y < 0) {
+    fprintf(stderr, "L3 out of range (too low)\n");
+    abort();
+  }
+  return l3sincf_table[y];
 }
 
 static inline float FastFloat(uint32_t u) {
@@ -97,10 +106,87 @@ static inline float FastFloat(uint32_t u) {
   return x.f - 8388608.f;
 }
 
+struct LanczosKernel {
+  int32_t start;
+  uint32_t rem, count;
+  float* kernel, rtotal;
+  LanczosKernel() : start(0), rem(0), count(0), kernel(NULL) {}
+  LanczosKernel(int32_t dst, float fact, float inc, int32_t size) : kernel(NULL) {
+    Setup(dst, fact, inc, size);
+  }
+  void Setup(int32_t dst, float fact, float inc, int32_t size) {
+    float left, right;
+    int32_t stop;
+    if(fact > 1.f) {
+      left = (dst - 3.f) * fact - 0.5f;
+      right = (dst + 3.f) * fact - 0.5f;
+    }
+    else {
+      left = dst * fact - 3.5f;
+      right = dst * fact + 2.5f;
+    }
+    float fstart = left + 1.f;
+    if(fstart < 0.f) fstart = 0.f;
+    else fstart = floorf(fstart);
+    start = (int32_t)fstart;
+    stop = (int32_t)ceilf(right)-1;
+    if(stop >= size) stop = size - 1;
+    rem = (stop - start) + 1;
+    if(rem > count) {
+      count = rem;
+      kernel = (float*)realloc(kernel, sizeof(float)*count);
+      if(!kernel) abort(); // :|
+    }
+    float x = -3.f + inc * (fstart - left);
+    uint32_t rem = this->rem;
+    float* p = kernel;
+    float l;
+    rtotal = 0.f;
+    UNROLL(rem,
+           l = L3(x);
+           *p++ = l;
+           rtotal += l;
+           x += inc;);
+    rtotal = 1.f / rtotal;
+  }
+  ~LanczosKernel() {
+    if(kernel) {
+      free(kernel);
+      kernel = NULL;
+    }
+  }
+};
+
 SUBCRITICAL_UTILITY(ScaleBest)(lua_State* L) {
   Drawable*restrict source = lua_toobject(L, 1, Drawable);
-  Graphic*restrict dest = new Graphic(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3), source->layout);
+  Drawable*restrict dest;
+  int callback;
+  int rowskip = 0, rowskiprem = 0;
+  if(lua_gettop(L) >= 2 && lua_type(L, 2) == LUA_TUSERDATA) {
+    dest = lua_toobject(L, 2, Drawable);
+    if(dest->layout != source->layout) {
+      if(source->IsA("Graphic"))
+        ((Graphic*)source)->ChangeLayout(dest->layout);
+      else if(dest->IsA("Graphic"))
+        ((Graphic*)dest)->ChangeLayout(source->layout);
+      else
+        return luaL_error(L, "Attempt to ScaleBest between two non-morphable Drawables!");
+    }
+    callback = lua_gettop(L) >= 3 ? 3 : 0;
+    lua_pushvalue(L, 2);
+  }
+  else {
+    dest = new Graphic(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3), source->layout);
+    callback = lua_gettop(L) >= 4 ? 4 : 0;
+    dest->Push(L);
+  }
   if(source == dest) return luaL_error(L, "source and destination must differ");
+  if(callback) {
+    // yes callback!
+    rowskip = luaL_optinteger(L, callback + 1, 1);
+    if(rowskip < 1) rowskip = 1;
+    rowskiprem = rowskip;
+  }
   int rsh, gsh, bsh, ash;
   switch(source->layout) {
 #define DO_FBLAYOUT(layout, _rsh, _gsh, _bsh, _ash)			\
@@ -113,140 +199,158 @@ SUBCRITICAL_UTILITY(ScaleBest)(lua_State* L) {
 #undef DO_FBLAYOUT
   }
   float xfact, yfact;
-  float xwind, ywind;
-  float rxwind, rywind;
   xfact = (float)source->width / dest->width;
   yfact = (float)source->height / dest->height;
-  if(xfact <= 1.f) xwind = 1.f;
-  else xwind = xfact;
-  if(yfact <= 1.f) ywind = 1.f;
-  else ywind = yfact;
-  rxwind = 1.f / xwind;
-  rywind = 1.f / ywind;
+  float xinc, yinc;
+  if(xfact > 1.f) xinc = 1.f / xfact;
+  else xinc = 1.f;
+  if(yfact > 1.f) yinc = 1.f / yfact;
+  else yinc = 1.f;
+  /* the X kernels will be the same for each row */
+  LanczosKernel x_kernels[dest->width];
+  for(int32_t x = 0; x < dest->width; ++x) {
+    x_kernels[x].Setup(x, xfact, xinc, source->width);
+  }
+  // the Y kernel is constant across a given row
+  LanczosKernel y_kernel;
   if(source->has_alpha) {
-    // this is a copy of the below with slight changes
+    /* the alpha code is a slight modification of the below */
     dest->has_alpha = true;
     dest->simple_alpha = false; // if it was simple before, it won't be soon
+    float interbuf[source->width*4];
+    dest->has_alpha = false;
+    int source_pitch = (const uint8_t*)source->rows[1] - (const uint8_t*)source->rows[0];
     for(int y = 0; y < dest->height; ++y) {
-      Pixel*restrict d = dest->rows[y];
-      int x = 0;
-      float ycenter = (float)(FastFloat(y) + 0.5f) * yfact;
-      int uy = (int)(ycenter - (2.5f * ywind));
-      if(uy < 0) uy = 0;
-      int dy = (int)(ycenter + (3.5f * ywind));
-      if(dy > source->height) dy = source->height;
-      float ys = (FastFloat(uy) - ycenter + 0.5f) * rywind;
-      int rem = dest->width;
-      while(rem--) {
-	float rs = 0.f, gs = 0.f, bs = 0.f, as = 0.f, ts = 0.f, ta = 0.f, s;
-	float xcenter = (float)(FastFloat(x) + 0.5f) * xfact;
-	int lx = (int)(xcenter - (2.5f * xwind));
-	if(lx < 0) lx = 0;
-	int rx = (int)(xcenter + (3.5f * xwind));
-	if(rx > source->width) rx = source->width;
-	float xs = (FastFloat(lx) - xcenter + 0.5f) * rxwind;
-	int sub_x, sub_y;
-	float x_sinc, y_sinc;
-	for(sub_y = uy, y_sinc = ys; sub_y < dy; ++sub_y, y_sinc += rywind) {
-	  Pixel*restrict src = source->rows[sub_y] + lx;
-	  sub_x = lx;
-	  x_sinc = xs;
-	  float sincy = L3(y_sinc);
-	  for(; sub_x < rx; ++sub_x, x_sinc += rxwind) {
-	    s = sincy * L3(x_sinc);
-	    float af = ((*src >> ash) & 255) * s;
-	    as += af;
-	    rs += FastFloat(SrgbToLinear[(*src >> rsh) & 255]) * af;
-            gs += FastFloat(SrgbToLinear[(*src >> gsh) & 255]) * af;
-	    bs += FastFloat(SrgbToLinear[(*src >> bsh) & 255]) * af;
-	    ++src;
-	    ts += s;
-	    ta += af;
-	  }
-	}
+      float* fp = interbuf;
+      y_kernel.Setup(y, yfact, yinc, source->height);
+      for(int x = 0; x < source->width; ++x) {
+        float tr = 0.f, tg = 0.f, tb = 0.f, ta = 0.f;
+        float a;
+        const Pixel* srcp = source->rows[y_kernel.start] + x;
+        uint32_t rem = y_kernel.rem;
+        float* lp = y_kernel.kernel;
+        UNROLL_MORE(rem,
+                    a = FastFloat((*srcp >> ash) & 255) * *lp;
+                    ta += a;
+                    tr += FastFloat(SrgbToLinear[(*srcp >> rsh) & 255]) * a;
+                    tg += FastFloat(SrgbToLinear[(*srcp >> gsh) & 255]) * a;
+                    tb += FastFloat(SrgbToLinear[(*srcp >> bsh) & 255]) * a;
+                    ++lp;
+                    srcp = (const Pixel*)((const uint8_t*)srcp + source_pitch););
+        *fp++ = ta * y_kernel.rtotal;
+        if(ta != 0.f) {
 #ifdef __powerpc__
-        __asm__("fres %0,%1" : "=f"(ts) : "f"(ts));
-        __asm__("fres %0,%1" : "=f"(ta) : "f"(ta));
+          __asm__("fres %0,%1" : "=f"(ta) : "f"(ta));
 #else
-        ts = 1.f / ts;
-	ta = 1.f / ta;
+          ta = 1.f / ta;
 #endif
-	int32_t rr, rg, rb, ra;
-        rr = (int32_t)(rs * ta);
-        rg = (int32_t)(gs * ta);
-        rb = (int32_t)(bs * ta);
-	ra = (int32_t)(as * ts);
-        if(rr < 0) rr = 0;
-        else if(rr > 65535) rr = 65535;
-        if(rg < 0) rg = 0;
-        else if(rg > 65535) rg = 65535;
-        if(rb < 0) rb = 0;
-        else if(rb > 65535) rb = 65535;
-	if(ra < 0) ra = 0;
-	else if(ra > 255) ra = 255;
-        *d++ = (LinearToSrgb[rr] << rsh) | (LinearToSrgb[rg] << gsh) | (LinearToSrgb[rb] << bsh) | (ra << ash);
-	++x;
+        }
+        *fp++ = tr * ta;
+        *fp++ = tg * ta;
+        *fp++ = tb * ta;
+      }
+      Pixel*restrict dp = dest->rows[y];
+      for(int x = 0; x < dest->width; ++x) {
+        LanczosKernel& x_kernel = x_kernels[x];
+        float tr = 0.f, tg = 0.f, tb = 0.f, ta = 0.f;
+        uint32_t rem = x_kernel.rem;
+        float* lp = x_kernel.kernel;
+        float a;
+        fp = interbuf + x_kernel.start * 4;
+        UNROLL_MORE(rem,
+                    a = *fp++ * *lp;
+                    ta += a;
+                    tr += *fp++ * a;
+                    tg += *fp++ * a;
+                    tb += *fp++ * a;
+                    ++lp;);
+        int32_t ia;
+        ia = (int32_t)(ta * x_kernel.rtotal);
+        if(ta != 0.f) {
+#ifdef __powerpc__
+          __asm__("fres %0,%1" : "=f"(ta) : "f"(ta));
+#else
+          ta = 1.f / ta;
+#endif
+        }
+        if(ia < 0) ia = 0;
+        else if(ia > 255) ia = 255;
+        int32_t ir, ig, ib;
+        ir = (int32_t)(tr * ta);
+        ig = (int32_t)(tg * ta);
+        ib = (int32_t)(tb * ta);
+        if(ir < 0) ir = 0;
+        else if(ir > 65535) ir = 65535;
+        if(ig < 0) ig = 0;
+        else if(ig > 65535) ig = 65535;
+        if(ib < 0) ib = 0;
+        else if(ib > 65535) ib = 65535;
+        *dp++ = (LinearToSrgb[ir] << rsh) | (LinearToSrgb[ig] << gsh) | (LinearToSrgb[ib] << bsh) | (ia << ash);
       }
     }
   }
   else {
     Pixel mask = 0xFF << ash;
+    float interbuf[source->width*3];
     dest->has_alpha = false;
+    int source_pitch = (const uint8_t*)source->rows[1] - (const uint8_t*)source->rows[0];
     for(int y = 0; y < dest->height; ++y) {
-      Pixel*restrict d = dest->rows[y];
-      int x = 0;
-      float ycenter = (float)(FastFloat(y) + 0.5f) * yfact;
-      // start at 3.f and add half a pixel
-      int uy = (int)(ycenter - (2.5f * ywind));
-      if(uy < 0) uy = 0;
-      int dy = (int)(ycenter + (3.5f * ywind));
-      if(dy > source->height) dy = source->height;
-      float ys = (FastFloat(uy) - ycenter + 0.5f) * rywind;
-      int rem = dest->width;
-      while(rem--) {
-	float rs = 0.f, gs = 0.f, bs = 0.f, ts = 0.f, s;
-	float xcenter = (float)(FastFloat(x) + 0.5f) * xfact;
-	int lx = (int)(xcenter - (2.5f * xwind));
-	if(lx < 0) lx = 0;
-	int rx = (int)(xcenter + (3.5f * xwind));
-	if(rx > source->width) rx = source->width;
-	float xs = (FastFloat(lx) - xcenter + 0.5f) * rxwind;
-	int sub_x, sub_y;
-	float x_sinc, y_sinc;
-	for(sub_y = uy, y_sinc = ys; sub_y < dy; ++sub_y, y_sinc += rywind) {
-	  Pixel*restrict src = source->rows[sub_y] + lx;
-	  sub_x = lx;
-	  x_sinc = xs;
-	  float sincy = L3(y_sinc);
-	  for(; sub_x < rx; ++sub_x, x_sinc += rxwind) {
-	    s = sincy * L3(x_sinc);
-	    rs += FastFloat(SrgbToLinear[(*src >> rsh) & 255]) * s;
-	    gs += FastFloat(SrgbToLinear[(*src >> gsh) & 255]) * s;
-	    bs += FastFloat(SrgbToLinear[(*src >> bsh) & 255]) * s;
-	    ++src;
-	    ts += s;
-	  }
-	}
-#ifdef __powerpc__
-        __asm__("fres %0,%1" : "=f"(ts) : "f"(ts));
-#else
-        ts = 1.f / ts;
-#endif
-	int32_t rr, rg, rb;
-        rr = (int32_t)(rs * ts);
-        rg = (int32_t)(gs * ts);
-        rb = (int32_t)(bs * ts);
-        if(rr < 0) rr = 0;
-        else if(rr > 65535) rr = 65535;
-        if(rg < 0) rg = 0;
-        else if(rg > 65535) rg = 65535;
-        if(rb < 0) rb = 0;
-        else if(rb > 65535) rb = 65535;
-        *d++ = (LinearToSrgb[rr] << rsh) | (LinearToSrgb[rg] << gsh) | (LinearToSrgb[rb] << bsh) | mask;
-	++x;
+      float* fp = interbuf;
+      y_kernel.Setup(y, yfact, yinc, source->height);
+      for(int x = 0; x < source->width; ++x) {
+        float tr = 0.f, tg = 0.f, tb = 0.f;
+        const Pixel* srcp = source->rows[y_kernel.start] + x;
+        uint32_t rem = y_kernel.rem;
+        float* lp = y_kernel.kernel;
+        UNROLL_MORE(rem,
+                    tr += FastFloat(SrgbToLinear[(*srcp >> rsh) & 255]) * *lp;
+                    tg += FastFloat(SrgbToLinear[(*srcp >> gsh) & 255]) * *lp;
+                    tb += FastFloat(SrgbToLinear[(*srcp >> bsh) & 255]) * *lp;
+                    ++lp;
+                    srcp = (const Pixel*)((const uint8_t*)srcp + source_pitch););
+        *fp++ = tr * y_kernel.rtotal;
+        *fp++ = tg * y_kernel.rtotal;
+        *fp++ = tb * y_kernel.rtotal;
+      }
+      Pixel*restrict dp = dest->rows[y];
+      for(int x = 0; x < dest->width; ++x) {
+        LanczosKernel& x_kernel = x_kernels[x];
+        float tr = 0.f, tg = 0.f, tb = 0.f;
+        uint32_t rem = x_kernel.rem;
+        float* lp = x_kernel.kernel;
+        fp = interbuf + x_kernel.start * 3;
+        UNROLL_MORE(rem,
+                    tr += *fp++ * *lp;
+                    tg += *fp++ * *lp;
+                    tb += *fp++ * *lp;
+                    ++lp;);
+        int32_t ir, ig, ib;
+        ir = (int32_t)(tr * x_kernel.rtotal);
+        ig = (int32_t)(tg * x_kernel.rtotal);
+        ib = (int32_t)(tb * x_kernel.rtotal);
+        if(ir < 0) ir = 0;
+        else if(ir > 65535) ir = 65535;
+        if(ig < 0) ig = 0;
+        else if(ig > 65535) ig = 65535;
+        if(ib < 0) ib = 0;
+        else if(ib > 65535) ib = 65535;
+        *dp++ = (LinearToSrgb[ir] << rsh) | (LinearToSrgb[ig] << gsh) | (LinearToSrgb[ib] << bsh) | mask;
+      }
+      if(callback && --rowskiprem == 0) {
+        rowskiprem = rowskip;
+        // callback
+        lua_pushvalue(L, callback);
+        // callback, destination
+        lua_pushvalue(L, -2);
+        // callback, destination, row
+        lua_pushinteger(L, y);
+        // result
+        lua_call(L, 2, 1);
+        bool abort = lua_toboolean(L, -1);
+        lua_pop(L, 1);
+        if(abort) break;
       }
     }
   }
-  dest->Push(L);
   return 1;
 }
