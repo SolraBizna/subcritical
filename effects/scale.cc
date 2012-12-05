@@ -83,8 +83,8 @@ LUA_EXPORT int Init_effects(lua_State* L) {
   }
   return 0;
 }
-//#define L3(x) l3sincf_table[(int)(x * L3SINC_TABLE_DIV + L3SINC_TABLE_CENTER)];
-static float L3(float x) {
+#define L3(x) l3sincf_table[(int)(x * L3SINC_TABLE_DIV + L3SINC_TABLE_CENTER)];
+/*static float L3(float x) {
   int y = (int)(x * L3SINC_TABLE_DIV + L3SINC_TABLE_CENTER);
   if(y >= L3SINC_TABLE_SIZE) {
     fprintf(stderr, "L3 out of range (too high)\n");
@@ -95,7 +95,7 @@ static float L3(float x) {
     abort();
   }
   return l3sincf_table[y];
-}
+  }*/
 
 static inline float FastFloat(uint32_t u) {
   union {
@@ -146,8 +146,13 @@ struct LanczosKernel {
            l = L3(x);
            *p++ = l;
            rtotal += l;
-           x += inc;);
+           x += inc;
+           if(x >= 3.f) goto owari;);
+    /* shamefully, this is what I did instead of making sure I got the math
+       right */
+  owari:
     rtotal = 1.f / rtotal;
+    this->rem = p - kernel;
   }
   ~LanczosKernel() {
     if(kernel) {
