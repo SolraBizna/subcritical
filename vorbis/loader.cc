@@ -75,6 +75,7 @@ SoundBuffer* VorbisLoader::Load(const char* path) throw() {
     rem -= read;
     dest += read;
   }
+  ov_clear(&ogg);
   return ret;
 }
 
