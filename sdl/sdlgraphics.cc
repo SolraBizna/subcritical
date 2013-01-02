@@ -190,6 +190,7 @@ class EXPORT SDLGraphics : public GraphicsDevice {
 #if CAN_DO_OPENGL
   GLenum glformat, gltype;
   int clear_count;
+  bool do_srgb;
 #endif
   DirtyRects target_dirty, screen_dirty;
   Graphic* cursor, *cbak, *old_cursor;
@@ -308,6 +309,28 @@ static bool haveRectTexture() {
   const char* exts = (const char*)glGetString(GL_EXTENSIONS);
   if(!exts) return false;
   return CheckExtension("GL_ARB_texture_rectangle",exts) || CheckExtension("GL_EXT_texture_rectangle",exts); // don't go with GL_NV_texture_rectangle.
+}
+
+/* SDL's glext is ancient... */
+
+#ifndef GL_EXT_texture_sRGB
+#define GL_SRGB_EXT                       0x8C40
+#endif
+
+#ifndef GL_EXT_framebuffer_sRGB
+#define GL_FRAMEBUFFER_SRGB_EXT           0x8DB9
+#define GL_FRAMEBUFFER_SRGB_CAPABLE_EXT   0x8DBA
+#endif
+
+static bool haveSRGBExts() {
+  const char* exts = (const char*)glGetString(GL_EXTENSIONS);
+  if(!exts) return false;
+  if((CheckExtension("GL_ARB_framebuffer_sRGB",exts) || CheckExtension("GL_EXT_framebuffer_sRGB",exts)) && (CheckExtension("GL_ARB_texture_sRGB",exts) || CheckExtension("GL_EXT_texture_sRGB",exts))) {
+    GLboolean capable;
+    glGetBooleanv(GL_FRAMEBUFFER_SRGB_CAPABLE_EXT, &capable);
+    return capable;
+  }
+  else return false;
 }
 
 static void _assertgl(const char* file, int line) {
@@ -478,6 +501,8 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
   this->height = target->h;
 #if CAN_DO_OPENGL
   if(screen->flags & SDL_OPENGL) {
+    do_srgb = haveSRGBExts();
+    if(do_srgb) glEnable(GL_FRAMEBUFFER_SRGB_EXT);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, target->w);
     assertgl();
     glEnable(GL_TEXTURE_RECTANGLE_ARB);
@@ -499,8 +524,8 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
       glformat = GL_RGBA;
       break;
     }
-    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB,0,GL_RGB,target->w,target->h,
-                 0,glformat,gltype,NULL);
+    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, do_srgb ? GL_SRGB_EXT : GL_RGB,
+                 target->w, target->h, 0, glformat, gltype, NULL);
     assertgl();
     /* we should handle an error here, really; that just involves shuffling
        this function a bit. the reason I haven't done it is that I think the
@@ -630,8 +655,8 @@ void SDLGraphics::indirect_update(SDL_Surface* target, SDL_Rect& a,
     }
     assertgl();
     if(a.x == 0 && a.y == 0 && a.w == target->w && a.h == target->h)
-      glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB, target->w, target->h,
-                   0, glformat, gltype, target->pixels);
+      glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, do_srgb ? GL_SRGB_EXT : GL_RGB,
+                   target->w, target->h, 0, glformat, gltype, target->pixels);
     else
       glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, a.x, a.y, a.w, a.h,
                       glformat, gltype, rows[a.y] + a.x);
