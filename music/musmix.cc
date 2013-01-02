@@ -208,8 +208,8 @@ bool MusicMixer::TimeToBranch() throw() {
   if(active_banks == 0 || banks[0]->sample_count == 0 || banks[0]->IsSilenced()) return true;
   switch(queued_branch_type) {
   default:
-  case BranchNow:
-  case BranchOnFade: return true;
+  case BranchNow: return true;
+  case BranchOnFade: return false;
   case BranchOnEnd: return banks[0]->pos == 0;
   case BranchOnMeasure: return banks[0]->pos % banks[0]->interrupt_rate == 0;
   }
@@ -279,6 +279,7 @@ void MusicMixer::QueueSampleBank(SoundBuffer** samples, size_t sample_count,
                                  lua_Number _fade_in_time,
                                  bool delayed_branch,
                                  bool branch_at_boundary) {
+  if(branch_at_boundary) delayed_branch = false;
   lock.Lock();
   uint32_t fade_out_time = (uint32_t)(_fade_out_time * framerate);
   uint32_t fade_in_time = (uint32_t)(_fade_in_time * framerate);
@@ -288,7 +289,7 @@ void MusicMixer::QueueSampleBank(SoundBuffer** samples, size_t sample_count,
     /* if the bank was already fading to 0 at a faster rate, don't slow it */
     /* assert(n == 0 && bank.bank_volume.target_volume == 0) */
     if(bank.bank_volume.target_volume == 0 && bank.bank_change_time < fade_out_time) continue;
-    if(n != 0)
+    if(n != 0 || delayed_branch)
       bank.bank_volume.target_volume = 0;
     if(fade_out_time != bank.bank_change_time) {
       bank.bank_change_time = fade_out_time;
