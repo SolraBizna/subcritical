@@ -56,12 +56,14 @@ namespace SubCritical {
     void Fade(lua_Number target_volume, lua_Number change_time);
     void SetSampleFadeTime(lua_Number change_time);
     void SetSampleTargetVolumes(lua_Number* volumes, size_t volume_count);
+    void SetAllSampleTargetVolumes(lua_Number* volumes, size_t volume_count);
     uint32_t GetActiveBanks();
     inline bool IsBranchPending() const { return !!queued_bank; }
     int Lua_QueueSampleBank(lua_State* L) throw();
     int Lua_Fade(lua_State* L) throw();
     int Lua_SetSampleFadeTime(lua_State* L) throw();
     int Lua_SetSampleTargetVolumes(lua_State* L) throw();
+    int Lua_SetAllSampleTargetVolumes(lua_State* L) throw();
     int Lua_GetActiveBanks(lua_State* L) throw();
     int Lua_IsBranchPending(lua_State* L) throw();
   };

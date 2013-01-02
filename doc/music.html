@@ -12,7 +12,8 @@
 <p>The <tt>music</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
 <h2>Classes</h2>
 <h3 class="code"><a name="MusicMixer" />MusicMixer : <a href="sound.html#SoundStream">SoundStream</a></h3>
-<p>A <tt>MusicMixer</tt> is a powerful tool designed specifically for the task of dynamic music. At a given moment, it is playing zero or more "banks," which are made up of one or more samples. The volume of each bank can be controlled, faded, etc. individually, as can the volume of each sample in the bank; all samples are played in parallel. (Normally, you will be playing only one bank except during crossfades.)</p>
+<p>A <tt>MusicMixer</tt> is a powerful tool designed specifically for the task of dynamic music. At a given moment, it is playing zero or more "banks," which are made up of one or more samples. The volume of the active bank can be controlled, faded, etc., as can the volume of each sample in the bank; all samples are played in parallel. (Normally, you will be playing only one bank except during crossfades.)</p>
+<p><tt>MusicMixer</tt> works with both stereo and mono samples, but does not perform resampling, and ignores the samplerate of its samples. This may change in the future.</p>
 <dl>
 <dt class="code"><a name="MusicMixer:QueueSampleBank" /><i>music_mixer</i>:QueueSampleBank({[measure_count=1],<i>samples</i>...}, [{[fade_out_time=0.0],[fade_in_time=0.0],[delayed_branch=false],[branch_at_boundary=false]}])</dt>
 <dd>Puts a bank of <i class="code">samples</i> (which must be <a class="code" href="sound.html#SoundBuffer">SoundBuffers</a> and in particular cannot be <a class="code" href="sound.html#SoundStream">SoundStreams</a>) in line to become active. As a special case, an empty <i class="code">samples</i> table can be given, in which case "silence" is put in line. Only one bank may be in line at once, and attempting to queue a bank identical to one that is still "active" (for instance, because it hasn't faded out yet, or it was already queued once) results in immediate reactivation of the existing bank.</dD>
@@ -25,12 +26,17 @@
 <dt><a name="MusicMixer:Fade" /><i>music_mixer</i>:Fade(<i>target_volume</i>, <i>fade_time</i>)</dt>
 <dd>Sets the "front" bank to fade to the <i class="code">target_volume</i>. <i class="code">fade_time</i> is a rate of change, expressed as how long the volume should take to fade from zero to full. Fades and volumes are linear.</dd>
 <dt><a name="MusicMixer:SetSampleFadeTime" /><i>music_mixer</i>:SetSampleFadeTime(<i>fade_time</i>)</dt>
-<dd>Sets the rate of change of the volume levels of samples in the "front" bank. See <a href="#MusicMixer:Fade">Fade</a> for a description of <i class="code">fade_time</i>.</dD>
+<dd>Sets the rate of change of the volume levels of samples in the "front" bank. See <a href="#MusicMixer:Fade">Fade</a> for a description of <i class="code">fade_time</i>.</dd>
+<dd>It is intended that you call this function immediately after queueing a new sample bank, to set the fade rate to something applicable to the song in question.</dd>
 <dt><a name="MusicMixer:SetSampleTargetVolumes" /><i>music_mixer</i>:SetSampleTargetVolumes()<br />
 <i>music_mixer</i>:SetSampleTargetVolumes(<i>volumes</i>...)<br />
 <i>music_mixer</i>:SetSampleTargetVolumes({<i>volumes</i>...})</dt>
 <dd>Set the target volumes of each sample in the "front" bank. If the volume of the first sample is unspecified, it defaults to 1. Other samples default to 0.</dd>
 <dd>See <a href="MusicMixer:SetSampleFadeTime">SetSampleFadeTime</a> for a way to change how fast the new volumes take effect.</dd>
+<dt><a name="MusicMixer:SetAllSampleTargetVolumes" /><i>music_mixer</i>:SetAllSampleTargetVolumes()<br />
+<i>music_mixer</i>:SetAllSampleTargetVolumes(<i>volumes</i>...)<br />
+<i>music_mixer</i>:SetAllSampleTargetVolumes({<i>volumes</i>...})</dt>
+<dd>As <a class="code" href="#SetSampleTargetVolumes">SetSampleTargetVolumes</a>, but applies to <b>all</b> banks, including banks that are fading or waiting for a branch. There is no corresponding <tt>SetAllSampleFadeTimes</tt>.</dd>
 <dt><a name="MusicMixer:GetActiveBanks"><i>active_banks</i> = <i>music_mixer</i>:GetActiveBanks()</dt>
 <dd>Returns the number of banks that are currently active, including any queued bank that may not technically have become active yet. If this is 0, absolutely no samples are playing or will be played.</dd>
 <dt><a name="MusicMixer:IsBranchQueued"><i>is_branch_queued</i> = <i>music_mixer</i>:IsBranchQueued()</dt>

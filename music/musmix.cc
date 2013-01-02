@@ -136,6 +136,15 @@ struct SubCritical::SampleBank {
   inline bool IsSilenced() const throw() {
     return bank_volume.cur_volume == 0 && bank_volume.target_volume == 0;
   }
+  void ApplyVolumes(lua_Number* volumes, size_t volume_count) {
+    if(volume_count > sample_count) volume_count = sample_count;
+    for(unsigned n = 0; n < volume_count; ++n) {
+      sample_volumes[n].target_volume = Volume2Q(volumes[n]);
+    }
+    for(unsigned n = volume_count; n < sample_count; ++n) {
+      sample_volumes[n].target_volume = 0;
+    }
+  }
 };
 
 size_t SampleBank::Mix(Frame* buffer, size_t count, uint32_t interrupt) throw() {
@@ -375,15 +384,17 @@ void MusicMixer::SetSampleFadeTime(lua_Number _change_time) {
 
 void MusicMixer::SetSampleTargetVolumes(lua_Number* volumes, size_t volume_count) {
   lock.Lock();
-  if(front_bank) {
-    if(volume_count > front_bank->sample_count) volume_count = front_bank->sample_count;
-    for(unsigned n = 0; n < volume_count; ++n) {
-      front_bank->sample_volumes[n].target_volume = Volume2Q(volumes[n]);
-    }
-    for(unsigned n = volume_count; n < front_bank->sample_count; ++n) {
-      front_bank->sample_volumes[n].target_volume = 0;
-    }
-  }
+  if(front_bank)
+    front_bank->ApplyVolumes(volumes, volume_count);
+  lock.Unlock();
+}
+
+void MusicMixer::SetAllSampleTargetVolumes(lua_Number* volumes, size_t volume_count) {
+  lock.Lock();
+  if(queued_bank)
+    queued_bank->ApplyVolumes(volumes, volume_count);
+  for(unsigned n = 0; n < active_banks; ++n)
+    banks[n]->ApplyVolumes(volumes, volume_count);
   lock.Unlock();
 }
 
@@ -506,6 +517,35 @@ int MusicMixer::Lua_SetSampleTargetVolumes(lua_State* L) throw() {
   return 0;
 }
 
+int MusicMixer::Lua_SetAllSampleTargetVolumes(lua_State* L) throw() {
+  unsigned count = lua_gettop(L);
+  if(count == 1) {
+    if(lua_istable(L, 1)) {
+      count = lua_rawlen(L, 1);
+      lua_Number targets[count];
+      for(unsigned i = 0; i < count; ++i) {
+        lua_pushinteger(L, i+1);
+        lua_gettable(L, 1);
+        targets[i] = luaL_checknumber(L, -1);
+        lua_settop(L, 1);
+      }
+      SetAllSampleTargetVolumes(targets, count);
+    }
+    else {
+      lua_Number target = luaL_checknumber(L, 1);
+      SetAllSampleTargetVolumes(&target, 1);
+    }
+  }
+  else {
+    lua_Number targets[count];
+    for(unsigned i = 0; i < count; ++i) {
+      targets[i] = luaL_checknumber(L, i+1);
+    }
+    SetAllSampleTargetVolumes(targets, count);
+  }
+  return 0;
+}
+
 int MusicMixer::Lua_GetActiveBanks(lua_State* L) throw() {
   lua_pushinteger(L, GetActiveBanks());
   return 1;
@@ -517,14 +557,11 @@ int MusicMixer::Lua_IsBranchPending(lua_State* L) throw() {
 }
 
 static const struct ObjectMethod MMMethods[] = {
-  METHOD("QueueSample", &MusicMixer::Lua_QueueSampleBank),
   METHOD("QueueSampleBank", &MusicMixer::Lua_QueueSampleBank),
   METHOD("Fade", &MusicMixer::Lua_Fade),
   METHOD("SetSampleFadeTime", &MusicMixer::Lua_SetSampleFadeTime),
-  METHOD("SetSampleVolume", &MusicMixer::Lua_SetSampleTargetVolumes),
-  METHOD("SetSampleVolumes", &MusicMixer::Lua_SetSampleTargetVolumes),
-  METHOD("SetSampleTargetVolume", &MusicMixer::Lua_SetSampleTargetVolumes),
   METHOD("SetSampleTargetVolumes", &MusicMixer::Lua_SetSampleTargetVolumes),
+  METHOD("SetAllSampleTargetVolumes", &MusicMixer::Lua_SetAllSampleTargetVolumes),
   METHOD("GetActiveBanks", &MusicMixer::Lua_GetActiveBanks),
   METHOD("IsBranchPending", &MusicMixer::Lua_IsBranchPending),
   NOMOREMETHODS(),
