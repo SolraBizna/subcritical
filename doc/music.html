@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>music</tt> package</h1>
+<p>A word on garbage collection: SubCritical sound devices are expected to do audio processing in a separate thread from the main thread. However, SubCritical (by design) does not provide thread synchronization primitives. Among other things, that means that the audio processing thread can not communicate with the Lua script or manipulate Lua objects. That includes keeping around references for sound buffers and the like. <b>You are responsible for not allowing sound effects, sound streams, etc. that are "in use" to be garbage collected.</b> This is as simple as keeping references around, such as in a global table.</p>
+<h2>License</h2>
+<p>The <tt>music</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Classes</h2>
+<h3 class="code"><a name="MusicMixer" />MusicMixer : <a href="sound.html#SoundStream">SoundStream</a></h3>
+<p>A <tt>MusicMixer</tt> is a powerful tool designed specifically for the task of dynamic music. At a given moment, it is playing zero or more "banks," which are made up of one or more samples. The volume of each bank can be controlled, faded, etc. individually, as can the volume of each sample in the bank; all samples are played in parallel. (Normally, you will be playing only one bank except during crossfades.)</p>
+<dl>
+<dt class="code"><a name="MusicMixer:QueueSampleBank" /><i>music_mixer</i>:QueueSampleBank({[measure_count=1],<i>samples</i>...}, [{[fade_out_time=0.0],[fade_in_time=0.0],[delayed_branch=false],[branch_at_boundary=false]}])</dt>
+<dd>Puts a bank of <i class="code">samples</i> (which must be <a class="code" href="sound.html#SoundBuffer">SoundBuffers</a> and in particular cannot be <a class="code" href="sound.html#SoundStream">SoundStreams</a>) in line to become active. As a special case, an empty <i class="code">samples</i> table can be given, in which case "silence" is put in line. Only one bank may be in line at once, and attempting to queue a bank identical to one that is still "active" (for instance, because it hasn't faded out yet, or it was already queued once) results in immediate reactivation of the existing bank.</dD>
+<dd><i class="code">measure_count</i> (which must be an integer >= 1) gives the number of measures in the first sample. This information is used in combination with a later <i class="code">branch_at_boundary</i>. The default value of <tt>1</tt> means that a later <i class="code">branch_at_boundary</i> will only branch at the end of the sample.</dd>
+<dd>If <i class="code">fade_out_time</i> is non-zero, it is as if all currently-active banks called <tt><a href="#MusicMixer:Fade">Fade</a>(0, <i>fade_out_time</i>)</tt>. If it is zero, all active banks will be terminated immediately.</dd>
+<dd>If <i class="code">fade_in_time</i> is non-zero, the new bank starts at zero volume and the equivalent of <tt><a href="#MusicMixer:Fade">Fade</a>(1, <i>fade_in_time</i>)</tt> is done. If it's zero, the bank starts at full volume.</dd>
+<dd>If <i class="code">delayed_branch</i> is <tt>true</tt>, the new bank will not become active until all existing banks finish fading out. Otherwise, the new bank will become active immediately, while any other banks fade out.</dd>
+<dd>If <i class="code">branch_at_boundary</i> is <tt>true</tt>, the new bank will not become active until the current active bank hits a measure boundary, and <i class="code">fade_out_time</i> will not be applied until this point either. This overrides the value of <i class="code">delayed_branch</i>. Timing of this branch is done based on the first sample in the bank.</dd>
+<dd>Regardless of the above, the volume of the first sample in the bank defaults to full (1), the volume of any other samples defaults to zero, and the bank immediately becomes the "front" bank.</dd>
+<dt><a name="MusicMixer:Fade" /><i>music_mixer</i>:Fade(<i>target_volume</i>, <i>fade_time</i>)</dt>
+<dd>Sets the "front" bank to fade to the <i class="code">target_volume</i>. <i class="code">fade_time</i> is a rate of change, expressed as how long the volume should take to fade from zero to full. Fades and volumes are linear.</dd>
+<dt><a name="MusicMixer:SetSampleFadeTime" /><i>music_mixer</i>:SetSampleFadeTime(<i>fade_time</i>)</dt>
+<dd>Sets the rate of change of the volume levels of samples in the "front" bank. See <a href="#MusicMixer:Fade">Fade</a> for a description of <i class="code">fade_time</i>.</dD>
+<dt><a name="MusicMixer:SetSampleTargetVolumes" /><i>music_mixer</i>:SetSampleTargetVolumes()<br />
+<i>music_mixer</i>:SetSampleTargetVolumes(<i>volumes</i>...)<br />
+<i>music_mixer</i>:SetSampleTargetVolumes({<i>volumes</i>...})</dt>
+<dd>Set the target volumes of each sample in the "front" bank. If the volume of the first sample is unspecified, it defaults to 1. Other samples default to 0.</dd>
+<dd>See <a href="MusicMixer:SetSampleFadeTime">SetSampleFadeTime</a> for a way to change how fast the new volumes take effect.</dd>
+<dt><a name="MusicMixer:GetActiveBanks"><i>active_banks</i> = <i>music_mixer</i>:GetActiveBanks()</dt>
+<dd>Returns the number of banks that are currently active, including any queued bank that may not technically have become active yet. If this is 0, absolutely no samples are playing or will be played.</dd>
+<dt><a name="MusicMixer:IsBranchQueued"><i>is_branch_queued</i> = <i>music_mixer</i>:IsBranchQueued()</dt>
+<dd>Returns <tt>true</tt> if there is a queued sample bank that has not yet become active (such as if it is waiting for a fade to complete).</dd>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

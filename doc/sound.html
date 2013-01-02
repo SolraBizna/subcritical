@@ -7,9 +7,9 @@
 </head>
 <body>
 <h1><tt>sound</tt> package</h1>
+<p>A word on garbage collection: SubCritical sound devices are expected to do audio processing in a separate thread from the main thread. However, SubCritical (by design) does not provide thread synchronization primitives. Among other things, that means that the audio processing thread can not communicate with the Lua script or manipulate Lua objects. That includes keeping around references for sound buffers and the like. <b>You are responsible for not allowing sound effects, sound streams, etc. that are "in use" to be garbage collected.</b> This is as simple as keeping references around, such as in a global table.</p>
 <h2>License</h2>
 <p>The <tt>sound</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
-<p>A word on garbage collection: SubCritical sound devices are expected to do audio processing in a separate thread from the main thread. However, SubCritical (by design) does not provide thread synchronization primitives. Among other things, that means that the audio processing thread can not communicate with the Lua script or manipulate Lua objects. That includes keeping around references for sound buffers and the like. <b>You are responsible for not allowing sound effects, sound streams, etc. that are "in use" to be garbage collected.</b> This is as simple as keeping references around, such as in a global table.</p>
 <h2>Classes</h2>
 <h3 class="code"><a name="SoundBuffer" />SoundBuffer</h3>
 <p>An instance of <tt>SoundBuffer</tt> contains a snippet of audio data&mdash;usually a single sound effect.</p>
@@ -47,6 +47,7 @@
 </dl>
 <h3 class="code"><a name="SoundMixer" />SoundMixer : <a href="#SoundStream" class="code">SoundStream</a></h3>
 <p><tt>SoundMixer</tt> is where the action is. It's very powerful. It has a fixed number of sound channels, each with a fixed-size command queue. At a given moment, a channel can be playing a <a href="#SoundBuffer" class="code">SoundBuffer</a>, a <a href="#SoundStream" class="code">SoundStream</a>, or silence. It can play buffers/streams at different rates (which can be changed after the play command is issued), and provides full control over both volume and stereo panning with pan matrices.</p>
+<p>If you intend to implement background music, consider applying <tt>SoundMixer</tt> in combination with a <a class="code" href="music.html#MusicMixer">MusicMixer</a>. <a class="code" href="music.html#MusicMixer">MusicMixer</a> simplifies crossfading and playlists, and in particular was designed to support dynamic music.</p>
 <dl>
 <dt class="code"><i>mixer</i> = SubCritical.Construct("SoundMixer", <i>channels</i>, <i>qlen</i>, <i>samplerate</i>)</dt>
 <dd>Creates a <tt>SoundMixer</tt> with the given number of channels, channel command queue depth, and sample rate. At a given time, only <i class="code">qlen</i>-1 unexecuted commands can be in a channel's command queue.</dd>

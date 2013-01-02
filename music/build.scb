@@ -1,0 +1,2 @@
+targets = {music={"musmix.cc", deps={"core","sound"}}}
+install = {packages={"music"}, headers={"music.h"}}
