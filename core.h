@@ -43,8 +43,8 @@ extern "C" {
 #endif
 
 #if NO_DUFF
-#define UNROLL(rem, code) do { while(rem >= 4) { rem -= 4; {code;} code; {code;} code; } switch(rem) { case 3: {code;} case 2: {code;} case 1: {code;} default: break; } } while(0)
-#define UNROLL_MORE(rem, code) do { while(rem >= 8) { rem -= 8; {code;} code; {code;} code; {code;} code; {code;} code; } switch(rem) { case 7: {code;} case 6: {code;} case 5: {code;} case 4: {code;} case 3: {code;} case 2: {code;} case 1: {code;} default: break; } } while(0)
+#define UNROLL(rem, code) do { while(rem >= 4) { rem -= 4; {code;} {code;} {code;} {code;} } switch(rem) { case 3: {code;} case 2: {code;} case 1: {code;} default: break; } } while(0)
+#define UNROLL_MORE(rem, code) do { while(rem >= 8) { rem -= 8; {code;} {code;} {code;} {code;} {code;} {code;} {code;} {code;} } switch(rem) { case 7: {code;} case 6: {code;} case 5: {code;} case 4: {code;} case 3: {code;} case 2: {code;} case 1: {code;} default: break; } } while(0)
 #else
 #define UNROLL(rem, code) do { int _n = ((rem) + 3) >> 2; switch((rem)&3) { case 0: do { {code;} case 3: {code;} case 2: {code;} case 1: {code;} } while(--_n > 0); } } while(0)
 #define UNROLL_MORE(rem, code) do { int _n = ((rem) + 7) >> 3; switch((rem)&7) { case 0: do { {code;} case 7: {code;} case 6: {code;} case 5: {code;} case 4: {code;} case 3: {code;} case 2: {code;} case 1: {code;} } while(--_n > 0); } } while(0)
