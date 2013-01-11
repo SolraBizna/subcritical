@@ -571,7 +571,7 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
     glViewport(0, 0, screen->w, screen->h);
   }
 #endif
-  SDLMan::current_screen = screen;
+  SDLMan::current_screen = this;
 }
 
 void SDLGraphics::SetCursor(Graphic* cursor, int hx, int hy) throw() {
@@ -1015,7 +1015,7 @@ SDLGraphics::~SDLGraphics() {
   if(target != screen)
     SDL_FreeSurface(target);
   // if SDLMan is ever made stackable, remove the following line
-  if(screen == SDLMan::current_screen)
+  if(this == SDLMan::current_screen)
     SDLMan::QuitSubsystem(SDL_INIT_VIDEO);
 }
 

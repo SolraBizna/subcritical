@@ -28,7 +28,7 @@
 namespace SDLMan {
   EXPORT void InitializeSubsystem(Uint32 system);
   EXPORT void QuitSubsystem(Uint32 system);
-  EXPORT extern SDL_Surface* current_screen;
+  EXPORT extern void* current_screen;
 }
 
 #endif
