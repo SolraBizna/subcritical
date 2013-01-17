@@ -165,7 +165,8 @@ struct LOCAL DirtyRects {
 class EXPORT SDLGraphics : public GraphicsDevice {
  public:
   SDLGraphics(int width, int height, bool windowed, const char* title,
-              int true_width, int true_height, bool keep_aspect, bool smooth_filter, bool borderless);
+              int true_width, int true_height, bool keep_aspect,
+              bool smooth_filter, bool borderless, bool vsync);
   virtual ~SDLGraphics();
   virtual void Update(int x, int y, int w, int h) throw();
   virtual void UpdateAll() throw();
@@ -349,7 +350,7 @@ static void _assertgl(const char* file, int line) {
 #define assertgl() _assertgl(__FILE__, __LINE__)
 #endif
 
-SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title, int true_width, int true_height, bool keep_aspect, bool smooth_filter, bool borderless) :
+SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title, int true_width, int true_height, bool keep_aspect, bool smooth_filter, bool borderless, bool vsync) :
   doing_relmouse(false), doing_textok(false), cursor(NULL), cbak(NULL), old_cursor(NULL), cx(0), cy(0) {
   SDLMan::current_screen = NULL;
   if(borderless) {
@@ -371,6 +372,8 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
   }
   if(width == 0) width = desktop_w ? desktop_w : 640;
   if(height == 0) height = desktop_h ? desktop_h : 480;
+  if(true_width == 0) true_width = width;
+  if(true_height == 0) true_height = height;
   Uint32 initflags = (windowed ? 0 : SDL_FULLSCREEN) | (borderless ? SDL_NOFRAME : 0);
   /* We will attempt upscaling only if requested. */
   bool tryFakeDoubling = false;
@@ -378,17 +381,20 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
       (true_height != 0 && true_height != height)))
     tryFakeDoubling = true;
 #if CAN_DO_OPENGL
-  /* Use OpenGL if upscaling is requested AND it is allowed. */
-  if(tryFakeDoubling && !getenv("NO_OPENGL")) {
+  /* Use OpenGL if upscaling OR vsync is requested ONLY IF it is allowed. */
+  if((vsync || tryFakeDoubling) && !getenv("NO_OPENGL")) {
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     if(!getenv("ALLOW_SOFTWARE_OPENGL"))
       SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    if(vsync)
+      SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
     initflags |= SDL_OPENGL;
   }
 #endif
   screen = SDL_SetVideoMode(width, height, 32, initflags);
+#if CAN_DO_OPENGL
   /* Try again without OpenGL IF:
    * . Initializing with OpenGL failed.
    *  OR
@@ -396,13 +402,11 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
    *   not support rectangular textures.
    */
   if((!screen && (initflags & SDL_OPENGL))
-#if CAN_DO_OPENGL
-     || ((initflags & SDL_OPENGL) && !haveRectTexture())
-#endif
-     ) {
+     || ((initflags & SDL_OPENGL) && !haveRectTexture())) {
     initflags &= ~SDL_OPENGL;
     screen = SDL_SetVideoMode(width, height, 32, initflags);
   }
+#endif
   /* Try again without hardware surfaces, if necessary. Currently, hardware
      surfaces are never requested. */
   if(!screen && (initflags & SDL_HWSURFACE)) {
@@ -1024,7 +1028,7 @@ PROTOCOL_IMP_PLAIN(SDLGraphics, GraphicsDevice);
 SUBCRITICAL_CONSTRUCTOR(SDLGraphics)(lua_State* L) {
   int width, height;
   int true_width = 0, true_height = 0;
-  bool windowed = false, keep_aspect = false, smooth_filter = false, borderless = false;
+  bool windowed = false, keep_aspect = false, smooth_filter = false, borderless = false, vsync = false;
   const char* title = NULL;
   width = (int)luaL_checknumber(L, 1);
   height = (int)luaL_checknumber(L, 2);
@@ -1043,12 +1047,15 @@ SUBCRITICAL_CONSTRUCTOR(SDLGraphics)(lua_State* L) {
     smooth_filter = lua_toboolean(L,-1);
     lua_getfield(L, 3, "borderless");
     borderless = lua_toboolean(L,-1);
-    lua_pop(L, 7);
+    lua_getfield(L, 3, "vsync");
+    vsync = lua_toboolean(L,-1);
+    lua_pop(L, 8);
   }
   try {
     SDLGraphics* ret = new SDLGraphics(width, height, windowed, title,
                                        true_width, true_height,
-                                       keep_aspect, smooth_filter, borderless);
+                                       keep_aspect, smooth_filter, borderless,
+                                       vsync);
     ret->Push(L);
     return 1;
   }
