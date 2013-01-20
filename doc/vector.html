@@ -13,10 +13,18 @@
 <h2>Classes</h2>
 <h3 class="code"><a name="VectorArray" />VectorArray</h3>
 <p>This is simply a memory-efficient way to encapsulate many vectors. They can all be multiplied by matrices at the same time in parallel, as well. This class is only useful if you're writing low-level graphics routines instead of using someone else's.</p>
+<p>Warning: This is <em>not</em> faster than a Lua table if it is Lua code that is going to be accessing the vectors! <tt>VectorArray</tt> is meant to be used in conjunction with <a class="code" href="#Mat*:MultiplyAndCompile">MultiplyAndCompile</a> and related functions (and provides a decent speedup for them).</p>
 <dl>
 <dt class="code"><i>array</i> = SubCritical.Construct("VectorArray", <i>table</i>)</dt>
 <dd>Construct a <span class="code">VectorArray</span> from <i class="code">table</i>. <i class="code">table</i> is an array of <a class="code" href="#Vector">Vectors</a>, all of the same size.</dd>
-</dt>
+<dt class="code"><i>count</i> = <i>array</i>:GetCount()</dt>
+<dd>Returns the number of vectors stored in the array.</dd>
+<dt class="code"><i>order</i> = <i>array</i>:GetOrder()</dt>
+<dd>Returns the order of the vectors in the array (2, 3, or 4).</dd>
+<dt class="code"><i>vec</i> = <i>array</i>:Get(<i>index</i>)</dt>
+<dd>Returns the vector at the given (0-based) <i class="code">index</i>.</dd>
+<dt class="code"><i>x</i>,<i>y</i>[,<i>z</i>[,<i>w</i>]] = <i>array</i>:UnrolledGet(<i>index</i>)</dt>
+<dd>Returns the components of the vector at the given (0-based) <i class="code">index</i>.</dd>
 </dl>
 <h3 class="code"><a name="Vector" />Vector</h3>
 <p>There are three <span class="code">Vector</span> types. They are largely interchangeable; any <span class="code">Vector</span> may, unless otherwise specified, participate in any binary operation with any other <span class="code">Vector</span>, and may multiply any <span class="code">Matrix</span>.</p>
@@ -94,7 +102,7 @@ local matrix = SC.Construct(unpack(serial_table))</pre></dd>
 <dd>Create a <i class="code">new_vector</i> containing the product of <i class="code">matrix</i> and <i class="code">old_vector</i> (as a row vector). The resulting vector will always have the same number of elements as the <i class="code">matrix</i> has rows. (This is useful because, for instance, all linear transformations from a 2D space into a 3D one fit into a <i class="code">Mat3x2</i>, and multiplying said matrix by a <i class="code">Vec2</i> will always result in a <i class="code">Vec3</i>.)</dd>
 <dd>Note that you must multiply the <em class="code">Matrix</em> by the <em class="code">Vector</em> and not the other way around.</dd>
 <dd>This can also be done to <a href="#VectorArray" class="code">VectorArrays</a>.</dd>
-<dt class="code"><i>coords</i> = <i>matrix</i>:MultiplyAndCompile(<i>array</i>, [<i>dx</i>, <i>dy</i>])
+<dt class="code"><a name="Mat*:MultiplyAndCompile"><i>coords</i> = <i>matrix</i>:MultiplyAndCompile(<i>array</i>, [<i>dx</i>, <i>dy</i>])
 <i>coords</i> = <i>matrix</i>:PerspectiveMultiplyAndCompile(<i>array</i>, [<i>dx</i>, <i>dy</i>])</dt>
 <dd>These are, respectively, equivalent (but somewhat superior in speed and memory efficiency) to:</dd>
 <pre><i>coords</i> = SCUtil.<a href="#CompileVectorArray">CompileVectorArray</a>(<i>matrix</i> * <i>array</i>, <i>dx</i>, <i>dy</i>)

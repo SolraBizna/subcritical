@@ -92,6 +92,10 @@ namespace SubCritical {
     PROTOCOL_PROTOTYPE();
     VectorArray(uint32_t order, uint32_t count);
     ~VectorArray();
+    int Lua_GetCount(lua_State* L);
+    int Lua_GetOrder(lua_State* L);
+    int Lua_Get(lua_State* L);
+    int Lua_UnrolledGet(lua_State* L);
     uint32_t order, count;
     Scalar* buffer;
   };

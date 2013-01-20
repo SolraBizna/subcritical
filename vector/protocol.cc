@@ -64,7 +64,14 @@ PROTOCOL_IMP(Vec2, Vector, V2M);
 PROTOCOL_IMP(Vec3, Vector, V3M);
 PROTOCOL_IMP(Vec4, Vector, V4M);
 
-PROTOCOL_IMP_PLAIN(VectorArray, MatrixOrVectorOrVectorArray);
+static const ObjectMethod VAM[] = {
+  METHOD("GetCount", &VectorArray::Lua_GetCount),
+  METHOD("GetOrder", &VectorArray::Lua_GetOrder),
+  METHOD("Get", &VectorArray::Lua_Get),
+  METHOD("UnrolledGet", &VectorArray::Lua_UnrolledGet),
+  NOMOREMETHODS(),
+};
+PROTOCOL_IMP(VectorArray, MatrixOrVectorOrVectorArray, VAM);
 
 #define SMALLMETHODS(Mat) \
   METHOD("MultiplyAndCompile", &Mat::MultiplyAndCompile),
@@ -152,4 +159,56 @@ SUBCRITICAL_UTILITY(Vec)(lua_State* L) {
     return 1;
   }
   else return luaL_typerror(L, 1, "table");
+}
+
+/* these don't really belong here... */
+int VectorArray::Lua_GetCount(lua_State* L) {
+  lua_pushinteger(L, count);
+  return 1;
+}
+
+int VectorArray::Lua_GetOrder(lua_State* L) {
+  lua_pushinteger(L, order);
+  return 1;
+}
+
+int VectorArray::Lua_Get(lua_State* L) {
+  lua_Integer index = luaL_checkinteger(L, 1);
+  if(index < 0 || (size_t)index >= count) return luaL_error(L, "Get index out of range");
+  switch(order) {
+  default: return luaL_error(L, "Unknown order!?");
+  case 2:
+    (new Vec2(buffer[index*2], buffer[index*2+1]))->Push(L);
+    break;
+  case 3:
+    (new Vec3(buffer[index*3], buffer[index*3+1], buffer[index*3+2]))->Push(L);
+    break;
+  case 4:
+    (new Vec4(buffer[index*4], buffer[index*4+1], buffer[index*4+2], buffer[index*4+3]))->Push(L);
+    break;
+  }
+  return 1;
+}
+
+int VectorArray::Lua_UnrolledGet(lua_State* L) {
+  lua_Integer index = luaL_checkinteger(L, 1);
+  if(index < 0 || (size_t)index >= count) return luaL_error(L, "UnrolledGet index out of range");
+  switch(order) {
+  default: return luaL_error(L, "Unknown order!?");
+  case 2:
+    lua_pushnumber(L, buffer[index*2]);
+    lua_pushnumber(L, buffer[index*2+1]);
+    return 2;
+  case 3:
+    lua_pushnumber(L, buffer[index*3]);
+    lua_pushnumber(L, buffer[index*3+1]);
+    lua_pushnumber(L, buffer[index*3+2]);
+    return 3;
+  case 4:
+    lua_pushnumber(L, buffer[index*4]);
+    lua_pushnumber(L, buffer[index*4+1]);
+    lua_pushnumber(L, buffer[index*4+2]);
+    lua_pushnumber(L, buffer[index*4+3]);
+    return 4;
+  }
 }
