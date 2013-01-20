@@ -63,11 +63,11 @@
 <dd>Like above, but using premultiplied colors. If you don't understand what this means, use <a href="#Drawable:SetPrimitiveColor" class="code">SetPrimitiveColor</a> instead.</dd>
 <dd>Note that this will not work right with <a href="#Frisket" class="code">Frisket</a>s.</dd>
 <dt class="code"><a name="Drawable:DrawPoints" /><i>destination</i>:DrawPoints(<i>coords</i>, <i>diameter</i>)</dt>
-<dd>Draw points <i class="code">diameter</i> in diameter at every coordinate in <i class="code">coords</i> (a CoordArray, see <a href="#CompileCoords" class="code">CompileCoords</a>) using the current primitive color.</dd>
+<dd>Draw points <i class="code">diameter</i> in diameter at every coordinate in <i class="code">coords</i> (a <a class="code" href="#CoordArray">CoordArray</a>) using the current primitive color.</dd>
 <dd>Note: Points, and all other primitives, fully support alpha in the primitive color.</dd>
 <dd>Note 2: Currently, points are rendered as rectangles and lack subpixel precision. In the future, they may be rendered as circles and gain subpixel precision.</dd>
 <dt class="code"><a name="Drawable:DrawLines" /><i>destination</i>:DrawLines(<i>coords</i>, <i>indices</i>, <i>width</i>, [<i>height</i>])</dt>
-<dd>Each pair of indices in <i class="code">indices</i> (an IndexArray, see <a href="#CompileIndices" class="code">CompileIndices</a>) designates two coordinate pairs in <i class="code">coords</i> (a CoordArray, see <a href="#CompileCoords" class="code">CompileCoords</a>) between which a <i class="code">width</i> (possibly non-integer) pixel wide line should be drawn using the current primitive color. (<i class="code">height</i> should only be specified to handle non-1:1 aspect ratios.)</dd>
+<dd>Each pair of indices in <i class="code">indices</i> (an <a class="code" href="#IndexArray">IndexArray</a>) designates two coordinate pairs in <i class="code">coords</i> (a <a class="code" href="#CoordArray">CoordArray</a>) between which a <i class="code">width</i> (possibly non-integer) pixel wide line should be drawn using the current primitive color. (<i class="code">height</i> should only be specified to handle non-1:1 aspect ratios.)</dd>
 <dd>Lines in SubCritical are drawn with subpixel precision, but not antialiased.</dd>
 <dd>If you wish to draw only a single line, the following code is more convenient:</dd>
 <dd><pre>local _i = SCUtil.CompileIndices{0,1}
@@ -82,7 +82,7 @@ end</pre></dd>
 <dt class="code"><a name="Drawable:DrawLineLoop" /><i>destination</i>:DrawLineLoop(<i>coords</i>, <i>indices</i>, <i>width</i>, [<i>height</i>])</dt>
 <dd>As with DrawLineStrip, with an additional line between the last and first indices.</dd>
 <dt class="code"><a name="Drawable:DrawTriangles" /><i>destination</i>:DrawTriangles(<i>coords</i>, <i>indices</i>)</dt>
-<dd>Each triple of indices in <i class="code">indices</i> (an IndexArray, see <a href="#CompileIndices" class="code">CompileIndices</a>) designates three coordinate pairs in <i class="code">coords</i> (a CoordArray, see <a href="#CompileCoords" class="code">CompileCoords</a>) which form a triangle that should be drawn with the current primitive color.</dd>
+<dd>Each triple of indices in <i class="code">indices</i> (an <a class="code" href="#IndexArray">IndexArray</a>) designates three coordinate pairs in <i class="code">coords</i> (a <a class="code" href="#CoordArray">CoordArray</a>) which form a triangle that should be drawn with the current primitive color.</dd>
 <dd>Triangles in SubCritical are drawn with subpixel precision, but not antialiased. SubCritical consistently uses a top-left fill convention, so abutting triangles will not have holes or overdraw. SubCritical also does clipping to the clip rectangle of the <span class="code">Drawable</span>, so you gain nothing from doing such clipping yourself.</dd>
 <dd>Note: Triangles, and all other primitives, fully support alpha in the primitive color.</dd>
 <dt class="code"><a name="Drawable:DrawTriangleStrip" /><i>destination</i>:DrawTriangleStrip(<i>coords</i>, <i>indices</i>)</dt>
@@ -187,15 +187,40 @@ end</pre></dd>
 <dd><i class="code">image</i> is any <a href="#Drawable" class="code">Drawable</a>, <i class="code">value</i> is anything at all, and <i class="code">func</i> is a function that will be called like <tt><i>func</i>(<i>value</i>, <i>data</i>)</tt> where <i>data</i> is data to be written to the file. <i class="code">func</i> must return <tt>true</tt> (or some other true value) if the write succeeded.</dd>
 <dd>It is an amazing coincidence that it just so happens that this is how <tt>file:write</tt> behaves. For some Lua file, then, one could <tt><i>dumper</i>:Dump(<i>image</i>, <i>file</i>, <i>file</i>.write)</tt>. Total coincidence, of course.</dd>
 </dl>
+<h3 class="code"><a name="CoordArray" />CoordArray</h3>
+<p>A <tt>CoordArray</tt> stores screen-space coordinates.</p>
+<p>Warning: This is <i>not</i> faster than a Lua table if it is Lua code that is going to be accessing the coordinates. In addition, coordinates are not stored with the full range of Lua number precision. <tt>CoordArray</tt> is meant to be used as input to primitive drawing functions, and serves no other useful purpose.</p>
+<p>A <tt>CoordArray</tt> is not constructed directly, but is created by other means (e.g. <a class="code" href="#CompileCoords">CompileCoords</a> or one of several functions in the <a class="code" href="vector.html">vector</a> package).</p>
+<dl>
+<dt class="code"><a name="CoordArray:GetCount"><i>count</i> = <i>array</i>:GetCount()</dt>
+<dd>Returns the number of coordinate pairs stored in <i class="code">array</i>.</dd>
+<dt class="code"><a name="CoordArray:GetCoord"><i>x</i>,<i>y</i> = <i>array</i>:GetCoord(<i>index</i>)</dt>
+<dd>Returns the coordinates of the point at the given (0-based) <i class="code">index</i>.</dd>
+</dl>
+<h3 class="code"><a name="IndexArray" />IndexArray</h3>
+<p>A <tt>IndexArray</tt> stores zero-based indices.</p>
+<p>Warning: This is <i>not</i> faster than a Lua table if it is Lua code that is going to be accessing the indices. <tt>IndexArray</tt> is meant to be used as input to primitive-related functions, and serves no other useful purpose.</p>
+<p>An <tt>IndexArray</tt> is not constructed directly, but is created by other means (e.g. <a class="code" href="#CompileIndices">CompileIndices</a> or the <a class="code" href="#CullTriangles">CullTriangles</a> functions).</p>
+<dl>
+<dt class="code"><a name="IndexArray:GetCount"><i>count</i> = <i>array</i>:GetCount()</dt>
+<dd>Returns the number of indices stored in <i class="code">array</i>.</dd>
+<dt class="code"><a name="IndexArray:GetRealCount"><i>count</i> = <i>array</i>:GetRealCount()</dt>
+<dd>Returns the number of indices <em>actually</em> stored in <i class="code">array</i> (i.e. not affected by <a class="code" href="#IndexArray:SetActiveRange">SetActiveRange</a>).</dd>
+<dt class="code"><a name="IndexArray:GetIndex"><i>i</i> = <i>array</i>:GetIndex(<i>index</i>)</dt>
+<dd>Returns the (0-based) index <i class="code">i</i> stored at the given (0-based) <i class="code">index</i>. What could be clearer than that?</dd>
+<dt class="code"><a name="IndexArray:SetActiveRange"><i>array</i>:SetActiveRange(<i>first</i>, <i>count</i>)</dt>
+<dd>Sets the "active range" of this <tt>IndexArray</tt> to the <i class="code">count</i> indices starting with the <i class="code">first</i>th index. Apart from <a class="code" href="#IndexArray:GetRealCount">GetRealCount</a>, this affects <em>all</em> accesses to <tt>array</tt>. This is useful when you want to render a subset of indices without making a new <tt>IndexArray</tt> each time.</dd>
+<dd>The provided range is silently clipped against the "right" edge of the array, but an error is thrown if either <i class="code">first</i> or <i class="code">count</i> are negative.</dd>
+</dl>
 <h2>Utility functions</h2>
 <dl>
 <dt class="code"><a name="CompileCoords" /><i>coords</i> = SCUtil.CompileCoords(<i>table</i>)</dt>
-<dd>Returns a <tt>CoordArray</tt> suitable for passing to many of <a href="#Drawable" class="code">Drawable</a>'s drawing functions. <i class="code">table</i> should be an array directly containing coordinate pairs in the form of <tt>number</tt>s, and in particular must <b>not</b> be an array of <tt>table</tt>s.</dd>
+<dd>Returns a <a class="code" href="#CoordArray">CoordArray</a> suitable for passing to many of <a href="#Drawable" class="code">Drawable</a>'s drawing functions. <i class="code">table</i> should be an array directly containing coordinate pairs in the form of <tt>number</tt>s, and in particular must <b>not</b> be an array of <tt>table</tt>s.</dd>
 <dt class="code"><a name="CompileIndices" /><i>indices</i> = SCUtil.CompileIndices(<i>table</i>)</dt>
-<dd>Returns an <tt>IndexArray</tt> suitable for passing to many of <a href="#Drawable" class="code">Drawable</a>'s drawing functions. <i class="code">table</i> should be an array directly containing 0-based indices in the form of <tt>number</tt>s.</dd>
+<dd>Returns an <a class="code" href="#IndexArray">IndexArray</a> suitable for passing to many of <a href="#Drawable" class="code">Drawable</a>'s drawing functions. <i class="code">table</i> should be an array directly containing 0-based indices in the form of <tt>number</tt>s.</dd>
 <dt class="code"><a name="CullTriangles" /><i>new_indices</i> = SCUtil.CullTriangles<i>CW</i>(<i>coords</i>, <i>indices</i>)
 <i>new_indices</i> = SCUtil.CullTriangles<i>CCW</i>(<i>coords</i>, <i>indices</i>)</dt>
-<dd>Returns an <tt>IndexArray</tt> containing only those triangles described by <i class="code">coords</i> and <i class="code">indices</i> that wind in the specified direction (clockwise for <tt>CW</tt> and counter-clockwise for <tt>CCW</tt>).</dd>
+<dd>Returns an <a class="code" href="#IndexArray">IndexArray</a> containing only those triangles described by <i class="code">coords</i> and <i class="code">indices</i> that wind in the specified direction (clockwise for <tt>CW</tt> and counter-clockwise for <tt>CCW</tt>).</dd>
 </dl>
 <p><a href="index.html">Back to index</a></p>
 </body>
