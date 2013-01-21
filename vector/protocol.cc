@@ -65,9 +65,9 @@ PROTOCOL_IMP(Vec3, Vector, V3M);
 PROTOCOL_IMP(Vec4, Vector, V4M);
 
 static const ObjectMethod VAM[] = {
+  METHOD("Get", &VectorArray::Lua_Get),
   METHOD("GetCount", &VectorArray::Lua_GetCount),
   METHOD("GetOrder", &VectorArray::Lua_GetOrder),
-  METHOD("Get", &VectorArray::Lua_Get),
   METHOD("UnrolledGet", &VectorArray::Lua_UnrolledGet),
   NOMOREMETHODS(),
 };
