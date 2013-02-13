@@ -563,7 +563,11 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
   SetupDrawable(target->pixels, target->pitch/sizeof(Pixel));
   SDL_EventState(SDL_SYSWMEVENT, SDL_IGNORE);
   SDL_EventState(SDL_VIDEORESIZE, SDL_IGNORE);
-  SDL_ShowCursor(SDL_DISABLE);
+  /* because we can't count on SDL to give us a hardware cursor, or even
+     emulate one particularly well, this option remains undocumented and
+     unreliable. */
+  if(!getenv("NO_HIDE_CURSOR"))
+    SDL_ShowCursor(SDL_DISABLE);
 #if HAVE_WINDOWS
   // ...
   (void)TryGammaCorrection;
