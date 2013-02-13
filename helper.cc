@@ -97,10 +97,9 @@ static int f_listfiles(lua_State* L) {
   bool dirs = (lua_gettop(L) == 2) ? false : lua_toboolean(L,3);
   size_t extlen = strlen(ext);
   int i;
-  if(!lua_istable(L, -1))
-    lua_newtable(L);
   if(!dir) return 1;
-  i = lua_rawlen(L, -1) + 1;
+  lua_newtable(L);
+  i = 1;
   while((ent = readdir(dir))) {
     if(strlen(ent->d_name) < extlen || ent->d_name[0] == '.') continue; // lol
     if(strcasecmp(ent->d_name + strlen(ent->d_name) - extlen, ext)) continue;
@@ -110,10 +109,10 @@ static int f_listfiles(lua_State* L) {
     lua_concat(L, 2);
     const char* path = lua_tostring(L, -1);
     if(!stat(path, &buf)) {
-      if(dirs ? !S_ISDIR(buf.st_mode) : S_ISDIR(buf.st_mode)) continue;
+      if(dirs ? !S_ISDIR(buf.st_mode) : S_ISDIR(buf.st_mode)) goto escape;
       lua_rawseti(L, -2, i++);
     }
-    else lua_pop(L, 1);
+    else escape: lua_pop(L, 1);
   }
   closedir(dir);
   return 1;
