@@ -153,7 +153,7 @@ const ObjectProtocol* class::GetProtocol() const throw() { \
     // declared by this object!
     virtual const ObjectProtocol* GetProtocol() const throw();
   };
-  // bogus userdata to help with handling of stupid path stuff
+  // awesome userdata that helps to deal cleverly with paths in a portable way
   class EXPORT Path : public Object {
   public:
     Path(const char* path, bool copy = true);
