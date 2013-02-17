@@ -30,60 +30,6 @@ using namespace SubCritical;
 #define MAY_CONVERT_PMFS 1
 #endif
 
-bool SubCritical::little_endian;
-
-EXPORT uint32_t SubCritical::Swap32(uint32_t n) {
-  return (n >> 24) | ((n >> 8) & 0xFF00) | ((n << 8) & 0xFF0000) | (n << 24);
-}
-
-EXPORT uint32_t SubCritical::Swap32_BE(uint32_t n) {
-  if(little_endian) return (n >> 24) | ((n >> 8) & 0xFF00) | ((n << 8) & 0xFF0000) | (n << 24);
-  else return n;
-}
-
-EXPORT uint32_t SubCritical::Swap32_LE(uint32_t n) {
-  if(!little_endian) return (n >> 24) | ((n >> 8) & 0xFF00) | ((n << 8) & 0xFF0000) | (n << 24);
-  else return n;
-}
-
-EXPORT uint16_t SubCritical::Swap16(uint16_t n) {
-  return (n >> 8) | (n << 8);
-}
-
-EXPORT uint16_t SubCritical::Swap16_BE(uint16_t n) {
-  if(little_endian) return (n >> 8) | (n << 8);
-  else return n;
-}
-
-EXPORT uint16_t SubCritical::Swap16_LE(uint16_t n) {
-  if(!little_endian) return (n >> 8) | (n << 8);
-  else return n;
-}
-
-union f_i32 { float f; uint32_t i; };
-
-EXPORT float SubCritical::SwapF(float n) {
-  union f_i32 u;
-  u.f = n;
-  u.i = Swap32(u.i);
-  return u.f;
-}
-
-EXPORT float SubCritical::SwapF_BE(float n) {
-  union f_i32 u;
-  u.f = n;
-  u.i = Swap32_BE(u.i);
-  return u.f;
-}
-
-EXPORT float SubCritical::SwapF_LE(float n) {
-  union f_i32 u;
-  u.f = n;
-  u.i = Swap32_LE(u.i);
-  return u.f;
-}
-
-
 ObjectProtocol::ObjectProtocol(const char* name, const struct ObjectMethod* methods, const ObjectProtocol* super) throw()
 : name(name), methods(methods), super(super)
 {
@@ -273,7 +219,9 @@ const char* SubCritical::TypeName(lua_State* L, int n) {
 LUA_EXPORT int Init_core(lua_State* L) {
   union { uint8_t small; uint32_t large; } endiantest;
   endiantest.large = 1;
-  little_endian = !!endiantest.small;
+  bool really_little_endian = !!endiantest.small;
+  if(really_little_endian != little_endian)
+    return luaL_error(L, "WRONG RUNTIME ENDIANNESS! This copy of SubCritical was built incorrectly.");
 #if defined(i386) || defined(__i386) || defined(__i386__)
   // Change the x87 FPU to use double-precision internally. This doesn't apply
   // when floating point math is being done with SSE, but that's hard to

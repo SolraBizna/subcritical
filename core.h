@@ -22,6 +22,9 @@
 #ifndef _SUBCRITICAL_BASE_H
 #define _SUBCRITICAL_BASE_H
 
+#define _BSD_SOURCE 1
+#include <endian.h>
+
 extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
@@ -38,8 +41,10 @@ extern "C" {
 
 #if __GNUC__ >= 3
 #define restrict __restrict__
+#define deprecated __attribute__((deprecated))
 #else
-#define restrict
+#define restrict 
+#define deprecated 
 #endif
 
 #if NO_DUFF
@@ -92,16 +97,49 @@ namespace SubCritical {
   private:
     pthread_mutex_t mutex;
   };
-  extern EXPORT bool little_endian;
-  EXPORT uint32_t Swap32(uint32_t);
-  EXPORT uint32_t Swap32_BE(uint32_t); // won't swap if we're big-endian
-  EXPORT uint32_t Swap32_LE(uint32_t); // won't swap if we're small-endian
-  EXPORT uint16_t Swap16(uint16_t);
-  EXPORT uint16_t Swap16_BE(uint16_t);
-  EXPORT uint16_t Swap16_LE(uint16_t);
-  EXPORT float SwapF(float);
-  EXPORT float SwapF_BE(float);
-  EXPORT float SwapF_LE(float);
+  static const bool little_endian = BYTE_ORDER == LITTLE_ENDIAN;
+#if BYTE_ORDER == LITTLE_ENDIAN
+  static inline uint64_t Swap64(uint64_t u) { return be64toh(u); }
+  static inline uint32_t Swap32(uint32_t u) { return be32toh(u); }
+  static inline uint16_t Swap16(uint32_t u) { return be16toh(u); }
+#else
+  static inline uint64_t Swap64(uint64_t u) { return le64toh(u); }
+  static inline uint32_t Swap32(uint32_t u) { return le32toh(u); }
+  static inline uint16_t Swap16(uint32_t u) { return le16toh(u); }
+#endif
+  /* swap between big-endian and native (no-ops on big-endian) */
+  static inline uint32_t Swap64_BE(uint64_t u) { return be64toh(u); }
+  static inline uint32_t Swap32_BE(uint32_t u) { return be32toh(u); }
+  static inline uint32_t Swap16_BE(uint16_t u) { return be16toh(u); }
+  /* swap between little-endian and native (no-ops on little-endian) */
+  static inline uint32_t Swap64_LE(uint64_t u) { return le64toh(u); }
+  static inline uint32_t Swap32_LE(uint32_t u) { return le32toh(u); }
+  static inline uint32_t Swap16_LE(uint16_t u) { return le16toh(u); }
+  /* like above, but for floating-point */
+  static inline float SwapF(float f) {
+    union { uint32_t u; float f; } wat;
+    wat.f = f; wat.u = Swap32(wat.u); return wat.f;
+  }
+  static inline float SwapF_BE(float f) {
+    union { uint32_t u; float f; } wat;
+    wat.f = f; wat.u = Swap32_BE(wat.u); return wat.f;
+  }
+  static inline float SwapF_LE(float f) {
+    union { uint32_t u; float f; } wat;
+    wat.f = f; wat.u = Swap32_LE(wat.u); return wat.f;
+  }
+  static inline double SwapD(double f) {
+    union { uint64_t u; double f; } wat;
+    wat.f = f; wat.u = Swap64(wat.u); return wat.f;
+  }
+  static inline double SwapD_BE(double f) {
+    union { uint64_t u; double f; } wat;
+    wat.f = f; wat.u = Swap64_BE(wat.u); return wat.f;
+  }
+  static inline double SwapD_LE(double f) {
+    union { uint64_t u; double f; } wat;
+    wat.f = f; wat.u = Swap64_LE(wat.u); return wat.f;
+  }
   class Object;
   typedef int(Object::*ScriptMethodPointer)(lua_State* L);
   struct ObjectMethod {
