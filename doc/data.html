@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>SubCritical Lua developer documentation</title>
+<meta http-equiv="Content-type" content="text/xhtml+xml; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css.css" />
+</head>
+<body>
+<h1><tt>data</tt> package</h1>
+<p><tt>data</tt> contains no utilities.</p>
+<h2>License</h2>
+<p>The <tt>data</tt> package is marked as <tt>Compatible</tt>, which means any game can use it.</p>
+<h2>Classes</h2>
+<h3 class="code"><a name="DataBuffer" />DataBuffer</h3>
+<p>A <tt>DataBuffer</tt> represents a contiguous block of memory. It implements a file-like interface for reading to and writing from this memory.</p>
+<dl>
+<dt class="code"><i>buf</i> = SubCritical.Construct("DataBuffer", <i>size</i>)</dt>
+<dd>Creates an uninitialized buffer <i class="code">size</i> bytes long, and returns it. <i class="code">size</i> may be zero to produce an empty DataBuffer.</dd>
+<dt class="code"><i>buf</i> = SubCritical.Construct("DataBuffer", <i>source</i>)</dt>
+<dd>Creates a read-only reference to <i class="code">source</i>, which must be a string. This way bytes in the <i class="code">source</i> string can be accessed conveniently.</dd>
+<dt class="code"><a name="DataBuffer:SetCallback" /><i>buf</i>:SetCallback(<i>callback</i>)</dt>
+<dd>If <i class="code">callback</i> is nil, clears any existing callback from this buffer. Otherwise, sets the callback to be called when this <tt>DataBuffer</tt> overflows or underflows. The callback should attempt to re-fill (or re-empty) the buffer as appropriate.</dd>
+<dd>An operation that would normally result in a call to the callback will not do so if a callback call is already in progress.</dd>
+<dt class="code"><a name="DataBuffer:HasCallback" />if <i>buf</i>:HasCallback() then ...</dt>
+<dd>Returns <tt>true</tt> if the buffer has a callback set. The presence of a callback indicates that reading or writing past the current "end" of a buffer may be possible.</dd>
+<dt class="code"><a name="DataBuffer:IsReadOnly" />if <i>buf</i>:IsReadOnly() then ...</dt>
+<dd>Returns <tt>true</tt> if the buffer may not be written to. This may happen if the buffer is immutable (like a Lua <tt>string</tt>) or is in read-only memory. Depending on what your purpose for the data is, you may wish to obtain a writeable copy with <a href="#DataBuffer:Clone">Clone</a>.</dd>
+<dt class="code"><a name="DataBuffer:CopyIn" /><i>amount</i> = <i>buf</i>:CopyIn(<i>data</i>)</dt>
+<dd>Copy the data inside <i class="code">data</i> (a string) into the buffer at the current position. If the data does not all fit in the buffer, copy as much as will fit. Returns the number of bytes that were copied, or, if none were copied, <tt>nil</tt> and an error message. The current position is not changed and the callback (if any) is not called.</dd>
+<dt class="code"><a name="DataBuffer:CopyOut" /><i>data</i> = <i>buf</i>:CopyOut(<i>amount</i>)</dt>
+<dd>Copy the data inside the buffer, starting at the current position and extending for up to <i class="code">amount</i> bytes, into a string and return it. If there are not <i class="code">amount</i> bytes remaining, return all remaining bytes (which may be 0, in which case, return an empty string). The current position is not changed and the callback (if any) is not called.</dd>
+<dt class="code"><a name="DataBuffer:Read" /><i>data</i> = <i>buf</i>:Read(<i>amount</i>)</dt>
+<dd>Copy the data inside the buffer, starting at the current position and extending for up to <i class="code">amount</i> bytes, into a string and return it. If there are not <i class="code">amount</i> bytes remaining, keep calling the callback (if it exists) until it stops adding data, and then (if not enough bytes have still been read) return all remaining bytes. The current position is updated accordingly.</dd>
+<dt class="code"><a name="DataBuffer:Write" /><i>amount</i> = <i>buf</i>:Write(<i>data</i></dt>
+<dd>Copy the data inside <i class="code">data</i> (a string) into the buffer at the current position. If the data does not all fit in the buffer, and a callback exists, keep calling the callback and trying to resume the write afterwards; stopping when all data has been written or the callback does not make more space in the buffer. The current position is updated accordingly.</dd>
+<dt class="code"><a name="DataBuffer:GetRemSpace" /><i>rem_space</i> = <i>buf</i>:GetRemSpace()</dt>
+<dd>Returns the number of bytes left between the current position and the (possibly <a class="code" href="DataBuffer:SetSoftEnd">soft</a>) end of the buffer. This function does not account for any additional space a callback may "provide."</dd>
+<dt class="code"><a name="DataBuffer:GetSize" /><i>size</i> = <i>buf</i>:GetSize()</dt>
+<dd>Returns the physical size of the buffer, in bytes. It may not actually be possible to read or write all of the buffer if a <a class="code" href="DataBuffer:SetSoftEnd">soft end</a> is set.</dd>
+<dt class="code"><a name="DataBuffer:GetLength" /><i>length</i> = <i>buf</i>:GetLength()</dt>
+<dd>Returns the logical size of the buffer, in bytes. While the physical size of a buffer never changes over its lifetime, the logical size may be changed by setting a <a name="DataBuffer:SetSoftEnd">soft end</a>.</dd>
+<dt class="code"><a name="DataBuffer:SeekSet" /><i>new_position</i> = <i>buf</i>:SeekSet(<i>offset</i>)
+<a name="DataBuffer:SeekCur" /><i>new_position</i> = <i>buf</i>:SeekCur(<i>offset</i>)
+<a name="DataBuffer:SeekEnd" /><i>new_position</i> = <i>buf</i>:SeekEnd(<i>offset</i>)</dt>
+<dd>Alter the current position of the buffer. Each of the three <tt>Seek*</tt> methods has the same effect as the corresponding parameters to <tt>io.seek</tt>; <tt>SeekSet</tt> sets a position relative to the start of the buffer, <tt>SeekCur</tt> relative to the current position, and <tt>SeekEnd</tt> relative to the end. If the new position would lie outside the buffer, it is silently clipped to the buffer.</dd>
+<dd>Warning: Be careful when seeking on a buffer that has a callback. Unless you know what you're doing, you may end up trying to seek to a "virtual" section of the buffer that no longer physically exists (especially when seeking backwards).</dd>
+<dt class="code"><a name="DataBuffer:GetPos" /><i>position</i> = <i>buf</i>:GetPos()</dt>
+<dd>Returns the current position of the buffer.</dd>
+<dt class="code"><a name="DataBuffer:SetSoftEnd" /><i>buf</i>:SetSoftEnd()
+<i>buf</i>:SetSoftEnd(<i>position</i>)</dt>
+<dd>Sets the "soft end" of the buffer to <i class="code">position</i> (if specified) or the current position (if not). The "soft end" simulats a physical end to the buffer for the purposes of all functions except <a class="code" href="#DataBuffer:GetSize">GetSize</a>. If the current position is past the new "soft end," it is silently clipped to the new boundaries.</dd>
+<dd>If you pass an unreasonable position, everything will explode.</dd>
+<dt class="code"><a name="DataBuffer:ResetSoftEnd" /><i>buf</i>:ResetSoftEnd()</dt>
+<dd>Sets the "soft end" of the buffer to be the same as the "physical end" of the buffer.</dd>
+<dt class="code"><a name="DataBuffer:Clone" /><i>new_buf</i> = <i>buf</i>:Clone()</dt>
+<dd>Returns an entirely new (read-write) <tt>DataBuffer</tt> containing a copy of all of the data that was in the old buffer. Its position, callback, etc. are set to defaults.</dd>
+<dt class="code"><a name="DataBuffer:Resize" /><i>success</i> = <i>buf</i>:Resize(<i>new_size</i>)</dt>
+<dd>If the <tt>DataBuffer</tt> owns its own physical buffer (e.g. if it is a <tt>Clone</tt>, or it was created from Lua without a backing string), this attempts to change the size of the physical buffer. It returns <tt>true</tt> if the resize was successful, and <tt>false</tt> otherwise (in which case the buffer is unchanged).</dd>
+<dd>As much of the old data as will fit is preserved. If the new size is larger than the old size, the "extra" space is uninitialized. If it's smaller, the end is chopped off.</dd>
+<dd>The current position is set to the start of the buffer, and any "soft end" is removed.</dd>
+<dt class="code"><a name="DataBuffer:Read*" /><i>number</i> = <i>buf</i>:Read<i>Type</i>()
+<a name="DataBuffer:Write*" /><i>success</i> = <i>buf</i>:Write<i>Type</i>()</dt>
+<dd>These methods deal with numbers. <tt>Read</tt> returns the number that was read (or <tt>nil</tt> and an error message), <tt>Write</tt> returns whether the write succeeded. (<tt>Read</tt> and <tt>Write</tt> may return false after having read/written some bytes from/to the buffer, be wary.)</dd>
+<dd>Variants of these methods exist for the following <i class="code">Types</i>:</dd>
+<table>
+<thead>
+<tr><th>Type</th><th>Bytes</th><th>Range</th></tr>
+</thead>
+<tbody>
+<tr><td>S8</td><td>1</td><td>-128 <= integer <= 127</td></tr>
+<tr><td>U8</td><td>1</td><td>0 <= integer <= 255</td></tr>
+<tr><td>S16</td><td>2</td><td>-32768 <= integer <= 32767</td></tr>
+<tr><td>U16</td><td>2</td><td>0 <= integer <= 65535</td></tr>
+<tr><td>S32</td><td>4</td><td>-2147483648 <= integer <= 2147483647</td></tr>
+<tr><td>U32</td><td>4</td><td>0 <= integer <= 4294967295</td></tr>
+<tr><td>S64</td><td>8</td><td>-9223372036854775808 <= integer <= 9223372036854775807*</td></tr>
+<tr><td>U64</td><td>8</td><td>0 <= integer <= 18446744073709551615*</td></tr>
+<tr><td>F32</td><td>4</td><td>-126 <= exponent <= 127, 23+1 digits (binary)</td></tr>
+<tr><td>F64</td><td>8</td><td>-1022 <= exponent <= 1023, 52+1 digits (binary)**</td></tr>
+</tbody>
+</table>
+<dd>*In the default configuration, Lua numbers cannot represent every integer outside the range -9007199254740992 to 9007199254740992.<br />
+**In the default configuration, Lua numbers are 64-bit floats, meaning F64 deals with Lua numbers directly.</dd>
+<dd>All of these functions deal with big-endian storage. If you really want to read or write little-endian data, prefix <i class="code">Type</i> with <tt>LittleEndian</tt> (e.g. <tt>ReadLittleEndianU32</tt>). Please do not do this lightly! Little-endian storage is messed up!</dd>
+</dl>
+<p><a href="index.html">Back to index</a></p>
+</body>
+</html>

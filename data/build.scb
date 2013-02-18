@@ -1,0 +1,2 @@
+targets = {data={"buffer.cc",deps={"core"}}}
+install = {packages={"data"},headers={"data.h"}}

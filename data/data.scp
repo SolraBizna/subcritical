@@ -1,0 +1,5 @@
+license Compatible
+version 0c1 core
+
+class DataBuffer concrete
+class DataProcessor tangible
