@@ -48,7 +48,7 @@
 <dd>Returns the current position of the buffer.</dd>
 <dt class="code"><a name="DataBuffer:SetSoftEnd" /><i>buf</i>:SetSoftEnd()
 <i>buf</i>:SetSoftEnd(<i>position</i>)</dt>
-<dd>Sets the "soft end" of the buffer to <i class="code">position</i> (if specified) or the current position (if not). The "soft end" simulats a physical end to the buffer for the purposes of all functions except <a class="code" href="#DataBuffer:GetSize">GetSize</a>. If the current position is past the new "soft end," it is silently clipped to the new boundaries.</dd>
+<dd>Sets the "soft end" of the buffer to <i class="code">position</i> (if specified) or the current position (if not). The "soft end" simulates a physical end to the buffer for the purposes of all functions except <a class="code" href="#DataBuffer:GetSize">GetSize</a>. If the current position is past the new "soft end," it is silently clipped to the new boundaries.</dd>
 <dd>If you pass an unreasonable position, everything will explode.</dd>
 <dt class="code"><a name="DataBuffer:ResetSoftEnd" /><i>buf</i>:ResetSoftEnd()</dt>
 <dd>Sets the "soft end" of the buffer to be the same as the "physical end" of the buffer.</dd>
