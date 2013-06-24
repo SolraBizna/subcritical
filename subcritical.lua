@@ -771,14 +771,14 @@ function sc.var.Write(...)
    local config_dir,name = confdir(config_dir,...)
    helper.ckdir(config_dir)
    name = config_dir..fixvarname(name)
-   return cproxy({file=old_open(name.."~","wb+"), sname=name.."~", dname=name})
+   return cproxy({file=old_open(name.."~","w+b"), sname=name.."~", dname=name})
 end
 function sc.var.Update(...)
    local config_dir,name = confdir(config_dir,...)
    helper.ckdir(config_dir)
    name = config_dir..fixvarname(name)
    helper.copy(name.."~", name) -- save memory by not doing this in Lua
-   return cproxy({file=old_open(name.."~","ab+"), sname=name.."~", dname=name})
+   return cproxy({file=old_open(name.."~","a+b"), sname=name.."~", dname=name})
 end
 function sc.var.Path(...)
    local config_dir,name = confdir(config_dir,...)
