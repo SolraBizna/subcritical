@@ -23,7 +23,25 @@
 #define _SUBCRITICAL_BASE_H
 
 #define _BSD_SOURCE 1
-#include <endian.h>
+#include <sys/types.h>
+
+#if defined(__MACOSX__) || defined(__APPLE__) || defined(macintosh)
+#define Fixed __Fixed__
+#include <CoreFoundation/CFByteOrder.h>
+#undef Fixed
+#define le16toh(x) CFSwapInt16LittleToHost(x)
+#define le32toh(x) CFSwapInt32LittleToHost(x)
+#define le64toh(x) CFSwapInt64LittleToHost(x)
+#define be16toh(x) CFSwapInt16BigToHost(x)
+#define be32toh(x) CFSwapInt32BigToHost(x)
+#define be64toh(x) CFSwapInt64BigToHost(x)
+#define htole16(x) CFSwapInt16HostToLittle(x)
+#define htole32(x) CFSwapInt32HostToLittle(x)
+#define htole64(x) CFSwapInt64HostToLittle(x)
+#define htobe16(x) CFSwapInt16HostToBig(x)
+#define htobe32(x) CFSwapInt32HostToBig(x)
+#define htobe64(x) CFSwapInt64HostToBig(x)
+#endif
 
 extern "C" {
 #include <lua.h>
@@ -41,10 +59,10 @@ extern "C" {
 
 #if __GNUC__ >= 3
 #define restrict __restrict__
-#define deprecated __attribute__((deprecated))
+#define DEPRECATED __attribute__((deprecated))
 #else
 #define restrict 
-#define deprecated 
+#define DEPRECATED 
 #endif
 
 #if NO_DUFF

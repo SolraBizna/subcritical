@@ -25,7 +25,9 @@
 #include <assert.h>
 
 #if defined(__MACOSX__) || defined(__MACOS__)
+#define Fixed __Fixed__
 #include <CoreServices/CoreServices.h>
+#undef Fixed
 #endif
 
 using namespace SubCritical;
