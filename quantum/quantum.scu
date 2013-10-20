@@ -64,13 +64,14 @@ function quantum.run(params)
    local next_state = process_and_graph()
    if not next_state then return end
    repeat
-      if handle_events then if handle_events(params) then return end
+      if handle_events then if handle_events() then return end
       elseif screen then
 	 repeat
 	    local evt = screen:GetEvent{wait=false}
 	    if evt then
 	       if handle_event then
-		  if handle_event(params, evt) then return end
+                  -- remain compatible with existing quantum applications
+		  if handle_event(evt, evt) then return end
 	       else
 		  if evt.type == "quit" or
 		     (evt.type == "keydown" and evt.key == "escape") then
