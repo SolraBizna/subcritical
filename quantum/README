@@ -23,10 +23,11 @@ graph: (optional) A function that is called once per rendered tick. It must
 render: A function that is called once per rendered frame. Its prototype is
 	described below.
 handle_event: (optional) A function that is called for every received event if
-              handle_events is not specified. The return value has the same
-              meaning as for process.
+              handle_events is not specified. Returning a true value signals
+              quantum to return from "run".
 handle_events: (optional) A function that is called each time through the loop,
-               which should handle user input.
+               which should handle user input. Returning a true value signals
+               quantum to return from "run".
 
 (parameters)
 tickrate: The number of logic ticks per second.
