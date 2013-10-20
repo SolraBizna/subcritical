@@ -12,7 +12,7 @@ quantum.run(parameters)
 
 parameters is a table containing the following keys:
 
-tickrate: The number of logic ticks per second.
+(callbacks)
 process: A function that is called once per tick. If graph is not specified, it
 	 must return the same thing as graph does. If it returns a non-true
 	 value, it signals quantum to return from "run".
@@ -22,6 +22,14 @@ graph: (optional) A function that is called once per rendered tick. It must
        return from "run".
 render: A function that is called once per rendered frame. Its prototype is
 	described below.
+handle_event: (optional) A function that is called for every received event if
+              handle_events is not specified. The return value has the same
+              meaning as for process.
+handle_events: (optional) A function that is called each time through the loop,
+               which should handle user input.
+
+(parameters)
+tickrate: The number of logic ticks per second.
 framecap: (optional) The maximum number of frames to render per second.
 maxbacklog: (optional) The maximum number of logic ticks to render between
 	    frames.
