@@ -168,7 +168,7 @@ class EXPORT SDLGraphics : public GraphicsDevice {
  public:
   SDLGraphics(int width, int height, bool windowed, const char* title,
               int true_width, int true_height, bool keep_aspect,
-              bool smooth_filter, bool borderless, bool vsync);
+              bool smooth_filter, bool borderless, bool vsync, bool opengl);
   virtual ~SDLGraphics();
   virtual void Update(int x, int y, int w, int h) throw();
   virtual void UpdateAll() throw();
@@ -352,8 +352,18 @@ static void _assertgl(const char* file, int line) {
 #define assertgl() _assertgl(__FILE__, __LINE__)
 #endif
 
-SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title, int true_width, int true_height, bool keep_aspect, bool smooth_filter, bool borderless, bool vsync) :
+SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title, int true_width, int true_height, bool keep_aspect, bool smooth_filter, bool borderless, bool vsync, bool opengl) :
   doing_relmouse(false), doing_textok(false), cursor(NULL), cbak(NULL), old_cursor(NULL), cx(0), cy(0) {
+#if defined(__MACOSX__) || defined(__MACOS__)
+  // If we're running on 10.7 or later, always try to use OpenGL. This will...
+  // just avoid opening a huge can of worms all over the place, what with the
+  // framebuffer stuff and the Retina Display bugs. On top of that, it should
+  // improve performance a bit.
+  SInt32 major, minor;
+  Gestalt(gestaltSystemVersionMajor, &major);
+  Gestalt(gestaltSystemVersionMinor, &minor);
+  if(major >= 11 || (major == 10 && minor >= 7)) opengl = true;
+#endif
   SDLMan::current_screen = NULL;
   if(borderless) {
     // This is a destructive operation! Further windows will also be centered!
@@ -383,8 +393,10 @@ SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title
       (true_height != 0 && true_height != height)))
     tryFakeDoubling = true;
 #if CAN_DO_OPENGL
-  /* Use OpenGL if upscaling OR vsync is requested ONLY IF it is allowed. */
-  if((vsync || tryFakeDoubling) && !getenv("NO_OPENGL")) {
+  /* Use OpenGL if upscaling OR vsync is requested ONLY IF it is allowed.
+     Also use OpenGL if it was requested. */
+  if(getenv("FORCE_OPENGL") || opengl
+     || ((vsync || tryFakeDoubling) && !getenv("NO_OPENGL"))) {
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -1034,7 +1046,7 @@ PROTOCOL_IMP_PLAIN(SDLGraphics, GraphicsDevice);
 SUBCRITICAL_CONSTRUCTOR(SDLGraphics)(lua_State* L) {
   int width, height;
   int true_width = 0, true_height = 0;
-  bool windowed = false, keep_aspect = false, smooth_filter = false, borderless = false, vsync = false;
+  bool windowed = false, keep_aspect = false, smooth_filter = false, borderless = false, vsync = false, opengl = false;
   const char* title = NULL;
   width = (int)luaL_checknumber(L, 1);
   height = (int)luaL_checknumber(L, 2);
@@ -1055,13 +1067,15 @@ SUBCRITICAL_CONSTRUCTOR(SDLGraphics)(lua_State* L) {
     borderless = lua_toboolean(L,-1);
     lua_getfield(L, 3, "vsync");
     vsync = lua_toboolean(L,-1);
-    lua_pop(L, 8);
+    lua_getfield(L, 3, "opengl");
+    opengl = lua_toboolean(L,-1);
+    lua_pop(L, 9);
   }
   try {
     SDLGraphics* ret = new SDLGraphics(width, height, windowed, title,
                                        true_width, true_height,
                                        keep_aspect, smooth_filter, borderless,
-                                       vsync);
+                                       vsync, opengl);
     ret->Push(L);
     return 1;
   }
