@@ -154,18 +154,21 @@ end
 local cursor_x,cursor_y
 
 function scui.EventLoop(widget, params, cursor, hotx, hoty)
+   scui.PushCursor()
+   screen:SetCursor(cursor, hotx, hoty)
    cursor_x,cursor_y = screen:GetMousePos()
    local ret = nil
    params = params or {}
    local idle = params.idle
    local hotkeys = widget.hotkeys
-   local fake_cursor_widget = {}
-   fake_cursor_widget.w,fake_cursor_widget.h = cursor:GetSize()
    local focus_widget,clicked_widgets = nil,{}
    local lbcx,lbcy
    local dirty_l,dirty_t,dirty_r,dirty_b
    local function clean()
-      if(dirty_l > dirty_r or dirty_t > dirty_b) then return end
+      if(dirty_l > dirty_r or dirty_t > dirty_b) then
+         screen:Update(0,0,0,0) -- move the cursor
+         return
+      end
       if(dirty_debug) then
 	 local fake={_x=dirty_l, _y=dirty_t, w=dirty_r-dirty_l+1, h=dirty_b-dirty_t+1}
 	 scui.BackupWidget(fake)
@@ -233,19 +236,7 @@ function scui.EventLoop(widget, params, cursor, hotx, hoty)
 	 if(widget.messy) then
 	    scui.RefreshWidget(widget, dirty_rect)
 	 end
-	 if(cursor_x) then
-	    lbcx,lbcy = cursor_x,cursor_y
-	    fake_cursor_widget._x = cursor_x - hotx
-	    fake_cursor_widget._y = cursor_y - hoty
-	    scui.BackupWidget(fake_cursor_widget)
-	    screen:Blit(cursor, cursor_x - hotx, cursor_y - hoty)
-	    dirty_rect(cursor_x - hotx, cursor_y - hoty, fake_cursor_widget.w, fake_cursor_widget.h)
-	    clean()
-	    scui.RestoreWidget(fake_cursor_widget)
-	    dirty_rect(cursor_x - hotx, cursor_y - hoty, fake_cursor_widget.w, fake_cursor_widget.h)
-	 else
-	    clean()
-	 end
+         clean()
       elseif (evt.type == "mousemove") then
 	 mouseat(evt.x, evt.y)
       elseif (evt.type == "mousedown") then
@@ -292,6 +283,7 @@ function scui.EventLoop(widget, params, cursor, hotx, hoty)
       if(garbage) then garbage.Collect() end
    until ret ~= nil
    clean()
+   scui.PopCursor()
    if(garbage) then garbage.Release() end
    return ret
 end
@@ -334,6 +326,23 @@ function scui.CenterWidget(widget)
       widget.y = sh - widget.h
    else
       widget.y = math.floor((sh-widget.h)/2)
+   end
+end
+
+local pushed_cursors = {}
+function scui.PushCursor()
+   pushed_cursors[#pushed_cursors+1] = {screen:GetCursor()}
+end
+function scui.PopCursor()
+   if #pushed_cursors > 0 then
+      local cursor = table.remove(pushed_cursors, #pushed_cursors)
+      if #cursor > 0 then
+         screen:SetCursor(cursor[1], cursor[2], cursor[3])
+      else
+         screen:SetCursor(nil)
+      end
+   else
+      screen:SetCursor(nil)
    end
 end
 
