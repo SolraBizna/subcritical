@@ -677,9 +677,54 @@ int GraphicsDevice::Lua_GetScreenModes(lua_State* L) throw() {
 }
 
 int GraphicsDevice::Lua_SetCursor(lua_State* L) throw() {
+  int hotx = luaL_optinteger(L,2,0);
+  int hoty = luaL_optinteger(L,3,0);
+  /* save a reference to this cursor in the registry for later */
+  lua_pushlightuserdata(L, (void*)&GraphicsDevice::Lua_SetCursor);
+  lua_gettable(L, LUA_REGISTRYINDEX);
+  if(lua_isnil(L,-1)) {
+    lua_pop(L, 1);
+    lua_newtable(L);
+    lua_pushlightuserdata(L, (void*)&GraphicsDevice::Lua_SetCursor);
+    lua_pushvalue(L, -2);
+    lua_settable(L, LUA_REGISTRYINDEX);
+  }
+  // get registry[cookie][this]
+  lua_pushlightuserdata(L, this);
+  lua_gettable(L, -2);
+  // if it is nil, create it
+  if(lua_isnil(L, -1)) {
+    lua_pop(L, 1);
+    lua_createtable(L, 3, 0); // r[c] {}
+    lua_pushlightuserdata(L, this); // r[c] {} this
+    lua_pushvalue(L, -2); // r[c] {} this {}
+    lua_settable(L, -4); // r[c] {}
+  }
+  // registry[cookie][this] = {cursor, hotx, hoty}
+  lua_pushvalue(L, 1);
+  lua_rawseti(L, -2, 1);
+  lua_pushinteger(L, hotx);
+  lua_rawseti(L, -2, 2);
+  lua_pushinteger(L, hoty);
+  lua_rawseti(L, -2, 3);
+  // pop
+  lua_pop(L, 2);
   if(lua_isnil(L,1)) SetCursor(NULL, 0, 0);
-  else SetCursor(lua_toobject(L, 1, Graphic), luaL_optinteger(L,2,0), luaL_optinteger(L,3,0));
+  else SetCursor(lua_toobject(L, 1, Graphic), hotx, hoty);
   return 0;
+}
+
+int GraphicsDevice::Lua_GetCursor(lua_State* L) throw() {
+  lua_pushlightuserdata(L, (void*)&GraphicsDevice::Lua_SetCursor);
+  lua_gettable(L, LUA_REGISTRYINDEX);
+  if(lua_isnil(L, -1)) return 0;
+  lua_pushlightuserdata(L, this);
+  lua_gettable(L, -2);
+  if(lua_isnil(L, -1)) return 0;
+  lua_rawgeti(L, -2, 1);
+  lua_rawgeti(L, -2, 2);
+  lua_rawgeti(L, -2, 3);
+  return 3;
 }
 
 static const struct ObjectMethod DMethods[] = {
@@ -717,6 +762,7 @@ static const struct ObjectMethod GDMethods[] = {
   METHOD("GetMousePos", &GraphicsDevice::Lua_GetMousePos),
   METHOD("GetScreenModes", &GraphicsDevice::Lua_GetScreenModes),
   METHOD("SetCursor", &GraphicsDevice::Lua_SetCursor),
+  METHOD("GetCursor", &GraphicsDevice::Lua_GetCursor),
   NOMOREMETHODS(),
 };
 PROTOCOL_IMP(GraphicsDevice, Drawable, GDMethods);
