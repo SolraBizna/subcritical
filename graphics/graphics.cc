@@ -676,54 +676,58 @@ int GraphicsDevice::Lua_GetScreenModes(lua_State* L) throw() {
   return 2;
 }
 
+// this is an ugly way to get a unique identifier, but SubCritical already took
+// the good ones...
+static char cookie;
+
 int GraphicsDevice::Lua_SetCursor(lua_State* L) throw() {
   int hotx = luaL_optinteger(L,2,0);
   int hoty = luaL_optinteger(L,3,0);
   /* save a reference to this cursor in the registry for later */
-  lua_pushlightuserdata(L, (void*)&GraphicsDevice::Lua_SetCursor);
-  lua_gettable(L, LUA_REGISTRYINDEX);
+  lua_pushlightuserdata(L, (void*)&cookie);
+  lua_gettable(L, LUA_REGISTRYINDEX); // r[c]
   if(lua_isnil(L,-1)) {
-    lua_pop(L, 1);
-    lua_newtable(L);
-    lua_pushlightuserdata(L, (void*)&GraphicsDevice::Lua_SetCursor);
-    lua_pushvalue(L, -2);
-    lua_settable(L, LUA_REGISTRYINDEX);
+    lua_pop(L, 1); // <empty>
+    lua_newtable(L); // r[c]
+    lua_pushlightuserdata(L, (void*)&cookie); // r[c] c
+    lua_pushvalue(L, -2); // r[c] c r[c]
+    lua_settable(L, LUA_REGISTRYINDEX); // r[c]
   }
   // get registry[cookie][this]
-  lua_pushlightuserdata(L, this);
-  lua_gettable(L, -2);
+  lua_pushlightuserdata(L, this); // r[c] this
+  lua_gettable(L, -2); // r[c] r[c][this]
   // if it is nil, create it
   if(lua_isnil(L, -1)) {
-    lua_pop(L, 1);
+    lua_pop(L, 1); // r[c]
     lua_createtable(L, 3, 0); // r[c] {}
     lua_pushlightuserdata(L, this); // r[c] {} this
     lua_pushvalue(L, -2); // r[c] {} this {}
     lua_settable(L, -4); // r[c] {}
   }
   // registry[cookie][this] = {cursor, hotx, hoty}
-  lua_pushvalue(L, 1);
-  lua_rawseti(L, -2, 1);
-  lua_pushinteger(L, hotx);
+  lua_pushvalue(L, 1); // r[c] r[c][t] cursor
+  lua_rawseti(L, -2, 1); // r[c] r[c][t]
+  lua_pushinteger(L, hotx); // ... and so on
   lua_rawseti(L, -2, 2);
   lua_pushinteger(L, hoty);
   lua_rawseti(L, -2, 3);
   // pop
-  lua_pop(L, 2);
+  lua_pop(L, 2); // <empty>
   if(lua_isnil(L,1)) SetCursor(NULL, 0, 0);
   else SetCursor(lua_toobject(L, 1, Graphic), hotx, hoty);
   return 0;
 }
 
 int GraphicsDevice::Lua_GetCursor(lua_State* L) throw() {
-  lua_pushlightuserdata(L, (void*)&GraphicsDevice::Lua_SetCursor);
-  lua_gettable(L, LUA_REGISTRYINDEX);
-  if(lua_isnil(L, -1)) return 0;
-  lua_pushlightuserdata(L, this);
-  lua_gettable(L, -2);
-  if(lua_isnil(L, -1)) return 0;
-  lua_rawgeti(L, -2, 1);
-  lua_rawgeti(L, -2, 2);
-  lua_rawgeti(L, -2, 3);
+  lua_pushlightuserdata(L, (void*)&cookie); // c
+  lua_gettable(L, LUA_REGISTRYINDEX); // r[c]
+  if(lua_isnil(L, -1)) return 1; // ...return nil...
+  lua_pushlightuserdata(L, this); // r[c] this
+  lua_gettable(L, -2); // r[c] r[c][this]
+  if(lua_isnil(L, -1)) return 1; // ...return nil...
+  lua_rawgeti(L, -1, 1); // r[c] r[c][this] cursor
+  lua_rawgeti(L, -2, 2); // r[c] r[c][this] cursor x
+  lua_rawgeti(L, -3, 3); // r[c] r[c][this] cursor x y
   return 3;
 }
 
