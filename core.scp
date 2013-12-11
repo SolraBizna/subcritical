@@ -1,5 +1,5 @@
 license Compatible
-version 0c1 core
+version 0c2 core
 
 // This definition is required, and is treated specially.
 class Object
