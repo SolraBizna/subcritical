@@ -263,11 +263,18 @@ function scui.EventLoop(widget, params, cursor, hotx, hoty)
 	    ret = focus_widget:OnText(evt.text)
 	 end
       elseif (evt.type == "keydown") then
-	 if(hotkeys[evt.key]) then
-	    local key_widget = hotkeys[evt.key]
+         local t = {evt.key}
+         if evt.mod.shift then table.insert(t, 1, "shift") end
+         if evt.mod.alt then table.insert(t, 1, "alt") end
+         if evt.mod.control then table.insert(t, 1, "control") end
+         if evt.mod.meta then table.insert(t, 1, "meta") end
+         if evt.mod.super then table.insert(t, 1, "super") end
+         local effective_key = table.concat(t, "+");
+	 if(hotkeys[effective_key]) then
+	    local key_widget = hotkeys[effective_key]
 	    if(key_widget == true) then key_widget = widget end
-	    assert(hotkeys[evt.key].OnHotKey)
-	    ret = hotkeys[evt.key]:OnHotKey(evt.key, evt.mod)
+	    assert(key_widget.OnHotKey)
+	    ret = key_widget:OnHotKey(evt.key, evt.mod)
 	 end
 	 if(ret) then break end
 	 if(focus_widget and focus_widget.OnKeyDown) then
