@@ -199,6 +199,7 @@ class EXPORT SDLGraphics : public GraphicsDevice {
   Graphic* cursor, *cbak, *old_cursor;
   int cursor_hx, cursor_hy;
   int cx, cy, old_cx, old_cy, old_cw, old_ch;
+  bool lsuper_down, rsuper_down;
   static LOCAL Uint32 desktop_w, desktop_h;
 };
 
@@ -353,7 +354,7 @@ static void _assertgl(const char* file, int line) {
 #endif
 
 SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title, int true_width, int true_height, bool keep_aspect, bool smooth_filter, bool borderless, bool vsync, bool opengl) :
-  doing_relmouse(false), doing_textok(false), cursor(NULL), cbak(NULL), old_cursor(NULL), cx(0), cy(0) {
+  doing_relmouse(false), doing_textok(false), cursor(NULL), cbak(NULL), old_cursor(NULL), cx(0), cy(0), lsuper_down(false), rsuper_down(false) {
 #if defined(__MACOSX__) || defined(__MACOS__)
   // If we're running on 10.7 or later, always try to use OpenGL. This will...
   // just avoid opening a huge can of worms all over the place, what with the
@@ -875,7 +876,15 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
       lua_pushboolean(L, evt.key.keysym.mod & kmodpairs[n].mod);
       lua_setfield(L, -2, kmodpairs[n].name);
     }
+    lua_pushboolean(L, lsuper_down || rsuper_down);
+    lua_setfield(L, -2, "super");
+    lua_pushboolean(L, lsuper_down);
+    lua_setfield(L, -2, "lsuper");
+    lua_pushboolean(L, rsuper_down);
+    lua_setfield(L, -2, "rsuper");
     lua_setfield(L, -2, "mod");
+    if(evt.key.keysym.sym == SDLK_LSUPER) lsuper_down = evt.key.state == SDL_PRESSED;
+    if(evt.key.keysym.sym == SDLK_RSUPER) rsuper_down = evt.key.state == SDL_PRESSED;
     break;
   case SDL_ACTIVEEVENT:
     if(evt.active.state == SDL_APPACTIVE) {
