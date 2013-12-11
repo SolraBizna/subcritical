@@ -199,7 +199,7 @@ class EXPORT SDLGraphics : public GraphicsDevice {
   Graphic* cursor, *cbak, *old_cursor;
   int cursor_hx, cursor_hy;
   int cx, cy, old_cx, old_cy, old_cw, old_ch;
-  bool lsuper_down, rsuper_down;
+  bool lsuper_down, rsuper_down, have_mouse_focus, had_mouse_focus;
   static LOCAL Uint32 desktop_w, desktop_h;
 };
 
@@ -354,7 +354,7 @@ static void _assertgl(const char* file, int line) {
 #endif
 
 SDLGraphics::SDLGraphics(int width, int height, bool windowed, const char* title, int true_width, int true_height, bool keep_aspect, bool smooth_filter, bool borderless, bool vsync, bool opengl) :
-  doing_relmouse(false), doing_textok(false), cursor(NULL), cbak(NULL), old_cursor(NULL), cx(0), cy(0), lsuper_down(false), rsuper_down(false) {
+  doing_relmouse(false), doing_textok(false), cursor(NULL), cbak(NULL), old_cursor(NULL), cx(0), cy(0), lsuper_down(false), rsuper_down(false), have_mouse_focus(false), had_mouse_focus(false) {
 #if defined(__MACOSX__) || defined(__MACOS__)
   // If we're running on 10.7 or later, always try to use OpenGL. This will...
   // just avoid opening a huge can of worms all over the place, what with the
@@ -737,10 +737,10 @@ void SDLGraphics::Update(int x, int y, int w, int h) throw() {
   if(w > 0 || h > 0)
     target_dirty.AddRect(x,y,w,h,target);
   int clip_l, clip_t, clip_r, clip_b, cbx = 0, cby = 0, cbw = 0, cbh = 0;
-  if(cursor || old_cursor) {
+  if((have_mouse_focus && cursor) || (had_mouse_focus && old_cursor)) {
     GetClipRect(clip_l, clip_t, clip_r, clip_b);
     SetClipRect(0, 0, width-1, height-1);
-    if(cursor) {
+    if(have_mouse_focus && cursor) {
       cbx = cx-cursor_hx; cby = cy-cursor_hy;
       cbw = cursor->width; cbh = cursor->height;
       cbak->CopyRect(this, cbx, cby, cbw, cbh, 0, 0);
@@ -748,7 +748,7 @@ void SDLGraphics::Update(int x, int y, int w, int h) throw() {
       Blit(cursor, cbx, cby);
       target_dirty.AddRect(cbx, cby, cbw, cbh, target);
     }
-    if(old_cursor) {
+    if(had_mouse_focus && old_cursor) {
       target_dirty.AddRect(old_cx, old_cy, old_cw, old_ch, target);
     }
   }
@@ -780,9 +780,9 @@ void SDLGraphics::Update(int x, int y, int w, int h) throw() {
   }
 #endif
  skip_update:
-  if(cursor || old_cursor) {
+  if((have_mouse_focus && cursor) || (had_mouse_focus && old_cursor)) {
     SetClipRect(clip_l, clip_t, clip_r, clip_b);
-    if(cursor) {
+    if(have_mouse_focus && cursor) {
       Copy(cbak, cbx, cby);
       old_cx = cbx;
       old_cy = cby;
@@ -791,6 +791,7 @@ void SDLGraphics::Update(int x, int y, int w, int h) throw() {
     }
     old_cursor = cursor;
   }
+  had_mouse_focus = have_mouse_focus;
 }
 
 void SDLGraphics::UpdateAll() throw() {
@@ -887,7 +888,8 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
     if(evt.key.keysym.sym == SDLK_RSUPER) rsuper_down = evt.key.state == SDL_PRESSED;
     break;
   case SDL_ACTIVEEVENT:
-    if(evt.active.state == SDL_APPACTIVE) {
+    switch(evt.active.state) {
+    case SDL_APPACTIVE:
       lua_createtable(L, 0, 1);
       if(evt.active.gain)
 	lua_pushliteral(L, "deiconify");
@@ -895,7 +897,19 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
 	lua_pushliteral(L, "iconify");
       lua_setfield(L, -2, "type");
       break;
-    } else return RealGetEvent(L, wait, relmouse, textok);
+    case SDL_APPMOUSEFOCUS:
+      have_mouse_focus = !!evt.active.gain;
+      evt.active.type = SDL_MOUSEMOTION;
+      if(!have_mouse_focus) {
+        evt.motion.state = 0; // we ignore this field
+        evt.motion.xrel = 0;
+        evt.motion.xrel = 0;
+        evt.motion.x = cx;
+        evt.motion.y = cy;
+        SDL_PushEvent(&evt);
+      }
+    }
+    return RealGetEvent(L, wait, relmouse, textok);
   case SDL_MOUSEMOTION:
     lua_createtable(L, 0, 3);
     lua_pushliteral(L, "mousemove");
