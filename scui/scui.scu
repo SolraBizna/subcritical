@@ -159,6 +159,8 @@ function scui.EventLoop(widget, params, cursor, hotx, hoty)
    local ret = nil
    params = params or {}
    local idle = params.idle
+   local filter = params.event_filter
+   local unhandled_keydown = params.unhandled_keydown
    local hotkeys = widget.hotkeys
    local focus_widget,clicked_widgets = nil,{}
    local lbcx,lbcy
@@ -236,6 +238,11 @@ function scui.EventLoop(widget, params, cursor, hotx, hoty)
 	    scui.RefreshWidget(widget, dirty_rect)
 	 end
          clean()
+      elseif filter then
+         evt = filter(evt)
+      end
+      if evt == nil then
+         -- event got filtered out, go around again
       elseif (evt.type == "mousemove") then
 	 mouseat(evt.x, evt.y)
       elseif (evt.type == "mousedown") then
@@ -262,6 +269,7 @@ function scui.EventLoop(widget, params, cursor, hotx, hoty)
 	    ret = focus_widget:OnText(evt.text)
 	 end
       elseif (evt.type == "keydown") then
+         local handled = false
          local t = {evt.key}
          if evt.mod.shift then table.insert(t, 1, "shift") end
          if evt.mod.alt then table.insert(t, 1, "alt") end
@@ -274,11 +282,16 @@ function scui.EventLoop(widget, params, cursor, hotx, hoty)
 	    if(key_widget == true) then key_widget = widget end
 	    assert(key_widget.OnHotKey)
 	    ret = key_widget:OnHotKey(evt.key, evt.mod)
+            handled = true
 	 end
 	 if(ret) then break end
-	 if(focus_widget and focus_widget.OnKeyDown) then
+	 if(not handled and focus_widget and focus_widget.OnKeyDown) then
 	    ret = focus_widget:OnKeyDown(evt.key, evt.mod)
+            handled = true
 	 end
+         if not handled and unhandled_keydown then
+            ret = unhandled_keydown(evt)
+         end
       elseif (evt.type == "keyup") then
 	 if(focus_widget and focus_widget.OnKeyUp) then
 	    ret = focus_widget:OnKeyUp(evt.key, evt.mod)
