@@ -123,8 +123,7 @@ end
 -- Can also be used to backup the pixels comprising a widget
 function scui.BackupWidget(widget)
    assert(widget.w and widget.h, "scui.BackupWidget called for a virtual widget?!")
-   widget.backup = SC.Construct("Graphic", widget.w, widget.h)
-   widget.backup:OptimizeFor(screen) -- a comforting but unnecessary idiom
+   widget.backup = SC.Construct("Graphic", widget.w, widget.h, screen)
    widget.backup:Blit(screen, widget._x, widget._y, widget.w, widget.h, 0, 0)
 end
 
