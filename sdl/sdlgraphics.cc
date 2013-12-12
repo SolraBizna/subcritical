@@ -901,12 +901,17 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
       have_mouse_focus = !!evt.active.gain;
       evt.active.type = SDL_MOUSEMOTION;
       if(!have_mouse_focus) {
-        evt.motion.state = 0; // we ignore this field
-        evt.motion.xrel = 0;
-        evt.motion.xrel = 0;
-        evt.motion.x = cx;
-        evt.motion.y = cy;
-        SDL_PushEvent(&evt);
+        lua_createtable(L, 0, 3);
+        lua_pushliteral(L, "mousemove");
+        lua_setfield(L, -2, "type");
+        int report_x, report_y;
+        if(relmouse) report_y = report_x = 0;
+        else report_y = cy, report_x = cx;
+        lua_pushnumber(L, report_x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, report_y);
+        lua_setfield(L, -2, "y");
+        return 1;
       }
     }
     return RealGetEvent(L, wait, relmouse, textok);
