@@ -899,7 +899,6 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
       break;
     case SDL_APPMOUSEFOCUS:
       have_mouse_focus = !!evt.active.gain;
-      evt.active.type = SDL_MOUSEMOTION;
       if(!have_mouse_focus) {
         lua_createtable(L, 0, 3);
         lua_pushliteral(L, "mousemove");
@@ -916,6 +915,7 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
     }
     return RealGetEvent(L, wait, relmouse, textok);
   case SDL_MOUSEMOTION:
+    have_mouse_focus = true;
     lua_createtable(L, 0, 3);
     lua_pushliteral(L, "mousemove");
     lua_setfield(L, -2, "type");
@@ -947,8 +947,9 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
       lua_setfield(L, -2, "y");
     }
     break;
-  case SDL_MOUSEBUTTONUP:
   case SDL_MOUSEBUTTONDOWN:
+    have_mouse_focus = true;
+  case SDL_MOUSEBUTTONUP:
     lua_createtable(L, 0, relmouse ? 2 : 4);
     lua_pushstring(L, evt.button.state ? "mousedown" : "mouseup");
     lua_setfield(L, -2, "type");
