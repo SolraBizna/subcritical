@@ -10,7 +10,8 @@
 <p><tt>SubCritical</tt> is a normal Lua module. It can also be addressed by <tt>subcritical</tt>, <tt>SC</tt>, or <tt>sc</tt>.</p>
 <dl>
 <dt class="code"><a name="ParseCommandLine" /><i>result</i> = SubCritical.ParseCommandLine(<i>string</i>)</dt>
-<dd>Returns each token in string. Like in a shell, tokens are separated by spaces, and you can include spaces in tokens with quotes. Some form of escaping is supported as well. (I won't document the specifics.)</dd>
+<dd>Returns each token in string. Like in a shell, tokens are separated by spaces, and you can include spaces in tokens with quotes. Some form of escaping is supported as well. (I won't document the specifics, as they may be subject to change and may not even be consistent from platform to platform.)</dd>
+<dd>This should only be used for direct user input, and never for anything hardcoded or serialized.</dd>
 <dd>Example: <tt>ParseCommandLine[[foo bar "canada goo"se 'cheese\'n\'rice']]</tt> -> <tt>{"foo", "bar", "canada goose", "cheese'n'rice"}</tt></dd>
 <dt class="code"><a name="Choices" /><i>table</i> = SubCritical.Choices(<i>class</i>)</dt>
 <dd>Returns an array containing the names of all available implementors of <i class="code">class</i>, in order from best priority to worst. Normally you do not need this unless you want to offer the user a choice of which implementor to use (see <a href="#ConstructSpecific">ConstructSpecific</a>.)</dd>
