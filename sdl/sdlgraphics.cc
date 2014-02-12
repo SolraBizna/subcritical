@@ -877,6 +877,10 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
       lua_pushboolean(L, evt.key.keysym.mod & kmodpairs[n].mod);
       lua_setfield(L, -2, kmodpairs[n].name);
     }
+    if(evt.key.state == SDL_RELEASED) {
+      if(evt.key.keysym.sym == SDLK_LSUPER) lsuper_down = false;
+      if(evt.key.keysym.sym == SDLK_RSUPER) rsuper_down = false;
+    }
     lua_pushboolean(L, lsuper_down || rsuper_down);
     lua_setfield(L, -2, "super");
     lua_pushboolean(L, lsuper_down);
@@ -884,8 +888,10 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
     lua_pushboolean(L, rsuper_down);
     lua_setfield(L, -2, "rsuper");
     lua_setfield(L, -2, "mod");
-    if(evt.key.keysym.sym == SDLK_LSUPER) lsuper_down = evt.key.state == SDL_PRESSED;
-    if(evt.key.keysym.sym == SDLK_RSUPER) rsuper_down = evt.key.state == SDL_PRESSED;
+    if(evt.key.state == SDL_PRESSED) {
+      if(evt.key.keysym.sym == SDLK_LSUPER) lsuper_down = true;
+      if(evt.key.keysym.sym == SDLK_RSUPER) rsuper_down = true;
+    }
     break;
   case SDL_ACTIVEEVENT:
     switch(evt.active.state) {
