@@ -1,0 +1,5 @@
+license Compatible
+version 0c2
+
+class SDL2Graphics : GraphicsDevice concrete @ 90000
+class SDL2Sound : SoundDevice concrete @ 90000

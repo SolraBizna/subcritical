@@ -1,0 +1,20 @@
+-- -*- lua -*-
+local havesdl2config = os.execute[[which sdl2-config >/dev/null 2>&1]]
+if not havesdl2config then
+   print("sdl2-config not found, not building SDL 2.0 driver")
+   targets = {}
+   install = {}
+   return
+end
+
+local os = config_question("OS/COMPILER")
+
+append_cflags"`sdl2-config --cflags`"
+
+targets = {
+   ["scsdl2"]={"sdl2graphics.cc","sdl2man.cc","sdl2sound.cc",deps={"graphics","sound","core"}, libflags="`sdl2-config --libs`"},
+}
+
+install = {
+   packages={"scsdl2"}, headers={"sdl2man.h"}
+}
