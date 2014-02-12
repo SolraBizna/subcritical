@@ -2,7 +2,7 @@
 
 --[[
   This source file is part of the SubCritical kernel.
-  Copyright (C) 2008-2013 Solra Bizna.
+  Copyright (C) 2008-2014 Solra Bizna.
 
   SubCritical is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -78,7 +78,7 @@ end
 
 subcritical = {}
 subcritical.version = 0x0c2
-subcritical.copyright = ("SubCritical %03x \194\169 2008-2013 Solra Bizna."):format(subcritical.version)
+subcritical.copyright = ("SubCritical %03x \194\169 2008-2014 Solra Bizna."):format(subcritical.version)
 -- aliases
 SubCritical,SC,sc = subcritical,subcritical,subcritical
 
