@@ -1,13 +1,14 @@
 -- -*- lua -*-
 local havesdlconfig = os.execute[[which sdl-config >/dev/null 2>&1]]
+
 local os = config_question("OS/COMPILER")
 
-if(os == "mingw" and not havesdlconfig) then
-   append_cflags"-IC:\\MinGW\\include\\SDL"
-elseif(not havesdlconfig) then
-   append_cflags"-I/usr/local/include/SDL -Dmain=SDL_main"
-else
+if havesdlconfig then
    append_cflags"`sdl-config --cflags`"
+elseif os == "mingw" then
+   append_cflags"-IC:\\MinGW\\include\\SDL"
+else
+   append_cflags"-I/usr/local/include/SDL -Dmain=SDL_main"
 end
 
 targets = {
