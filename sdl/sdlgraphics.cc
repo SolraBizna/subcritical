@@ -956,27 +956,42 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
   case SDL_MOUSEBUTTONDOWN:
     have_mouse_focus = true;
   case SDL_MOUSEBUTTONUP:
-    lua_createtable(L, 0, relmouse ? 2 : 4);
-    lua_pushstring(L, evt.button.state ? "mousedown" : "mouseup");
-    lua_setfield(L, -2, "type");
-    lua_pushnumber(L, evt.button.button);
-    lua_setfield(L, -2, "button");
-    if(!relmouse) {
-      int report_x, report_y;
-      if(target != screen) {
-        report_x = (evt.button.x-fake_rectangle.x)*target->w/screen->w;
-        report_y = (evt.button.y-fake_rectangle.y)*target->h/screen->h;
-      }
-      else {
-        report_x = evt.button.x;
-        report_y = evt.button.y;
-      }
-      cx = report_x;
-      cy = report_y;
-      lua_pushnumber(L, report_x);
+    switch(evt.button.button) {
+    case SDL_BUTTON_WHEELUP:
+    case SDL_BUTTON_WHEELDOWN:
+      lua_createtable(L, 0, 3);
+      lua_pushliteral(L, "scroll");
+      lua_setfield(L, -2, "type");
+      lua_pushnumber(L, 0);
       lua_setfield(L, -2, "x");
-      lua_pushnumber(L, report_y);
+      lua_pushnumber(L, evt.button.button == SDL_BUTTON_WHEELUP ? 1 : -1);
       lua_setfield(L, -2, "y");
+      break;
+    default:
+      // ...
+      if(evt.button.button > SDL_BUTTON_WHEELUP) evt.button.button -= 2;
+      lua_createtable(L, 0, relmouse ? 2 : 4);
+      lua_pushstring(L, evt.button.state ? "mousedown" : "mouseup");
+      lua_setfield(L, -2, "type");
+      lua_pushnumber(L, evt.button.button);
+      lua_setfield(L, -2, "button");
+      if(!relmouse) {
+        int report_x, report_y;
+        if(target != screen) {
+          report_x = (evt.button.x-fake_rectangle.x)*target->w/screen->w;
+          report_y = (evt.button.y-fake_rectangle.y)*target->h/screen->h;
+        }
+        else {
+          report_x = evt.button.x;
+          report_y = evt.button.y;
+        }
+        cx = report_x;
+        cy = report_y;
+        lua_pushnumber(L, report_x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, report_y);
+        lua_setfield(L, -2, "y");
+      }
     }
     break;
     // TODO: joysticks
