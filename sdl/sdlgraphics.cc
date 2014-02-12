@@ -872,7 +872,7 @@ int SDLGraphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool texto
     lua_setfield(L, -2, "type");
     lua_pushstring(L, SDL_GetKeyName(evt.key.keysym.sym));
     lua_setfield(L, -2, "key");
-    lua_createtable(L, 0, sizeof(kmodpairs)/sizeof(*kmodpairs));
+    lua_createtable(L, 0, sizeof(kmodpairs)/sizeof(*kmodpairs) + 3);
     for(unsigned n = 0; n < sizeof(kmodpairs)/sizeof(*kmodpairs); ++n) {
       lua_pushboolean(L, evt.key.keysym.mod & kmodpairs[n].mod);
       lua_setfield(L, -2, kmodpairs[n].name);
