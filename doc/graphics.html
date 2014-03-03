@@ -192,7 +192,7 @@ end</pre></dd>
 </dl>
 <h3 class="code"><a name="CoordArray" />CoordArray</h3>
 <p>A <tt>CoordArray</tt> stores screen-space coordinates.</p>
-<p>Warning: This is <i>not</i> faster than a Lua table if it is Lua code that is going to be accessing the coordinates. In addition, coordinates are not stored with the full range of Lua number precision. <tt>CoordArray</tt> is meant to be used as input to primitive drawing functions, and serves no other useful purpose.</p>
+<p>Warning: This is <i>not</i> faster than a Lua table if it is Lua code that is going to be accessing the coordinates. In addition, coordinates are not stored with the full range of Lua number precision, but only enough to represent a useful range of window-space vertex positions. <tt>CoordArray</tt> is meant to be used as input to primitive drawing functions, and serves no other useful purpose.</p>
 <p>A <tt>CoordArray</tt> is not constructed directly, but is created by other means (e.g. <a class="code" href="#CompileCoords">CompileCoords</a> or one of several functions in the <a class="code" href="vector.html">vector</a> package).</p>
 <dl>
 <dt class="code"><a name="CoordArray:GetCount"><i>count</i> = <i>array</i>:GetCount()</dt>
@@ -201,7 +201,7 @@ end</pre></dd>
 <dd>Returns the coordinates of the point at the given (0-based) <i class="code">index</i>.</dd>
 </dl>
 <h3 class="code"><a name="IndexArray" />IndexArray</h3>
-<p>A <tt>IndexArray</tt> stores zero-based indices.</p>
+<p>A <tt>IndexArray</tt> stores zero-based indices. There is only enough precision to reference 65,536 different vertices; if you need more, split them across multiple arrays.</p>
 <p>Warning: This is <i>not</i> faster than a Lua table if it is Lua code that is going to be accessing the indices. <tt>IndexArray</tt> is meant to be used as input to primitive-related functions, and serves no other useful purpose.</p>
 <p>An <tt>IndexArray</tt> is not constructed directly, but is created by other means (e.g. <a class="code" href="#CompileIndices">CompileIndices</a> or the <a class="code" href="#CullTriangles">CullTriangles</a> functions).</p>
 <dl>

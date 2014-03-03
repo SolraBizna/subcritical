@@ -663,7 +663,9 @@ SUBCRITICAL_UTILITY(CompileIndices)(lua_State* L) {
       delete ret;
       return luaL_error(L, "CompileIndices was given a table containing a non-number!");
     }
-    ret->indices[n] = (int)lua_tonumber(L,-1);
+    lua_Number num = lua_tonumber(L,-1);
+    if(num < 0 || num > 65535) return luaL_error(L, "Indices must be in the range 0-65535. Consider splitting into multiple CoordArrays.");
+    ret->indices[n] = (int)num;
     lua_pop(L,1);
   }
   ret->Push(L);
