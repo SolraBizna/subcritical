@@ -244,8 +244,8 @@ namespace SubCritical {
     DumpOut(lua_State* L);
     friend class GraphicDumper;
   };
-  extern EXPORT uint16_t SrgbToLinear[256];
-  extern EXPORT uint8_t LinearToSrgb[65536];
+  extern EXPORT const uint16_t SrgbToLinear[256];
+  extern EXPORT const uint8_t LinearToSrgb[65536];
 }
 
 #endif
