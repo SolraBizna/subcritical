@@ -449,6 +449,32 @@ int SDL2Graphics::RealGetEvent(lua_State* L, bool wait, bool relmouse, bool text
     lua_pushnumber(L, evt.edit.length);
     lua_setfield(L, -2, "length");
     break;
+  case SDL_WINDOWEVENT:
+    /* currently only one window can exist */
+    switch(evt.window.event) {
+    case SDL_WINDOWEVENT_EXPOSED:
+      UpdateAll();
+      break;
+    case SDL_WINDOWEVENT_ENTER:
+      have_mouse_focus = true;
+      break;
+    case SDL_WINDOWEVENT_LEAVE:
+      have_mouse_focus = false;
+      lua_createtable(L, 0, 3);
+      lua_pushliteral(L, "mousemove");
+      lua_setfield(L, -2, "type");
+      int report_x, report_y;
+      if(relmouse) report_y = report_x = 0;
+      else report_y = cy, report_x = cx;
+      lua_pushnumber(L, report_x);
+      lua_setfield(L, -2, "x");
+      lua_pushnumber(L, report_y);
+      lua_setfield(L, -2, "y");
+      return 1;
+    default:
+      break;
+    }
+    /* fall through */
   default:
     return RealGetEvent(L, wait, relmouse, textok);
   }
