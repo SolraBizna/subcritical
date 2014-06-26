@@ -26,6 +26,20 @@
 
 using namespace SubCritical;
 
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
+// not sure which GCC version actually implemented this builtin
+// clang helpfully provides a __has_builtin magic macro that tells us
+#if __GNUC__ >= 4 || __has_builtin(__sync_bool_compare_and_swap)
+// shouldn't ever actually loop since only one thread is allowed to write
+#define atomic_write(where, wat) while(!__sync_bool_compare_and_swap(&where, where, wat))
+#else
+#warning "No atomic_write primitive on your platform. SoundMixer may be unstable (but probably won't be)."
+#define atomic_write(where, wat) where = wat
+#endif
+
 namespace SoundOpcode {
   enum SoundOpcode {
     Sentinel = 0,
@@ -110,14 +124,15 @@ public:
 #warning There may be a tiny, tiny, tiny chance (roughly 200,000,000,000,000 to one) that attempting to queue a SoundCommand will crash. Add fence code here. If your compiler supports "Intel Itanium Processor-specific Application Binary Interface" section 7.4 (which can apply on all platforms, not just Itanium), just enable the code above this warning.
 #endif
     transact_back = (transact_back + 1) & qmask;
-    if(!transacting) back = transact_back;
+    if(!transacting) atomic_write(back, transact_back);
     return true;
   }
   inline void HandleNextCommand() {
     if(front != back) {
       for(size_t n = front; n != back; n = (n + 1) & qmask) {
 	if(q[n].op == SoundOpcode::ClearQueue) {
-	  front = (n + 1) & qmask;
+          size_t new_front = (n + 1) & qmask;
+          atomic_write(front, new_front);
 	  delay = -1;
           // keep searching, there may be another ClearQueue
 	}
@@ -186,7 +201,8 @@ public:
 	if(Q.flag2) flags[1] = true;
 	if(Q.flag3) flags[2] = true;
 	if(Q.flag4) flags[3] = true;
-	front = (front + 1) & qmask;
+        size_t new_front = (front + 1) & qmask;
+        atomic_write(front, new_front);
 	HandleNextCommand();
       }
     }
@@ -618,7 +634,7 @@ void SoundMixer::CommitTransaction() throw() {
   mutex.Lock();
   for(size_t ch = 0; ch < num_channels; ++ch) {
     channels[ch].transacting = false;
-    channels[ch].back = channels[ch].transact_back;
+    atomic_write(channels[ch].back, channels[ch].transact_back);
   }
   mutex.Unlock();
 }
