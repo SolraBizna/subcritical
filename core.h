@@ -24,6 +24,7 @@
 
 #define _BSD_SOURCE 1
 #include <sys/types.h>
+#include <sys/endian.h>
 
 #if defined(__MACOSX__) || defined(__APPLE__) || defined(macintosh)
 #define Fixed __Fixed__

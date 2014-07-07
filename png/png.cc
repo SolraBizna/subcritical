@@ -22,6 +22,7 @@
 
 #include <string.h>
 #include <png.h>
+#include <zlib.h>
 #include <assert.h>
 
 using namespace SubCritical;
