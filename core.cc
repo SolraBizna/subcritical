@@ -217,9 +217,9 @@ const char* SubCritical::TypeName(lua_State* L, int n) {
 }
 
 LUA_EXPORT int Init_core(lua_State* L) {
-  union { uint8_t small; uint32_t large; } endiantest;
-  endiantest.large = 1;
-  bool really_little_endian = !!endiantest.small;
+  union { uint8_t _small; uint32_t _large; } endiantest;
+  endiantest._large = 1;
+  bool really_little_endian = !!endiantest._small;
   if(really_little_endian != little_endian)
     return luaL_error(L, "WRONG RUNTIME ENDIANNESS! This copy of SubCritical was built incorrectly.");
 #if defined(i386) || defined(__i386) || defined(__i386__)

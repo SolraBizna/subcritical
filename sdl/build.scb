@@ -5,8 +5,6 @@ local os = config_question("OS/COMPILER")
 
 if havesdlconfig then
    append_cflags"`sdl-config --cflags`"
-elseif os == "mingw" then
-   append_cflags"-IC:\\MinGW\\include\\SDL"
 else
    append_cflags"-I/usr/local/include/SDL -Dmain=SDL_main"
 end
@@ -24,6 +22,8 @@ end
 if os == "darwin" or config_question("ALLOW_OPENGL", "Compile OpenGL support? (Answer no only if you don't have OpenGL headers.)", "bool", true) then
    if(os == "darwin") then
       targets.scsdl.libflags = targets.scsdl.libflags .. " -framework OpenGL"
+   elseif(os == "mingw") then
+      targets.scsdl.libflags = targets.scsdl.libflags .. " -lopengl32 -lglu32"
    else
       targets.scsdl.libflags = targets.scsdl.libflags .. " -lGL -lGLU"
    end

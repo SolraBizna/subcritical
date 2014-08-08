@@ -238,11 +238,9 @@ else
    local gld = os.getenv("LD") or os.getenv("CXX") or "g++"
    local platforms = {
       linux={cxx=gpp.." -pthread -Wall -Wno-pmf-conversions -fPIC -O2 "..lua_cflags.." -c", ld=gld.." -pthread -fPIC -O -shared", soext=".so"},
-      --cygwin={cxx=gpp.." -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -c", ld=gld.." -pthread -O -shared", soext=".dll"},
-      --mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 "..lua_cflags.." -c", ld=gld.." -O -shared", soext=".dll"},
-      cygwin={cxx=gpp.." -pthread -g -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -c", ld=gld.." -pthread -O -shared", ld_libflags="-llua", soext=".scc"},
-      cygwin_mingw={cxx=gpp.." -pthread -mno-cygwin -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 "..lua_cflags.." -c", ld=gld.." -pthread -mno-cygwin -O -shared", ld_libflags="-llua", soext=".scc"},
-      mingw={cxx=gpp.." -pthread -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O3 "..lua_cflags.." -c", ld=gld.." -pthread -O -L/usr/local/lib -shared -static-libgcc", ld_libflags="-llua", soext=".scc"},
+      cygwin={cxx=gpp.." -pthread -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -c", ld=gld.." -pthread -O -shared", ld_libflags="-llua", soext=".scc"},
+      cygwin_mingw={cxx=gpp.." -mno-cygwin -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 "..lua_cflags.." -c", ld=gld.." -mno-cygwin -O -shared", ld_libflags="-llua", soext=".scc"},
+      mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O3 "..lua_cflags.." -c", ld=gld.." -O -L/usr/local/lib -shared -static-libgcc -static-libstdc++", ld_libflags="-llua", soext=".scc"},
       darwin={cxx=gpp.." -pthread -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" "..gld.." -pthread -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
    }
    local platform = platforms[osc]
@@ -299,7 +297,11 @@ if(install_path == "") then
 end
 if(onpurewindows) then
    function sanitize_path(path)
-      return (path.."\\"):gsub("\\\\+", "\\")
+      return (path.."\\"):gsub("[\\/]+", "\\")
+   end
+elseif(onwindows) then
+   function sanitize_path(path)
+      return (path.."/"):gsub("[\\/]+", "/")
    end
 else
    function sanitize_path(path)
@@ -700,6 +702,10 @@ else
    end
    for i,v in ipairs(arg) do
       if(v ~= "clean") then
+	 -- msys will strangely capitalize install, so lower it
+	 if(v == "INSTALL" and onwindows) then
+	    v = v:lower()
+	 end
 	 if(not fake_targets[v] and not virtual_targets[v] and not real_targets[v]) then
 	    print("ERROR: "..v..": unknown target")
 	    os.exit(1)

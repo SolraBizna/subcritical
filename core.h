@@ -24,7 +24,29 @@
 
 #define _BSD_SOURCE 1
 #include <sys/types.h>
-#include <sys/endian.h>
+
+#if defined(WIN32) || defined(_WIN32) || defined(HAVE_WINDOWS)
+#include <sys/param.h>
+# if BYTE_ORDER == LITTLE_ENDIAN
+#  define le16toh(x) (x)
+#  define le32toh(x) (x)
+#  define le64toh(x) (x)
+#  define be16toh(x) __builtin_bswap16(x)
+#  define be32toh(x) __builtin_bswap32(x)
+#  define be64toh(x) __builtin_bswap64(x)
+# else
+#  define be16toh(x) (x)
+#  define be32toh(x) (x)
+#  define be64toh(x) (x)
+#  define le16toh(x) __builtin_bswap16(x)
+#  define le32toh(x) __builtin_bswap32(x)
+#  define le64toh(x) __builtin_bswap64(x)
+# endif
+#else
+// ... this is a can of worms for sure
+// sys/types.h will include the right header, supposedly
+// #include <sys/endian.h>
+#endif
 
 #if defined(__MACOSX__) || defined(__APPLE__) || defined(macintosh)
 #define Fixed __Fixed__
@@ -48,8 +70,6 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 }
-
-#include <pthread.h>
 
 /* exactly the same as the check in helper.cc */
 #if LUA_VERSION_NUM < 502
@@ -91,10 +111,35 @@ extern "C" {
 #endif
 #define LUA_EXPORT extern "C" EXPORT
 
+#if defined(WIN32) || defined(_WIN32) || defined(HAVE_WINDOWS)
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
 namespace SubCritical {
   /* Don't use this unless you know you need it. If you don't KNOW you need it,
      YOU DON'T NEED IT. */
-  /* TODO: Windows version of this class? */
+#if defined(WIN32) || defined(_WIN32) || defined(HAVE_WINDOWS)
+  class Mutex {
+  public:
+    inline Mutex() throw() {
+      mutex = CreateMutex(0, 0, 0);
+    }
+    inline ~Mutex() throw() {
+      CloseHandle(mutex);
+    }
+    inline void Lock() throw() {
+      /* We don't check errors, so this is not a kid's toy. */
+      WaitForSingleObject(mutex, INFINITE);
+    }
+    inline void Unlock() throw() {
+      ReleaseMutex(mutex);
+    }
+  private:
+    HANDLE mutex;
+  };
+#else
   class Mutex {
   public:
     inline Mutex() throw() {
@@ -116,6 +161,7 @@ namespace SubCritical {
   private:
     pthread_mutex_t mutex;
   };
+#endif
   static const bool little_endian = BYTE_ORDER == LITTLE_ENDIAN;
 #if BYTE_ORDER == LITTLE_ENDIAN
   static inline uint64_t Swap64(uint64_t u) { return be64toh(u); }
