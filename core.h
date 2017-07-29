@@ -22,7 +22,7 @@
 #ifndef _SUBCRITICAL_BASE_H
 #define _SUBCRITICAL_BASE_H
 
-#define _BSD_SOURCE 1
+#define _DEFAULT_SOURCE 1
 #include <sys/types.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(HAVE_WINDOWS)
