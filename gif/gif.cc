@@ -101,19 +101,19 @@ static int infp(GifFileType* gif, GifByteType* p, int n) {
 Graphic* GIFLoader::Load(const char* name) throw() {
   FILE* f = fopen(name, "rb");
   if(!f) return NULL;
-  GifFileType* gif = DGifOpen(f, infp);
+  GifFileType* gif = DGifOpen(f, infp, NULL);
   if(!gif) {
    fclose(f);
    return NULL;
   }
   if(DGifSlurp(gif) == GIF_ERROR) {
-    DGifCloseFile(gif);
+    DGifCloseFile(gif, NULL);
     fclose(f);
     return NULL;
   }
   fclose(f);
   if(gif->ImageCount <= 0) {
-    DGifCloseFile(gif);
+    DGifCloseFile(gif, NULL);
     return NULL;
   }
   if(gif->SavedImages[0].ImageDesc.Top + gif->SavedImages[0].ImageDesc.Height > gif->SHeight ||
@@ -167,7 +167,7 @@ Graphic* GIFLoader::Load(const char* name) throw() {
 		*d++ = 0xFF000000 | (palette[*s].Red << 16) | (palette[*s].Green << 8) | palette[*s].Blue;
 		++s;);
   }
-  DGifCloseFile(gif);
+  DGifCloseFile(gif, NULL);
   ret->has_alpha = false;
   return ret;
 }
