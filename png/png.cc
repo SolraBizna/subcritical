@@ -101,7 +101,7 @@ bool PNGDumper::Dump(Graphic* graphic, DumpOut& out, const char*& err) throw() {
     return false;
   png_infop info = png_create_info_struct(libpng);
   if(!info) {
-    png_destroy_write_struct(&libpng, NULL, NULL);
+    png_destroy_write_struct(&libpng, NULL);
     return false;
   }
   png_set_compression_level(libpng, Z_BEST_COMPRESSION);
