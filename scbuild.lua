@@ -163,7 +163,9 @@ end
 
 --print("Detecting Lua flags...")
 local lua_cflags = ""
-if os.execute("pkg-config lua5.2 --exists") then
+if os.execute("pkg-config lua5.3 --exists") then
+   lua_cflags="`pkg-config lua5.3 --cflags`"
+elseif os.execute("pkg-config lua5.2 --exists") then
    lua_cflags="`pkg-config lua5.2 --cflags`"
 else
    local searchpath = {
@@ -174,6 +176,8 @@ else
    }
    local subpath = {
       "/",
+      "/lua5.3/",
+      "/lua53/",
       "/lua5.2/",
       "/lua52/"
    }
@@ -382,7 +386,7 @@ end
 
 local hack_flags
 if(os.getenv("STUPID_LINKER_HACK_FLAGS")) then hack_flags = " " .. os.getenv("STUPID_LINKER_HACK_FLAGS") else hack_flags = "" end
-if(osc == "mingw") then hack_flags = " /mingw/lib/lua51.dll " .. hack_flags end
+if(osc == "mingw") then hack_flags = " /mingw/lib/lua53.dll " .. hack_flags end
 
 function append_cxxflags(flags)
    cxx = cxx .. " " .. flags

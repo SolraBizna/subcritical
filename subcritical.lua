@@ -33,7 +33,7 @@ do
    elseif major < 5 or major == 5 and minor < 2 then
       io.stderr:write("Your Lua interpreter is too old. Lua 5.2 is required, but you have ".._VERSION..".\nPlease install Lua 5.2 before attempting to build SubCritical.\n")
       os.exit(1)
-   elseif major > 5 or minor > 2 then
+   elseif major > 5 or minor > 3 then
       io.stderr:write("WARNING:\nYour Lua interpreter may be too new. SubCritical is designed for Lua 5.2,\nbut you have ".._VERSION..". There may be incompatibilities.\n")
    end
 end
