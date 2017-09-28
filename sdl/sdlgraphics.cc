@@ -262,7 +262,7 @@ void gamma_frob::frobnicate(const char* envp) {
 // gamma correction ramps for the display gamma. Try, also, to fail gracefully.
 static void TryGammaCorrection() throw() {
   struct gamma_frob r, g, b;
-  if(getenv("NO_FIX_GAMMA")) return;
+  if(!getenv("YES_FIX_GAMMA")) return;
 #if defined(__MACOSX__) || defined(__MACOS__)
   // if we're running on 10.6 or later, disable automatic recalibration, since
   // it will probably do more harm than good and piss off people who calibrate
