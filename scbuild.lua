@@ -46,12 +46,12 @@ do
    major = tonumber(major)
    minor = tonumber(minor)
    if not major or not minor then
-      io.stderr:write("WARNING:\nCan't identify the running Lua version. SubCritical requires Lua 5.2.\n")
+      io.stderr:write("WARNING:\nCan't identify the running Lua version. SubCritical requires Lua 5.2 or 5.3.\n")
    elseif major < 5 or major == 5 and minor < 2 then
-      io.stderr:write("Your Lua interpreter is too old. Lua 5.2 is required, but you have ".._VERSION..".\nPlease install Lua 5.2 before attempting to build SubCritical.\n")
+      io.stderr:write("Your Lua interpreter is too old. Lua 5.2 is required, but you have ".._VERSION..".\nPlease install Lua 5.2 or 5.3 before attempting to build SubCritical.\n")
       os.exit(1)
-   elseif major > 5 or minor > 2 then
-      io.stderr:write("WARNING:\nYour Lua interpreter may be too new. SubCritical is designed for Lua 5.2,\nbut you have ".._VERSION..". There may be incompatibilities.\n")
+   elseif major > 5 or minor > 3 then
+      io.stderr:write("WARNING:\nYour Lua interpreter may be too new. SubCritical is designed for Lua 5.2 or 5.3,\nbut you have ".._VERSION..". There may be incompatibilities.\n")
    end
 end
 
