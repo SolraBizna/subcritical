@@ -271,7 +271,7 @@ const ObjectProtocol* class::GetProtocol() const throw() { \
     bool shouldfree;
   };
   EXPORT const char* TypeName(lua_State* L, int n);
-#define luaL_typerror(L, n, wat) luaL_error(L, "Expected %s at arg %i, found %s instead", wat, n, SubCritical::TypeName(L, n))
+#define luaL_typerror(L, n, wat) luaL_error(L, "Expected %s at arg %d, found %s instead", wat, n, SubCritical::TypeName(L, n))
   // convenience function
   EXPORT const char* GetPath(lua_State* L, int);
 }
