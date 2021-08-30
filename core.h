@@ -74,7 +74,7 @@ extern "C" {
 /* exactly the same as the check in helper.cc */
 #if LUA_VERSION_NUM < 502
 #error Lua version too old. Please install Lua 5.2 and make sure scbuild can find your headers.
-#elif LUA_VERSION_NUM > 503
+#elif LUA_VERSION_NUM > 504
 #warning Lua version may be too new.
 #endif
 

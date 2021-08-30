@@ -107,7 +107,7 @@ static boolean f_jpeg_emptyout(j_compress_ptr C) {
   if(!c->out->Write(c->buf, sizeof(c->buf))) longjmp(c->jmp,1);
   c->dst.next_output_byte = c->buf;
   c->dst.free_in_buffer = sizeof(c->buf);
-  return 1;
+  return (boolean)1;
 }
 
 static void f_jpeg_termdest(j_compress_ptr C) {
@@ -164,10 +164,10 @@ bool JPEGDumper::Dump(Graphic* graphic, DumpOut& out, const char*& err) throw() 
   c.jpeg.input_components = 3;
   c.jpeg.in_color_space = JCS_RGB;
   jpeg_set_defaults(&c.jpeg);
-  jpeg_set_quality(&c.jpeg, quality, 0);
+  jpeg_set_quality(&c.jpeg, quality, (boolean)0);
   jpeg_simple_progression(&c.jpeg);
-  c.jpeg.optimize_coding = 1;
-  jpeg_start_compress(&c.jpeg, 1);
+  c.jpeg.optimize_coding = (boolean)1;
+  jpeg_start_compress(&c.jpeg, (boolean)1);
   for(int y = 0; y < graphic->height; ++y) {
     Pixel* s = graphic->rows[y];
     uint8_t* d = buf;
@@ -203,7 +203,7 @@ Graphic* JPEGLoader::Load(const char* name) throw() {
     return NULL;
   }
   jpeg_stdio_src(&c.jpeg, f);
-  jpeg_read_header(&c.jpeg, TRUE);
+  jpeg_read_header(&c.jpeg, (boolean)TRUE);
   ret = new Graphic(c.jpeg.image_width, c.jpeg.image_height, FB_xRGB);
   jpeg_start_decompress(&c.jpeg);
   buf = (uint8_t*)malloc(sizeof(uint8_t) * ret->width * c.jpeg.out_color_components);

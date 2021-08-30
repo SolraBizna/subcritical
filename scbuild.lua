@@ -46,12 +46,12 @@ do
    major = tonumber(major)
    minor = tonumber(minor)
    if not major or not minor then
-      io.stderr:write("WARNING:\nCan't identify the running Lua version. SubCritical requires Lua 5.2 or 5.3.\n")
+      io.stderr:write("WARNING:\nCan't identify the running Lua version. SubCritical requires Lua 5.2, 5.3, or 5.4.\n")
    elseif major < 5 or major == 5 and minor < 2 then
-      io.stderr:write("Your Lua interpreter is too old. Lua 5.2 is required, but you have ".._VERSION..".\nPlease install Lua 5.2 or 5.3 before attempting to build SubCritical.\n")
+      io.stderr:write("Your Lua interpreter is too old. Lua 5.2 is required, but you have ".._VERSION..".\nPlease install Lua 5.2, 5.3, or 5.4 before attempting to build SubCritical.\n")
       os.exit(1)
-   elseif major > 5 or minor > 3 then
-      io.stderr:write("WARNING:\nYour Lua interpreter may be too new. SubCritical is designed for Lua 5.2 or 5.3,\nbut you have ".._VERSION..". There may be incompatibilities.\n")
+   elseif major > 5 or minor > 4 then
+      io.stderr:write("WARNING:\nYour Lua interpreter may be too new. SubCritical is designed for Lua 5.2, 5.3, or 5.4,\nbut you have ".._VERSION..". There may be incompatibilities.\n")
    end
 end
 
@@ -163,7 +163,9 @@ end
 
 --print("Detecting Lua flags...")
 local lua_cflags = ""
-if os.execute("pkg-config lua5.3 --exists") then
+if os.execute("pkg-config lua5.4 --exists") then
+   lua_cflags="`pkg-config lua5.4 --cflags`"
+elseif os.execute("pkg-config lua5.3 --exists") then
    lua_cflags="`pkg-config lua5.3 --cflags`"
 elseif os.execute("pkg-config lua5.2 --exists") then
    lua_cflags="`pkg-config lua5.2 --cflags`"
@@ -176,6 +178,8 @@ else
    }
    local subpath = {
       "/",
+      "/lua5.4/",
+      "/lua54/",
       "/lua5.3/",
       "/lua53/",
       "/lua5.2/",
@@ -245,7 +249,7 @@ else
       cygwin={cxx=gpp.." -pthread -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -c", ld=gld.." -pthread -O -shared", ld_libflags="-llua", soext=".scc"},
       cygwin_mingw={cxx=gpp.." -mno-cygwin -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O2 "..lua_cflags.." -c", ld=gld.." -mno-cygwin -O -shared", ld_libflags="-llua", soext=".scc"},
       mingw={cxx=gpp.." -Wall -Wno-pmf-conversions -DHAVE_WINDOWS -O3 "..lua_cflags.." -c", ld=gld.." -O -L/usr/local/lib -shared -static-libgcc -static-libstdc++", ld_libflags="-llua", soext=".scc"},
-      darwin={cxx=gpp.." -pthread -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -fPIC -fno-common -c", ld="MACOSX_DEPLOYMENT_TARGET=\"10.3\" "..gld.." -pthread -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".scc"},
+      darwin={cxx=gpp.." -pthread -Wall -Wno-pmf-conversions -O2 "..lua_cflags.." -fPIC -fno-common -c", ld=gld.." -pthread -bundle -undefined dynamic_lookup -Wl,-bind_at_load", soext=".so"},
    }
    local platform = platforms[osc]
    assert(platform)

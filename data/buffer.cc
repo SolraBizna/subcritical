@@ -74,9 +74,11 @@ void DataBuffer::CallCallback() {
   case LUA_ERRERR:
     fprintf(stderr, "Impossible error during DataBuffer callback call\n");
     break;
+#ifdef LUA_ERRGCMM
   case LUA_ERRGCMM:
     fprintf(stderr, "Error during garbage collection during DataBuffer callback call\n");
     break;
+#endif
   }
   lua_settop(L, old_top);
   in_callback = false;
